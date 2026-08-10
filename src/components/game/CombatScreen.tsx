@@ -76,33 +76,36 @@ export function CombatScreen() {
       <div className="scanlines pointer-events-none absolute inset-0" />
       <div className="vignette pointer-events-none absolute inset-0" />
 
-      {/* enemies */}
-      <div className="relative z-10 flex items-start justify-center gap-3 px-3 pt-4">
-        {combat.enemies.map((e) => (
-          <EnemyView key={e.uid} enemyUid={e.uid} targeting={targeting} onSelect={selectTarget} />
-        ))}
-      </div>
-
-      {/* log */}
-      <div
-        className="relative z-10 mx-3 mt-2 h-[42px] overflow-hidden rounded-[2px] border-2 border-white/10 bg-black/50 px-2 py-1 text-[12px] leading-[13px] text-foreground/75"
-        style={{ fontFamily: "var(--font-pixel-body)" }}
-      >
-        <AnimatePresence initial={false}>
-          {combat.log.slice(-3).map((l, i) => (
-            <motion.div
-              key={`${combat.log.length - 3 + i}-${l}`}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              {l}
-            </motion.div>
+      {/* arena — enemies centered in the remaining space */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        <div className="flex flex-1 items-center justify-center gap-3 px-3 pt-3">
+          {combat.enemies.map((e) => (
+            <EnemyView key={e.uid} enemyUid={e.uid} targeting={targeting} onSelect={selectTarget} />
           ))}
-        </AnimatePresence>
+        </div>
+
+        {/* log */}
+        <div
+          className="mx-3 mb-1 h-[42px] shrink-0 overflow-hidden rounded-[2px] border-2 border-white/10 bg-black/50 px-2 py-1 text-[12px] leading-[13px] text-foreground/75"
+          style={{ fontFamily: "var(--font-pixel-body)" }}
+        >
+          <AnimatePresence initial={false}>
+            {combat.log.slice(-3).map((l, i) => (
+              <motion.div
+                key={`${combat.log.length - 3 + i}-${l}`}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                {l}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* player */}
-      <div className="relative z-10 mt-auto flex items-end justify-between px-3">
+      <div className="relative z-10 flex shrink-0 items-end justify-between px-3">
+
         <div className="relative">
           <motion.img
             src={hero.asset}
