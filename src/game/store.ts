@@ -569,6 +569,7 @@ export const useGame = create<GameState>((set, get) => ({
   buyRemove: (cardUid) => {
     const s = get();
     if (s.gold < 75) return;
+    if (s.deck.length <= 5) return; // never let the deck get unplayably small
     set({ gold: s.gold - 75, deck: s.deck.filter((c) => c.uid !== cardUid) });
   },
 
