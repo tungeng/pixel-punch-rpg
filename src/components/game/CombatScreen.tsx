@@ -207,14 +207,14 @@ export function CombatScreen() {
                 layout
                 initial={{ y: 90, opacity: 0, rotate: 0 }}
                 animate={{
-                  y: Math.abs(offset) * 6,
+                  y: Math.abs(offset) * 4 - 8,
                   opacity: 1,
                   rotate: offset * 5,
                 }}
                 exit={{ y: -140, opacity: 0, scale: 0.7 }}
                 transition={{ type: "spring", stiffness: 320, damping: 26 }}
                 style={{
-                  marginLeft: i === 0 ? 0 : -26,
+                  marginLeft: i === 0 ? 0 : -24,
                   zIndex: 10 + i,
                   transformOrigin: "bottom center",
                 }}

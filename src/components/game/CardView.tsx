@@ -33,8 +33,8 @@ export function CardView({
 }) {
   const t = TYPE[card.type] ?? TYPE["skill"]!;
   const big = size !== "hand";
-  const w = big ? 132 : 108;
-  const h = big ? 186 : 152;
+  const w = big ? 132 : 102;
+  const h = big ? 186 : 138;
   const art = card.hero ? HEROES[card.hero]?.asset : undefined;
   const pip = RARITY_PIP[card.rarity] ?? "#7b8794";
 
@@ -75,7 +75,7 @@ export function CardView({
         <div
           className="relative overflow-hidden"
           style={{
-            height: big ? 74 : 60,
+            height: big ? 74 : 52,
             margin: 3,
             border: "2px solid #07060c",
             background: `radial-gradient(circle at 50% 85%, ${t.accent}55, #0b0a14 70%)`,
