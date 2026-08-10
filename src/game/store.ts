@@ -329,7 +329,7 @@ export const useGame = create<GameState>((set, get) => ({
 
     // junkrat passive: enemies start with 1 vulnerable
     if (s.heroId === "junkrat") {
-      for (const e of enemies) e.vulnerable = 1;
+      for (const e of enemies) e.vulnerable = 2;
     }
     const maxEnergy = maxEnergyFor(s.heroId, s.relics);
     const drawN = drawCountFor(s.heroId, s.relics);
