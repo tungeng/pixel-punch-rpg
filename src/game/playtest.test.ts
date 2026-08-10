@@ -125,10 +125,12 @@ function simulateRun(hero: string, seed: string): RunResult {
         break;
       }
       case "shop": {
+        const goldBefore = s.gold;
         const relicIdx = s.shopRelics.findIndex((r) => !!r);
         if (s.gold >= 150 && relicIdx >= 0) s.buyRelic(relicIdx);
-        else if (s.gold >= 90 && s.shopCards.length > 0) s.buyCard(0);
-        else s.leaveShop();
+        else if (s.shopCards.length > 0) s.buyCard(0);
+        // If nothing changed, the bot can't afford anything — leave.
+        if (g().gold === goldBefore) s.leaveShop();
         break;
       }
       case "treasure": {
