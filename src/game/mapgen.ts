@@ -19,13 +19,9 @@ const POOL: NodeType[] = [
 export function generateMap(rng: Rng): MapNode[] {
   const nodes: MapNode[] = [];
   let id = 0;
-  // rows[0..ROWS-1] are path columns, row ROWS is boss
   const grid: MapNode[][] = [];
-  for (let r = 0; r <= ROWS; r++) {
-    grid[r] = [];
-  }
+  for (let r = 0; r <= ROWS; r++) grid.push([]);
 
-  const width = 3; // vertical bands per column
   for (let r = 0; r < ROWS; r++) {
     const count = rng.int(2, 3);
     for (let i = 0; i < count; i++) {
@@ -39,11 +35,10 @@ export function generateMap(rng: Rng): MapNode[] {
         y: 0,
         visited: false,
       };
-      grid[r].push(node);
+      grid[r]!.push(node);
       nodes.push(node);
     }
   }
-  // boss
   const boss: MapNode = {
     id: id++,
     type: "boss",
@@ -54,12 +49,12 @@ export function generateMap(rng: Rng): MapNode[] {
     y: 0,
     visited: false,
   };
-  grid[ROWS].push(boss);
+  grid[ROWS]!.push(boss);
   nodes.push(boss);
 
-  // Assign types to non-start, non-boss columns
   for (let r = 0; r < ROWS; r++) {
-    for (const node of grid[r]) {
+    const col = grid[r]!;
+    for (const node of col) {
       if (r === 0) {
         node.type = rng.pick(POOL.filter((t) => t !== "elite" && t !== "treasure" && t !== "shop"));
       } else {
@@ -67,17 +62,16 @@ export function generateMap(rng: Rng): MapNode[] {
       }
     }
   }
-  // Guarantee at least one rest and one shop and one treasure per act
+
   const allNormal = nodes.filter((n) => n.type !== "boss");
   ensureType(allNormal, rng, "rest");
   ensureType(allNormal, rng, "shop");
   ensureType(allNormal, rng, "treasure");
   ensureType(allNormal, rng, "elite");
 
-  // Connect: each node links to 1-2 nodes in next column, ensure next col fully reached
   for (let r = 0; r < ROWS; r++) {
-    const cur = grid[r];
-    const nextCol = grid[r + 1];
+    const cur = grid[r]!;
+    const nextCol = grid[r + 1]!;
     for (const node of cur) {
       const links = rng.chance(0.5) ? 1 : 2;
       const shuffled = rng.shuffle(nextCol).slice(0, links);
@@ -85,7 +79,6 @@ export function generateMap(rng: Rng): MapNode[] {
         if (!node.next.includes(nx.id)) node.next.push(nx.id);
       }
     }
-    // ensure every node in next col has at least one predecessor
     for (const nx of nextCol) {
       const hasPred = cur.some((c) => c.next.includes(nx.id));
       if (!hasPred && cur.length > 0) {
@@ -95,22 +88,21 @@ export function generateMap(rng: Rng): MapNode[] {
     }
   }
 
-  // Position: x by column, y spread within band. Keep only reachable from start.
-  const reachable = computeReachable(nodes, grid[0]);
-  const positioned = nodes.filter((n) => reachable.has(n.id));
-  // re-link filtered (already via ids)
-  const COL_W = 14; // percent-ish handled in component; here give raw x/y 0..1
-  for (const node of positioned) {
-    node.x = node.col / ROWS;
+  const starts = grid[0]!;
+  const reachable = computeReachable(nodes, starts);
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  for (const node of nodes) {
+    if (reachable.has(node.id)) {
+      node.x = node.col / ROWS;
+    }
   }
-  // vertical position within column
   for (let r = 0; r <= ROWS; r++) {
-    const col = grid[r].filter((n) => reachable.has(n.id));
+    const col = (grid[r] ?? []).filter((n) => reachable.has(n.id));
     col.forEach((n, i) => {
-      n.y = col.length === 1 ? 0.5 : i / (col.length - 1);
+      n.y = col.length <= 1 ? 0.5 : i / (col.length - 1);
     });
   }
-  return positioned;
+  return nodes.filter((n) => reachable.has(n.id));
 }
 
 function ensureType(pool: MapNode[], rng: Rng, type: NodeType) {
@@ -123,9 +115,10 @@ function ensureType(pool: MapNode[], rng: Rng, type: NodeType) {
 function computeReachable(nodes: MapNode[], starts: MapNode[]): Set<number> {
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const seen = new Set<number>();
-  const stack = [...starts.map((s) => s.id)];
+  const stack: number[] = [...starts.map((s) => s.id)];
   while (stack.length) {
-    const id = stack.pop()!;
+    const id = stack.pop();
+    if (id === undefined) continue;
     if (seen.has(id)) continue;
     seen.add(id);
     const node = byId.get(id);
@@ -133,4 +126,8 @@ function computeReachable(nodes: MapNode[], starts: MapNode[]): Set<number> {
     for (const nx of node.next) stack.push(nx);
   }
   return seen;
+}
+
+export function getStarts(map: MapNode[]): MapNode[] {
+  return map.filter((n) => n.col === 0);
 }
