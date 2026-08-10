@@ -798,9 +798,11 @@ function handleCombatWin(set: any, get: () => GameState) {
   const rng = rngForRun(s.seed, 9000 + floorsCleared);
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
   const choices: CardInstance[] = [];
-  for (let i = 0; i < 3; i++) {
-    const id = rng.pick(pool);
-    choices.push(makeCard(id));
+  const remaining = [...pool];
+  for (let i = 0; i < 3 && remaining.length > 0; i++) {
+    const id = rng.pick(remaining);
+    remaining.splice(remaining.indexOf(id), 1); // no duplicate offers
+    choices.push(makeCard(id, rng.chance(0.12)));
   }
   // boss -> next act or victory
   if (c.nodeType === "boss") {
