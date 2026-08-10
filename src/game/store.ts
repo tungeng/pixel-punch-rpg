@@ -866,7 +866,12 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
   const s = get();
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
   const shopCards: CardInstance[] = [];
-  for (let i = 0; i < 5; i++) shopCards.push(makeCard(rng.pick(pool), rng.chance(0.25)));
+  const stock = [...pool];
+  for (let i = 0; i < 5 && stock.length > 0; i++) {
+    const id = rng.pick(stock);
+    stock.splice(stock.indexOf(id), 1); // distinct stock, no duplicate listings
+    shopCards.push(makeCard(id, rng.chance(0.25)));
+  }
   const owned = new Set(s.relics);
   const avail = ALL_RELIC_IDS.filter((r) => !owned.has(r));
   const firstRelic = rng.pick(avail) ?? "";
