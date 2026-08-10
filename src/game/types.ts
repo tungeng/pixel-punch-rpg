@@ -21,6 +21,7 @@ export interface CardDef {
   energyGain?: number;
   selfDamage?: number;
   bonusIfAttack?: number;
+  aoe?: boolean;
   exhaust?: boolean;
   retain?: boolean;
   // upgrade deltas applied when upgraded
