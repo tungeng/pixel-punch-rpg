@@ -19,15 +19,15 @@ export class Rng {
   }
 
   pick<T>(arr: T[]): T {
-    return arr[Math.floor(this.next() * arr.length)];
+    return arr[Math.floor(this.next() * arr.length)] as T;
   }
 
   shuffle<T>(arr: T[]): T[] {
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(this.next() * (i + 1));
-      const tmp = a[i];
-      a[i] = a[j];
+      const tmp = a[i] as T;
+      a[i] = a[j] as T;
       a[j] = tmp;
     }
     return a;
