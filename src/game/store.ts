@@ -316,6 +316,17 @@ export const useGame = create<GameState>((set, get) => ({
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
       }
     }
+    // Difficulty curve: the breach hardens the deeper you fall.
+    const floor = s.floorsCleared;
+    const hpScale = 1 + floor * 0.085 + s.act * 0.15;
+    const strBonus = Math.floor(floor / 4) + (nodeType === "elite" ? 2 : 0);
+    for (const e of enemies) {
+      const scaled = Math.round(e.maxHp * hpScale);
+      e.hp = scaled;
+      e.maxHp = scaled;
+      e.strength = strBonus;
+    }
+
     // junkrat passive: enemies start with 1 vulnerable
     if (s.heroId === "junkrat") {
       for (const e of enemies) e.vulnerable = 1;
