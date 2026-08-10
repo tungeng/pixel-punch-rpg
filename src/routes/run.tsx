@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useGame } from "@/game/store";
 import { Hud } from "@/components/game/MetaScreens";
 import { MapView } from "@/components/game/MapView";
