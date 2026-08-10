@@ -546,12 +546,12 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const card = s.shopCards[index];
     if (!card) return;
-    const cost = cardCost(card);
+    const cost = cardPrice(card);
     if (s.gold < cost) return;
     set({
       gold: s.gold - cost,
       deck: [...s.deck, card],
-      shopCards: s.shopCards.map((c, i) => (i === index ? { ...c, cost: 999 } : c)),
+      shopCards: s.shopCards.filter((_, i) => i !== index),
     });
   },
 
@@ -856,8 +856,7 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
   set({ phase: "shop", shopCards, shopRelics });
 }
 
-function cardCost(card: CardInstance): number {
-  if ((card as any).cost === 999) return 999;
+export function cardPrice(card: CardInstance): number {
   const base = card.rarity === "rare" ? 90 : card.rarity === "uncommon" ? 60 : 40;
   return card.upgraded ? base + 20 : base;
 }
