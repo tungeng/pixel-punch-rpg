@@ -91,7 +91,7 @@ function NodeButton({
   const color = NODE_COLOR[node.type] ?? "#888";
   return (
     <motion.button
-      initial={scale: 0.6, opacity: 0} as never
+      initial={{ scale: 0.6, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       onClick={canEnter ? onEnter : undefined}
       disabled={!canEnter}
