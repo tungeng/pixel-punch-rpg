@@ -196,7 +196,7 @@ export function CombatScreen() {
       </div>
 
       {/* hand — fanned */}
-      <div className="relative z-10 flex min-h-[172px] items-end justify-center px-2 pb-3 pt-4">
+      <div className="relative z-10 flex shrink-0 items-end justify-center px-2 pb-4 pt-3">
         <AnimatePresence mode="popLayout">
           {hand.map((card, i) => {
             const dimmed = card.cost > combat.energy;
