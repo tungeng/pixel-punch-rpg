@@ -88,9 +88,9 @@ export const HEROES: Record<string, HeroDef> = {
       cost: 0,
       rarity: "rare",
       hero: "genji",
-      damage: 8,
+      damage: 10,
       hits: 4,
-      text: "Deal 8 damage 4 times to one enemy.",
+      text: "Deal 10 damage 4 times to one enemy.",
     },
   },
   junkrat: {
