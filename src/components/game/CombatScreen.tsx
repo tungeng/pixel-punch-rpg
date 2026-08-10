@@ -204,6 +204,7 @@ export function CombatScreen() {
             return (
               <motion.div
                 key={card.uid}
+                className="shrink-0"
                 layout
                 initial={{ y: 90, opacity: 0, rotate: 0 }}
                 animate={{
@@ -214,7 +215,7 @@ export function CombatScreen() {
                 exit={{ y: -140, opacity: 0, scale: 0.7 }}
                 transition={{ type: "spring", stiffness: 320, damping: 26 }}
                 style={{
-                  marginLeft: i === 0 ? 0 : -8,
+                  marginLeft: i === 0 ? 0 : -18,
                   zIndex: 10 + i,
                   transformOrigin: "bottom center",
                 }}

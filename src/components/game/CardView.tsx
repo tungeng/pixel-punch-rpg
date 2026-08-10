@@ -33,7 +33,7 @@ export function CardView({
 }) {
   const t = TYPE[card.type] ?? TYPE["skill"]!;
   const big = size !== "hand";
-  const w = big ? 132 : 96;
+  const w = big ? 132 : 92;
   const h = big ? 186 : 138;
   const art = card.hero ? HEROES[card.hero]?.asset : undefined;
   const pip = RARITY_PIP[card.rarity] ?? "#7b8794";
