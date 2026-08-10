@@ -33,7 +33,7 @@ export function CardView({
 }) {
   const t = TYPE[card.type] ?? TYPE["skill"]!;
   const big = size !== "hand";
-  const w = big ? 132 : 102;
+  const w = big ? 132 : 96;
   const h = big ? 186 : 138;
   const art = card.hero ? HEROES[card.hero]?.asset : undefined;
   const pip = RARITY_PIP[card.rarity] ?? "#7b8794";
@@ -115,10 +115,10 @@ export function CardView({
 
         {/* rules text */}
         <div
-          className="flex-1 overflow-hidden px-1.5 pt-1 text-center leading-[14px]"
+          className="flex-1 overflow-hidden px-1 pt-1 text-center leading-[13px]"
           style={{
             fontFamily: "var(--font-pixel-body)",
-            fontSize: big ? 15 : 13,
+            fontSize: big ? 15 : 11,
             color: "#dfe3f2",
           }}
         >

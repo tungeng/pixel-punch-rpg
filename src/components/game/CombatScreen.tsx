@@ -214,7 +214,7 @@ export function CombatScreen() {
                 exit={{ y: -140, opacity: 0, scale: 0.7 }}
                 transition={{ type: "spring", stiffness: 320, damping: 26 }}
                 style={{
-                  marginLeft: i === 0 ? 0 : -24,
+                  marginLeft: i === 0 ? 0 : -8,
                   zIndex: 10 + i,
                   transformOrigin: "bottom center",
                 }}
