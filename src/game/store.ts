@@ -850,7 +850,9 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
   for (let i = 0; i < 5; i++) shopCards.push(makeCard(rng.pick(pool), rng.chance(0.25)));
   const owned = new Set(s.relics);
   const avail = ALL_RELIC_IDS.filter((r) => !owned.has(r));
-  const shopRelics = [rng.pick(avail) ?? "", rng.pick(avail.filter((r) => r !== shopRelics[0])) ?? ""];
+  const firstRelic = rng.pick(avail) ?? "";
+  const secondRelic = rng.pick(avail.filter((r) => r !== firstRelic)) ?? "";
+  const shopRelics = [firstRelic, secondRelic];
   set({ phase: "shop", shopCards, shopRelics });
 }
 
