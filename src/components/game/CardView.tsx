@@ -24,9 +24,6 @@ export function CardView({
   const heroColor = card.hero;
   const w = size === "hand" ? 96 : 120;
   const h = size === "hand" ? 132 : 162;
-  return (
-    <motion.button
-      layout
   const hover = dimmed ? undefined : { y: -8, scale: 1.04 };
   const tap = dimmed ? undefined : { scale: 0.97 };
   return (
