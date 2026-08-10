@@ -489,7 +489,7 @@ export const useGame = create<GameState>((set, get) => ({
     const drawN = drawCountFor(s.heroId, relics);
     drawCards(c, drawN);
     // passive heals
-    if (s.heroId === "mercy") c.hp = Math.min(c.maxHp, c.hp + 2);
+    if (s.heroId === "mercy") c.hp = Math.min(c.maxHp, c.hp + 1);
     if (relics.includes("regen_drone")) c.hp = Math.min(c.maxHp, c.hp + 1);
     set({ combat: { ...c } });
   },
@@ -710,8 +710,13 @@ function resolveCard(
   if (card.draw) drawCards(c, card.draw);
   // self damage
   if (card.selfDamage) {
-    c.hp -= card.selfDamage;
-    pushFloat(c, `-${card.selfDamage}`, "dmg", "player");
+    // Junkrat's Total Mayhem soaks the first 3 damage of every self-blast.
+    const soak = heroId === "junkrat" ? 3 : 0;
+    const selfDmg = Math.max(0, card.selfDamage - soak);
+    if (selfDmg > 0) {
+      c.hp -= selfDmg;
+      pushFloat(c, `-${selfDmg}`, "dmg", "player");
+    }
   }
   // deal damage
   if (card.damage && card.damage > 0) {
