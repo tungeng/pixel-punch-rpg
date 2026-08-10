@@ -196,7 +196,7 @@ export function CombatScreen() {
       </div>
 
       {/* hand — fanned */}
-      <div className="relative z-10 flex shrink-0 items-end justify-center px-2 pb-4 pt-3">
+      <div className="relative z-10 flex shrink-0 items-end justify-center px-2 pb-6 pt-3">
         <AnimatePresence mode="popLayout">
           {hand.map((card, i) => {
             const dimmed = card.cost > combat.energy;
@@ -207,9 +207,9 @@ export function CombatScreen() {
                 layout
                 initial={{ y: 90, opacity: 0, rotate: 0 }}
                 animate={{
-                  y: Math.abs(offset) * 4 - 8,
+                  y: Math.abs(offset) * 3 - 12,
                   opacity: 1,
-                  rotate: offset * 5,
+                  rotate: offset * 3,
                 }}
                 exit={{ y: -140, opacity: 0, scale: 0.7 }}
                 transition={{ type: "spring", stiffness: 320, damping: 26 }}
