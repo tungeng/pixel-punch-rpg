@@ -27,8 +27,13 @@ export function CardView({
   return (
     <motion.button
       layout
-      whileHover={dimmed ? undefined : { y: -8, scale: 1.04 }}
-      whileTap={dimmed ? undefined : { scale: 0.97 }}
+  const hover = dimmed ? undefined : { y: -8, scale: 1.04 };
+  const tap = dimmed ? undefined : { scale: 0.97 };
+  return (
+    <motion.button
+      layout
+      {...(hover ? { whileHover: hover } : {})}
+      {...(tap ? { whileTap: tap } : {})}
       onClick={onClick}
       disabled={dimmed}
       animate={selected ? { y: -16 } : { y: 0 }}
