@@ -22,7 +22,7 @@ function RunRoute() {
   const navigate = useNavigate();
 
   if (!inRun) {
-    return <RedirectHome navigate={navigate} />;
+    return <RedirectHome />;
   }
 
   return (
@@ -42,7 +42,10 @@ function RunRoute() {
   );
 }
 
-function RedirectHome({ navigate }: { navigate: (o: { to: string }) => void }) {
-  navigate({ to: "/" });
+function RedirectHome() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate({ to: "/" });
+  }, [navigate]);
   return null;
 }
