@@ -61,6 +61,11 @@ export function CombatScreen() {
   const targeting = !!combat.targetingCardUid;
   const hand = combat.hand;
   const mid = (hand.length - 1) / 2;
+  // fit the fan inside the portrait viewport without hiding card text
+  const CARD_W = 92;
+  const AVAIL = 400;
+  const overlap =
+    hand.length > 1 ? Math.max(0, (hand.length * CARD_W - AVAIL) / (hand.length - 1)) : 0;
 
   return (
     <div
@@ -215,7 +220,7 @@ export function CombatScreen() {
                 exit={{ y: -140, opacity: 0, scale: 0.7 }}
                 transition={{ type: "spring", stiffness: 320, damping: 26 }}
                 style={{
-                  marginLeft: i === 0 ? 0 : -18,
+                  marginLeft: i === 0 ? 0 : -overlap,
                   zIndex: 10 + i,
                   transformOrigin: "bottom center",
                 }}
