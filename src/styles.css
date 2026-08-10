@@ -163,3 +163,73 @@
     transparent 3px
   );
 }
+
+@utility crt {
+  position: relative;
+}
+
+@keyframes map-dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+.map-dash {
+  animation: map-dash-flow 0.7s linear infinite;
+}
+
+@keyframes node-pulse-kf {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.04); }
+}
+.node-pulse {
+  animation: node-pulse-kf 1.6s ease-in-out infinite;
+}
+
+@keyframes idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.idle-bob { animation: idle-bob 2.2s ease-in-out infinite; }
+.idle-bob-slow { animation: idle-bob 3.1s ease-in-out infinite; }
+
+@keyframes hit-shake {
+  0% { transform: translate(0,0); }
+  20% { transform: translate(-6px,2px); }
+  40% { transform: translate(5px,-2px); }
+  60% { transform: translate(-4px,1px); }
+  80% { transform: translate(3px,0); }
+  100% { transform: translate(0,0); }
+}
+.hit-shake { animation: hit-shake 0.32s steps(5) 1; }
+
+@keyframes screen-shake {
+  0% { transform: translate(0,0); }
+  25% { transform: translate(3px,-3px); }
+  50% { transform: translate(-3px,2px); }
+  75% { transform: translate(2px,3px); }
+  100% { transform: translate(0,0); }
+}
+.screen-shake { animation: screen-shake 0.28s steps(4) 1; }
+
+@keyframes glitch-shift {
+  0%, 92%, 100% { transform: translate(0,0); opacity: 1; }
+  93% { transform: translate(-2px,1px); }
+  95% { transform: translate(2px,-1px); }
+  97% { transform: translate(-1px,0); }
+}
+.glitch { animation: glitch-shift 4.5s infinite steps(1); }
+
+@keyframes energy-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.energy-ring { animation: energy-spin 6s linear infinite; }
+
+@keyframes rift-drift {
+  0% { background-position: 0% 0%, 100% 100%; }
+  50% { background-position: 12% 8%, 88% 92%; }
+  100% { background-position: 0% 0%, 100% 100%; }
+}
+.rift-bg { animation: rift-drift 14s ease-in-out infinite; }
+
+@utility vignette {
+  box-shadow: inset 0 0 90px 20px rgba(0,0,0,0.75);
+}

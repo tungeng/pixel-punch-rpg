@@ -1,77 +1,132 @@
+import { useEffect, useRef } from "react";
 import { useGame } from "@/game/store";
 import { getStarts } from "@/game/mapgen";
 import type { MapNode } from "@/game/types";
 import { motion } from "motion/react";
 
-const NODE_GLYPH: Record<string, string> = {
-  combat: "⚔",
-  elite: "★",
-  rest: "♥",
-  shop: "$",
-  treasure: "?",
-  boss: "☠",
+const NODE: Record<string, { glyph: string; color: string; label: string }> = {
+  combat: { glyph: "⚔", color: "#ff7a45", label: "FIGHT" },
+  elite: { glyph: "☠", color: "#c47bff", label: "ELITE" },
+  rest: { glyph: "+", color: "#54d98c", label: "REST" },
+  shop: { glyph: "$", color: "#ffcc4d", label: "SHOP" },
+  treasure: { glyph: "?", color: "#54a8ff", label: "CACHE" },
+  boss: { glyph: "☠", color: "#ff3b3b", label: "BOSS" },
 };
-const NODE_COLOR: Record<string, string> = {
-  combat: "#e85d3a",
-  elite: "#a855f7",
-  rest: "#22c55e",
-  shop: "#fcd34d",
-  treasure: "#38bdf8",
-  boss: "#ef4444",
-};
+
+const ROW_GAP = 92;
+const PAD_TOP = 46;
 
 export function MapView() {
   const map = useGame((s) => s.map);
   const currentId = useGame((s) => s.currentNodeId);
   const enterNode = useGame((s) => s.enterNode);
   const act = useGame((s) => s.act);
+  const scroller = useRef<HTMLDivElement>(null);
+
+  const maxCol = map.reduce((m, n) => Math.max(m, n.col), 0);
+  const totalH = PAD_TOP * 2 + maxCol * ROW_GAP;
 
   const current = map.find((n) => n.id === currentId) ?? null;
   const reachable = new Set<number>();
   if (!current) getStarts(map).forEach((n) => reachable.add(n.id));
   else current.next.forEach((id) => reachable.add(id));
 
-  // connectors
-  const lines: { x1: number; y1: number; x2: number; y2: number }[] = [];
-  for (const n of map) {
-    for (const nx of n.next) {
-      const t = map.find((m) => m.id === nx);
-      if (t) lines.push({ x1: n.x, y1: n.y, x2: t.x, y2: t.y });
-    }
-  }
+  // Single source of truth for placement — SVG + buttons both use it.
+  const posOf = (n: MapNode) => ({
+    leftPct: 14 + n.y * 72,
+    topPx: PAD_TOP + (maxCol - n.col) * ROW_GAP,
+  });
+
+  const byId = new Map(map.map((n) => [n.id, n]));
+  const lines = map.flatMap((n) =>
+    n.next
+      .map((id) => byId.get(id))
+      .filter((t): t is MapNode => !!t)
+      .map((t) => {
+        const a = posOf(n);
+        const b = posOf(t);
+        const live = currentId === n.id && reachable.has(t.id);
+        return { a, b, live, key: `${n.id}-${t.id}` };
+      }),
+  );
+
+  // Scroll so the player's position sits in view.
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const target = current ? posOf(current).topPx : totalH;
+    el.scrollTo({ top: Math.max(0, target - el.clientHeight * 0.6), behavior: "smooth" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentId, map]);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="text-pixel px-4 pt-3 text-[10px] text-primary">
-        ACT {act + 1} — BREACH NAV
+    <div className="relative flex h-full flex-col">
+      <div className="relative z-20 flex items-center justify-between border-b-2 border-primary/30 bg-background/90 px-3 py-2">
+        <span className="text-pixel text-[9px] text-primary">ACT {act + 1} · BREACH NAV</span>
+        <span
+          className="text-[13px] text-muted-foreground"
+          style={{ fontFamily: "var(--font-pixel-body)" }}
+        >
+          {map.filter((n) => n.visited).length}/{map.length} nodes
+        </span>
       </div>
-      <div className="relative mx-auto my-2 w-full flex-1 overflow-hidden px-2">
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1 1" preserveAspectRatio="none">
-          {lines.map((l, i) => (
-            <line
-              key={i}
-              x1={l.x1}
-              y1={l.y1}
-              x2={l.x2}
-              y2={l.y2}
-              stroke="oklch(0.55 0.18 35)"
-              strokeWidth={0.012}
-              strokeLinecap="round"
+
+      <div ref={scroller} className="relative flex-1 overflow-y-auto">
+        <div className="relative w-full" style={{ height: totalH }}>
+          {/* starfield / rift backdrop */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse at 50% 0%, rgba(196,123,255,0.16), transparent 60%), radial-gradient(ellipse at 50% 100%, rgba(255,122,69,0.14), transparent 55%)",
+            }}
+          />
+          <div className="scanlines pointer-events-none absolute inset-0 opacity-60" />
+
+          <svg
+            className="absolute inset-0 h-full w-full"
+            style={{ pointerEvents: "none" }}
+          >
+            {lines.map((l) => (
+              <line
+                key={l.key}
+                x1={`${l.a.leftPct}%`}
+                y1={l.a.topPx}
+                x2={`${l.b.leftPct}%`}
+                y2={l.b.topPx}
+                stroke={l.live ? "#ffcc4d" : "rgba(180,190,220,0.28)"}
+                strokeWidth={l.live ? 3 : 2}
+                strokeDasharray="6 6"
+                strokeLinecap="round"
+                className={l.live ? "map-dash" : undefined}
+              />
+            ))}
+          </svg>
+
+          {map.map((n, i) => (
+            <NodeButton
+              key={n.id}
+              node={n}
+              index={i}
+              pos={posOf(n)}
+              canEnter={reachable.has(n.id)}
+              isCurrent={n.id === currentId}
+              onEnter={() => enterNode(n.id)}
             />
           ))}
-        </svg>
-        {map.map((n) => (
-          <NodeButton
-            key={n.id}
-            node={n}
-            canEnter={reachable.has(n.id)}
-            isCurrent={n.id === currentId}
-            onEnter={() => enterNode(n.id)}
-          />
-        ))}
+        </div>
       </div>
-      <div className="px-4 pb-3 text-center text-[14px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        Tap a glowing node to advance. ☠ = boss breach.
+
+      <div className="relative z-20 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t-2 border-primary/30 bg-background/90 px-3 py-1.5">
+        {Object.entries(NODE).map(([k, v]) => (
+          <span
+            key={k}
+            className="text-[12px]"
+            style={{ fontFamily: "var(--font-pixel-body)", color: v.color }}
+          >
+            {v.glyph} {v.label}
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -79,35 +134,70 @@ export function MapView() {
 
 function NodeButton({
   node,
+  index,
+  pos,
   canEnter,
   isCurrent,
   onEnter,
 }: {
   node: MapNode;
+  index: number;
+  pos: { leftPct: number; topPx: number };
   canEnter: boolean;
   isCurrent: boolean;
   onEnter: () => void;
 }) {
-  const color = NODE_COLOR[node.type] ?? "#888";
+  const cfg = NODE[node.type] ?? NODE["combat"]!;
+  const size = node.type === "boss" ? 62 : 46;
   return (
     <motion.button
-      initial={{ scale: 0.6, opacity: 0 }}
+      initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay: Math.min(index * 0.03, 0.5), type: "spring", stiffness: 260, damping: 16 }}
+      whileTap={canEnter ? { scale: 0.9 } : {}}
+      whileHover={canEnter ? { scale: 1.12 } : {}}
       onClick={canEnter ? onEnter : undefined}
       disabled={!canEnter}
-      className="absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center pix-border disabled:opacity-40"
-      style={{
-        left: `${10 + node.y * 80}%`,
-        top: `${6 + node.x * 86}%`,
-        background: node.visited ? "oklch(0.2 0.02 265)" : `linear-gradient(160deg, ${color}, oklch(0.16 0.03 265))`,
-        boxShadow: canEnter
-          ? `0 0 0 3px ${color}, 0 0 12px 2px ${color}aa`
-          : `0 0 0 2px ${color}66`,
-      }}
+      className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+      style={{ left: `${pos.leftPct}%`, top: pos.topPx }}
     >
-      <span className="text-pixel text-[14px] text-black">{NODE_GLYPH[node.type]}</span>
+      <div
+        className={`flex items-center justify-center ${canEnter ? "node-pulse" : ""}`}
+        style={{
+          width: size,
+          height: size,
+          border: "3px solid #07060c",
+          background: node.visited
+            ? "linear-gradient(180deg,#2a2836,#15131f)"
+            : `linear-gradient(180deg, ${cfg.color}, #15131f)`,
+          boxShadow: canEnter
+            ? `0 0 0 3px ${cfg.color}, 0 0 18px 2px ${cfg.color}`
+            : `0 0 0 2px ${cfg.color}55`,
+          opacity: canEnter || isCurrent ? 1 : node.visited ? 0.75 : 0.4,
+          filter: canEnter || isCurrent ? "none" : "saturate(0.5)",
+        }}
+      >
+        <span
+          className="text-pixel"
+          style={{ fontSize: node.type === "boss" ? 20 : 14, color: "#07060c" }}
+        >
+          {node.visited ? "✓" : cfg.glyph}
+        </span>
+      </div>
+      <span
+        className="text-pixel mt-1 whitespace-nowrap text-[6px]"
+        style={{ color: canEnter ? cfg.color : "rgba(200,205,225,0.45)" }}
+      >
+        {cfg.label}
+      </span>
       {isCurrent && (
-        <span className="absolute -bottom-3 text-pixel text-[7px] text-primary">YOU</span>
+        <motion.span
+          animate={{ y: [0, -4, 0] }}
+          transition={{ repeat: Infinity, duration: 1 }}
+          className="text-pixel absolute -top-6 text-[8px] text-primary"
+        >
+          ▼YOU
+        </motion.span>
       )}
     </motion.button>
   );

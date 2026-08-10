@@ -316,9 +316,20 @@ export const useGame = create<GameState>((set, get) => ({
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
       }
     }
+    // Difficulty curve: the breach hardens the deeper you fall.
+    const floor = s.floorsCleared;
+    const hpScale = 1 + floor * 0.085 + s.act * 0.15;
+    const strBonus = Math.floor(floor / 4) + (nodeType === "elite" ? 2 : 0);
+    for (const e of enemies) {
+      const scaled = Math.round(e.maxHp * hpScale);
+      e.hp = scaled;
+      e.maxHp = scaled;
+      e.strength = strBonus;
+    }
+
     // junkrat passive: enemies start with 1 vulnerable
     if (s.heroId === "junkrat") {
-      for (const e of enemies) e.vulnerable = 1;
+      for (const e of enemies) e.vulnerable = 2;
     }
     const maxEnergy = maxEnergyFor(s.heroId, s.relics);
     const drawN = drawCountFor(s.heroId, s.relics);
@@ -478,7 +489,7 @@ export const useGame = create<GameState>((set, get) => ({
     const drawN = drawCountFor(s.heroId, relics);
     drawCards(c, drawN);
     // passive heals
-    if (s.heroId === "mercy") c.hp = Math.min(c.maxHp, c.hp + 2);
+    if (s.heroId === "mercy") c.hp = Math.min(c.maxHp, c.hp + 1);
     if (relics.includes("regen_drone")) c.hp = Math.min(c.maxHp, c.hp + 1);
     set({ combat: { ...c } });
   },
@@ -546,12 +557,12 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const card = s.shopCards[index];
     if (!card) return;
-    const cost = cardCost(card);
+    const cost = cardPrice(card);
     if (s.gold < cost) return;
     set({
       gold: s.gold - cost,
       deck: [...s.deck, card],
-      shopCards: s.shopCards.map((c, i) => (i === index ? { ...c, cost: 999 } : c)),
+      shopCards: s.shopCards.filter((_, i) => i !== index),
     });
   },
 
@@ -569,6 +580,7 @@ export const useGame = create<GameState>((set, get) => ({
   buyRemove: (cardUid) => {
     const s = get();
     if (s.gold < 75) return;
+    if (s.deck.length <= 5) return; // never let the deck get unplayably small
     set({ gold: s.gold - 75, deck: s.deck.filter((c) => c.uid !== cardUid) });
   },
 
@@ -698,8 +710,13 @@ function resolveCard(
   if (card.draw) drawCards(c, card.draw);
   // self damage
   if (card.selfDamage) {
-    c.hp -= card.selfDamage;
-    pushFloat(c, `-${card.selfDamage}`, "dmg", "player");
+    // Junkrat's Total Mayhem soaks the first 3 damage of every self-blast.
+    const soak = s.heroId === "junkrat" ? 3 : 0;
+    const selfDmg = Math.max(0, card.selfDamage - soak);
+    if (selfDmg > 0) {
+      c.hp -= selfDmg;
+      pushFloat(c, `-${selfDmg}`, "dmg", "player");
+    }
   }
   // deal damage
   if (card.damage && card.damage > 0) {
@@ -781,9 +798,11 @@ function handleCombatWin(set: any, get: () => GameState) {
   const rng = rngForRun(s.seed, 9000 + floorsCleared);
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
   const choices: CardInstance[] = [];
-  for (let i = 0; i < 3; i++) {
-    const id = rng.pick(pool);
-    choices.push(makeCard(id));
+  const remaining = [...pool];
+  for (let i = 0; i < 3 && remaining.length > 0; i++) {
+    const id = rng.pick(remaining);
+    remaining.splice(remaining.indexOf(id), 1); // no duplicate offers
+    choices.push(makeCard(id, rng.chance(0.12)));
   }
   // boss -> next act or victory
   if (c.nodeType === "boss") {
@@ -847,7 +866,12 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
   const s = get();
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
   const shopCards: CardInstance[] = [];
-  for (let i = 0; i < 5; i++) shopCards.push(makeCard(rng.pick(pool), rng.chance(0.25)));
+  const stock = [...pool];
+  for (let i = 0; i < 5 && stock.length > 0; i++) {
+    const id = rng.pick(stock);
+    stock.splice(stock.indexOf(id), 1); // distinct stock, no duplicate listings
+    shopCards.push(makeCard(id, rng.chance(0.25)));
+  }
   const owned = new Set(s.relics);
   const avail = ALL_RELIC_IDS.filter((r) => !owned.has(r));
   const firstRelic = rng.pick(avail) ?? "";
@@ -856,8 +880,7 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
   set({ phase: "shop", shopCards, shopRelics });
 }
 
-function cardCost(card: CardInstance): number {
-  if ((card as any).cost === 999) return 999;
+export function cardPrice(card: CardInstance): number {
   const base = card.rarity === "rare" ? 90 : card.rarity === "uncommon" ? 60 : 40;
   return card.upgraded ? base + 20 : base;
 }
