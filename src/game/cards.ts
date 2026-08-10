@@ -76,22 +76,20 @@ export const NEUTRAL_POOL = ["n_block", "n_strike", "n_vuln", "n_heal", "n_focus
 export function makeCard(defId: string, upgraded = false): CardInstance {
   const base = CARDS[defId];
   if (!base) throw new Error(`Unknown card: ${defId}`);
-  const up = upgraded ? base.up : undefined;
-  const merged: CardInstance = {
-    ...base,
-    damage: up?.damage !== undefined ? (base.damage ?? 0) + (up.damage - (base.damage ?? 0)) : base.damage,
-    hits: up?.hits ?? base.hits,
-    block: up?.block !== undefined ? up.block : base.block,
-    heal: up?.heal !== undefined ? up.heal : base.heal,
-    draw: up?.draw !== undefined ? up.draw : base.draw,
-    cost: up?.cost !== undefined ? up.cost : base.cost,
-    vulnerable: up?.vulnerable !== undefined ? up.vulnerable : base.vulnerable,
-    weak: up?.weak !== undefined ? up.weak : base.weak,
-    strength: up?.strength !== undefined ? up.strength : base.strength,
-    energyGain: up?.energyGain !== undefined ? up.energyGain : base.energyGain,
-    bonusIfAttack: up?.bonusIfAttack !== undefined ? up.bonusIfAttack : base.bonusIfAttack,
-    uid: nextUid(defId),
-    upgraded,
-  };
+  const merged: CardInstance = { ...base, uid: nextUid(defId), upgraded };
+  if (upgraded && base.up) {
+    const up = base.up;
+    if (up.damage !== undefined) merged.damage = (base.damage ?? 0) + (up.damage - (base.damage ?? 0));
+    if (up.hits !== undefined) merged.hits = up.hits;
+    if (up.block !== undefined) merged.block = up.block;
+    if (up.heal !== undefined) merged.heal = up.heal;
+    if (up.draw !== undefined) merged.draw = up.draw;
+    if (up.cost !== undefined) merged.cost = up.cost;
+    if (up.vulnerable !== undefined) merged.vulnerable = up.vulnerable;
+    if (up.weak !== undefined) merged.weak = up.weak;
+    if (up.strength !== undefined) merged.strength = up.strength;
+    if (up.energyGain !== undefined) merged.energyGain = up.energyGain;
+    if (up.bonusIfAttack !== undefined) merged.bonusIfAttack = up.bonusIfAttack;
+  }
   return merged;
 }
