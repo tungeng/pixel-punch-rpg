@@ -207,8 +207,10 @@ export function Hud() {
           <span>F{floors} · ACT {act + 1} · 🂠{deckCount}</span>
           <div className="flex gap-0.5">
             {relics.slice(0, 6).map((r) => (
-              <RelicIcon key={r} id={r} />
-            )).map((el, i) => <div key={i} className="scale-50">{el}</div>)}
+              <div key={r} className="scale-75 origin-center">
+                <RelicIcon id={r} />
+              </div>
+            ))}
           </div>
         </div>
       </div>
