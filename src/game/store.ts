@@ -711,7 +711,7 @@ function resolveCard(
   // self damage
   if (card.selfDamage) {
     // Junkrat's Total Mayhem soaks the first 3 damage of every self-blast.
-    const soak = heroId === "junkrat" ? 3 : 0;
+    const soak = s.heroId === "junkrat" ? 3 : 0;
     const selfDmg = Math.max(0, card.selfDamage - soak);
     if (selfDmg > 0) {
       c.hp -= selfDmg;
