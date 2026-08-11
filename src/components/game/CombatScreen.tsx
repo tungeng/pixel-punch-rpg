@@ -52,7 +52,7 @@ export function CombatScreen() {
     if (turn === 0 || turn === prevTurn.current) return;
     prevTurn.current = turn;
     setBanner(`TURN ${turn}`);
-    const t = setTimeout(() => setBanner(null), 900);
+    const t = setTimeout(() => setBanner(null), 600);
     return () => clearTimeout(t);
   }, [turn]);
 
@@ -253,19 +253,21 @@ export function CombatScreen() {
         )}
       </AnimatePresence>
 
-      {/* turn banner */}
+      {/* turn banner — swoops in, then swoops out */}
       <AnimatePresence>
         {banner && (
           <motion.div
-            initial={{ opacity: 0, x: -60 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 60 }}
+            initial={{ x: "-110%", opacity: 0, skewX: -12 }}
+            animate={{ x: 0, opacity: 1, skewX: 0 }}
+            exit={{ x: "110%", opacity: 0, skewX: 12 }}
+            transition={{ type: "spring", stiffness: 420, damping: 32 }}
             className="text-pixel pointer-events-none absolute left-0 right-0 top-1/3 z-30 bg-primary/85 py-2 text-center text-[14px] text-black"
           >
             {banner}
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 }
