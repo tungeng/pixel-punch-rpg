@@ -45,6 +45,9 @@ export const CARDS: Record<string, CardDef> = {
   genji_riposte: { id: "genji_riposte", name: "Riposte", type: "attack", cost: 1, hero: "genji", rarity: "common", damage: 5, block: 5, text: "Deal 5 damage. Gain 5 Block.", up: { damage: 7, block: 8 } },
   genji_dash: { id: "genji_dash", name: "Dash", type: "attack", cost: 0, hero: "genji", rarity: "common", damage: 3, draw: 1, text: "Deal 3 damage. Draw 1 card.", up: { damage: 5 } },
   genji_storm: { id: "genji_storm", name: "Storm of Blades", type: "attack", cost: 2, hero: "genji", rarity: "rare", damage: 4, hits: 3, text: "Deal 4 damage 3 times.", up: { damage: 6 } },
+  genji_rush: { id: "genji_rush", name: "Dragon Rush", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 7, freeIfAttack: true, text: "Deal 7 damage. Costs 0 if you played an Attack this turn.", up: { damage: 10 } },
+  genji_windcut: { id: "genji_windcut", name: "Wind Cut", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 6, comboCards: 2, comboDraw: 1, comboEnergy: 1, text: "Deal 6 damage. If you played 2+ cards this turn, draw 1 and gain 1 Energy.", up: { damage: 9 } },
+
 
   // ---------------- JUNKRAT (chaos / area) ----------------
   junkrat_launcher: { id: "junkrat_launcher", name: "Frag Launcher", type: "attack", cost: 1, hero: "junkrat", rarity: "starter", damage: 7, text: "Deal 7 damage.", up: { damage: 10 } },
