@@ -95,8 +95,8 @@ export interface EnemyInstance {
   name: string;
   asset: string;
   isBoss: boolean;
-  mechanic?: BossMechanic;
-  mechanicName?: string;
+  mechanic?: BossMechanic | undefined;
+  mechanicName?: string | undefined;
   untargetable: boolean;
   enraged: boolean;
   hp: number;
