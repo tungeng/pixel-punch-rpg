@@ -373,6 +373,15 @@ export const useGame = create<GameState>((set, get) => ({
       nodeType,
       ultUsedThisCombat: false,
     };
+    // elite modifier: curse enemies hex you the moment the fight opens
+    for (const e of enemies) {
+      if (e.trait === "curse") {
+        combat.weak = Math.max(combat.weak, 2);
+        combat.vulnerable = Math.max(combat.vulnerable, 2);
+        combat.log.push(`${e.name}'s ${e.traitName ?? "aura"} weakens you.`);
+      }
+      if (e.trait === "aegis") e.block += 5;
+    }
     // barrier_start relic
     if (s.relics.includes("barrier_start")) combat.block = 10;
     // berserker relic
@@ -454,6 +463,7 @@ export const useGame = create<GameState>((set, get) => ({
         pushLog(c, "Moira drops her barrier and burns biotic energy.");
       }
     }
+    const summonRng = new Rng(hashSeed(`${get().seed}_summon_${c.turn}`));
     for (const e of c.enemies) {
       if (e.isDead) continue;
       e.block = 0; // reset block before acting
@@ -464,6 +474,13 @@ export const useGame = create<GameState>((set, get) => ({
           if (c.hp <= 0) break;
           const taken = applyPlayerDamage(get, c, intent.damage ?? 0, e.strength, e.weak);
           charge.v += taken * 1.5;
+          if (e.trait === "leech" && taken > 0) {
+            const drained = Math.min(e.maxHp - e.hp, Math.ceil(taken * 0.5));
+            if (drained > 0) {
+              e.hp += drained;
+              pushFloat(c, `+${drained}`, "heal", e.uid);
+            }
+          }
           if (relics.includes("thorn_mail") && taken > 0) {
             e.hp -= 2;
             pushFloat(c, "2", "dmg", e.uid);
@@ -482,7 +499,38 @@ export const useGame = create<GameState>((set, get) => ({
       if (intent.type === "debuff") {
         if (intent.weak) c.weak = Math.max(c.weak, intent.weak);
         if (intent.vulnerable) c.vulnerable = Math.max(c.vulnerable, intent.vulnerable);
+        if (intent.poison) {
+          c.poison += intent.poison;
+          pushFloat(c, `+${intent.poison} PSN`, "debuff", "player");
+        }
       }
+      if (intent.type === "summon") {
+        const alive = c.enemies.filter((x) => !x.isDead).length;
+        const sdef = intent.summonId ? ENEMIES[intent.summonId] : undefined;
+        if (sdef && alive < 4) {
+          const add = spawnEnemy(sdef, summonRng, `add_${Date.now()}_${alive}`);
+          const scaled = Math.round(add.maxHp * (1 + e.maxHp / 260));
+          add.hp = scaled;
+          add.maxHp = scaled;
+          add.strength = Math.max(0, e.strength - 1);
+          c.enemies.push(add);
+          pushFloat(c, "SUMMON", "buff", e.uid);
+          pushLog(c, `${e.name} assembles a ${add.name}.`);
+        } else {
+          e.block += 6;
+        }
+      }
+      // ---- persistent enemy traits ----
+      if (e.trait === "rampage") {
+        e.strength += 1;
+        pushFloat(c, "+1 STR", "buff", e.uid);
+      }
+      if (e.trait === "regen" && e.hp < e.maxHp) {
+        const healed = Math.min(e.maxHp - e.hp, Math.max(2, Math.round(e.maxHp * 0.04)));
+        e.hp += healed;
+        pushFloat(c, `+${healed}`, "heal", e.uid);
+      }
+      if (e.trait === "aegis") e.block += Math.round(4 + e.maxHp * 0.06);
     }
     c.ultCharge = Math.min(100, charge.v);
     // advance enemy intents
