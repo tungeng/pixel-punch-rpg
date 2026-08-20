@@ -218,6 +218,38 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
   return remaining;
 }
 
+/** Does this card deal damage in any form (fixed, random or scaling)? */
+export function cardDealsDamage(card: CardInstance): boolean {
+  return (
+    (card.damage ?? 0) > 0 ||
+    !!card.randomDamage ||
+    !!card.damagePerDiscard ||
+    !!card.damagePerCardPlayed ||
+    !!card.damagePerMissingHp
+  );
+}
+
+/** Cost after dynamic discounts (Genji free-if-attack, Doomfist momentum). */
+export function effectiveCost(card: CardInstance, c: Combat): number {
+  let cost = card.cost;
+  if (card.freeIfAttack && c.attacksPlayedThisTurn > 0) return 0;
+  if (card.costPerDamageTaken) {
+    cost -= Math.floor(c.damageTakenThisCombat / card.costPerDamageTaken);
+  }
+  return Math.max(0, cost);
+}
+
+/** Damage this card would deal right now, before enemy modifiers. */
+export function scaledDamage(card: CardInstance, c: Combat, roll?: number): number {
+  if (card.randomDamage) return roll ?? card.randomDamage[0];
+  let dmg = card.damage ?? 0;
+  if (card.damagePerCardPlayed) dmg += card.damagePerCardPlayed * c.cardsPlayedThisTurn;
+  if (card.damagePerMissingHp) dmg += Math.floor((c.maxHp - c.hp) / card.damagePerMissingHp);
+  if (card.damagePerDiscard) dmg += card.damagePerDiscard * c.discardPile.length;
+  return dmg;
+}
+
+
 function pushLog(c: Combat, text: string) {
   c.log.push(text);
   if (c.log.length > 40) c.log.shift();
