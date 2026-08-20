@@ -16,6 +16,25 @@ const NODE: Record<string, { glyph: string; color: string; label: string }> = {
 const ROW_GAP = 92;
 const PAD_TOP = 46;
 
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+const STARS = (() => {
+  const rnd = seededRandom(12345);
+  return Array.from({ length: 80 }, (_, i) => ({
+    id: i,
+    left: rnd() * 100,
+    top: rnd() * 100,
+    size: rnd() < 0.25 ? 2 : 1,
+    layer: rnd() < 0.33 ? 0 : rnd() < 0.5 ? 1 : 2,
+  }));
+})();
+
 export function MapView() {
   const map = useGame((s) => s.map);
   const currentId = useGame((s) => s.currentNodeId);
@@ -61,21 +80,44 @@ export function MapView() {
 
   return (
     <div className="relative flex h-full flex-col">
-      <div className="relative z-20 flex items-center justify-between border-b-2 border-primary/30 bg-background/90 px-3 py-2">
-        <span className="text-pixel text-[9px] text-primary">ACT {act + 1} · BREACH NAV</span>
-        <span
-          className="text-[13px] text-muted-foreground"
-          style={{ fontFamily: "var(--font-pixel-body)" }}
-        >
-          {map.filter((n) => n.visited).length}/{map.length} nodes
-        </span>
+      <div className="relative z-20 border-b-2 border-primary/30 bg-background/90 px-3 py-2">
+        <div className="flex items-center justify-between">
+          <span className="text-pixel text-[9px] text-primary">ACT {act + 1} · BREACH NAV</span>
+          <span
+            className="text-[13px] text-muted-foreground"
+            style={{ fontFamily: "var(--font-pixel-body)" }}
+          >
+            {map.filter((n) => n.visited).length}/{map.length} nodes
+          </span>
+        </div>
+
+        <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+          {Object.entries(NODE).map(([k, v]) => (
+            <span
+              key={k}
+              className="text-[12px]"
+              style={{ fontFamily: "var(--font-pixel-body)", color: v.color }}
+            >
+              {v.glyph} {v.label}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div ref={scroller} className="relative flex-1 overflow-y-auto">
         <div className="relative w-full" style={{ height: totalH }}>
-          {/* starfield / rift backdrop */}
+          <Starfield />
+
           <div
-            className="pointer-events-none absolute inset-0"
+            className="rift-bg pointer-events-none absolute inset-0 opacity-40"
+            style={{
+              background:
+                "radial-gradient(ellipse at 0% 0%, rgba(196,123,255,0.22), transparent 55%), radial-gradient(ellipse at 100% 100%, rgba(255,122,69,0.20), transparent 55%)",
+            }}
+          />
+
+          <div
+            className="pointer-events-none absolute inset-0 opacity-60"
             style={{
               background:
                 "radial-gradient(ellipse at 50% 0%, rgba(196,123,255,0.16), transparent 60%), radial-gradient(ellipse at 50% 100%, rgba(255,122,69,0.14), transparent 55%)",
@@ -116,18 +158,40 @@ export function MapView() {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="relative z-20 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t-2 border-primary/30 bg-background/90 px-3 py-1.5">
-        {Object.entries(NODE).map(([k, v]) => (
-          <span
-            key={k}
-            className="text-[12px]"
-            style={{ fontFamily: "var(--font-pixel-body)", color: v.color }}
-          >
-            {v.glyph} {v.label}
-          </span>
-        ))}
-      </div>
+function Starfield() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {[0, 1, 2].map((layer) => (
+        <motion.div
+          key={layer}
+          className="absolute inset-0"
+          animate={{ x: layer % 2 === 0 ? ["-4%", "4%"] : ["4%", "-4%"] }}
+          transition={{
+            duration: 28 + layer * 14,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "linear",
+          }}
+        >
+          {STARS.filter((s) => s.layer === layer).map((s) => (
+            <span
+              key={s.id}
+              className="absolute bg-foreground"
+              style={{
+                left: `${s.left}%`,
+                top: `${s.top}%`,
+                width: s.size,
+                height: s.size,
+                opacity: layer === 0 ? 0.85 : layer === 1 ? 0.55 : 0.3,
+              }}
+            />
+          ))}
+        </motion.div>
+      ))}
     </div>
   );
 }
