@@ -40,6 +40,11 @@ function intentParts(intent: {
 }
 
 
+const BURST = Array.from({ length: 8 }, (_, i) => {
+  const a = (i / 8) * Math.PI * 2;
+  return { x: Math.cos(a) * 34, y: Math.sin(a) * 30 };
+});
+
 export function CombatScreen() {
   const combat = useGame((s) => s.combat);
   const heroId = useGame((s) => s.heroId);
