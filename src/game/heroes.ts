@@ -17,11 +17,11 @@ export const HEROES: Record<string, HeroDef> = {
     startingDeck: [
       "tracer_blink", "tracer_blink", "tracer_pistols", "tracer_pistols",
       "tracer_recall", "tracer_strafe", "tracer_strafe", "tracer_hnr",
-      "tracer_reload", "tracer_dual",
+      "tracer_reload", "tracer_dual", "tracer_flurry", "tracer_overclock",
     ],
     cardPool: [
       "tracer_strafe", "tracer_charged", "tracer_adrenaline", "tracer_hnr",
-      "tracer_reload", "tracer_dual",
+      "tracer_reload", "tracer_dual", "tracer_flurry", "tracer_overclock",
     ],
     ultimate: {
       id: "tracer_pulse",
@@ -49,7 +49,7 @@ export const HEROES: Record<string, HeroDef> = {
     ],
     cardPool: [
       "mercy_boost", "mercy_guardian", "mercy_resurrect", "mercy_shot",
-      "mercy_blight",
+      "mercy_blight", "mercy_lastrites", "mercy_overflow",
     ],
     ultimate: {
       id: "mercy_valkyrie",
@@ -75,11 +75,11 @@ export const HEROES: Record<string, HeroDef> = {
     startingDeck: [
       "genji_shuriken", "genji_shuriken", "genji_swift", "genji_swift",
       "genji_deflect", "genji_fang", "genji_agility", "genji_riposte",
-      "genji_dash", "genji_storm",
+      "genji_dash", "genji_storm", "genji_rush", "genji_windcut",
     ],
     cardPool: [
       "genji_fang", "genji_agility", "genji_spirit", "genji_riposte",
-      "genji_dash", "genji_storm",
+      "genji_dash", "genji_storm", "genji_rush", "genji_windcut",
     ],
     ultimate: {
       id: "genji_dragon",
@@ -104,11 +104,11 @@ export const HEROES: Record<string, HeroDef> = {
     startingDeck: [
       "junkrat_launcher", "junkrat_launcher", "junkrat_trap", "junkrat_trap",
       "junkrat_concussive", "junkrat_mine", "junkrat_scatter", "junkrat_armor",
-      "junkrat_frag", "junkrat_blast",
+      "junkrat_frag", "junkrat_blast", "junkrat_loose", "junkrat_scrap",
     ],
     cardPool: [
       "junkrat_concussive", "junkrat_mine", "junkrat_rpg", "junkrat_scatter",
-      "junkrat_frag", "junkrat_blast",
+      "junkrat_frag", "junkrat_blast", "junkrat_loose", "junkrat_scrap",
     ],
     ultimate: {
       id: "junkrat_riptire",
@@ -137,7 +137,7 @@ export const HEROES: Record<string, HeroDef> = {
     ],
     cardPool: [
       "doomfist_uppercut", "doomfist_bestdefense", "doomfist_charge",
-      "doomfist_quake",
+      "doomfist_quake", "doomfist_executioner", "doomfist_momentum",
     ],
     ultimate: {
       id: "doomfist_meteor",
