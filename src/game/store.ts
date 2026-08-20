@@ -315,10 +315,8 @@ export const useGame = create<GameState>((set, get) => ({
       const pool = enemyPoolFor(s.act);
       const r = rng.next();
       const count = r < 0.4 ? 1 : r < 0.9 ? 2 : 3;
-      const used: string[] = [];
       for (let i = 0; i < count; i++) {
         const id = rng.pick(pool);
-        used.push(id);
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
       }
     }
@@ -676,6 +674,9 @@ function spawnEnemy(def: EnemyDef, rng: Rng, uidBase: string): EnemyInstance {
     name: def.name,
     asset: def.asset,
     isBoss: !!def.isBoss,
+    isElite: def.isElite,
+    trait: def.trait,
+    traitName: def.traitName,
     mechanic: def.mechanic,
     mechanicName: def.mechanicName,
     untargetable: false,
