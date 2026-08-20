@@ -79,6 +79,66 @@ export const ENEMIES: Record<string, EnemyDef> = {
 export const ELITE_POOL = ["talon_heavy", "bastion", "sniper"];
 
 export const BOSSES: Record<string, EnemyDef> = {
+  reaper: {
+    id: "reaper",
+    name: "Reaper",
+    asset: reaperImg,
+    hp: [130, 130],
+    isBoss: true,
+    mechanic: "wraith",
+    mechanicName: "WRAITH FORM",
+    moves: [
+      { type: "attack", text: "Hellfire x2 9", damage: 9, hits: 2 },
+      { type: "debuff", text: "Wraith Curse 2 Weak", weak: 2 },
+      { type: "buff", text: "The Reaping +3 Str", strength: 3 },
+      { type: "attack", text: "Death Blossom 20", damage: 20 },
+    ],
+  },
+  widowmaker: {
+    id: "widowmaker",
+    name: "Widowmaker",
+    asset: widowImg,
+    hp: [175, 175],
+    isBoss: true,
+    mechanic: "venom",
+    mechanicName: "VENOM MINE",
+    moves: [
+      { type: "attack", text: "Headshot 16", damage: 16 },
+      { type: "attack_block", text: "Grapple 8+12", damage: 8, block: 12 },
+      { type: "debuff", text: "Venom Cloud 2 Vuln", vulnerable: 2 },
+      { type: "attack", text: "Widow's Kiss x3 7", damage: 7, hits: 3 },
+    ],
+  },
+  sigma: {
+    id: "sigma",
+    name: "Sigma",
+    asset: sigmaImg,
+    hp: [215, 215],
+    isBoss: true,
+    mechanic: "gravity",
+    mechanicName: "GRAVITIC FLUX",
+    moves: [
+      { type: "attack", text: "Hyperspheres x2 11", damage: 11, hits: 2 },
+      { type: "block", text: "Experimental Barrier 22", block: 22 },
+      { type: "buff", text: "Accretion +3 Str", strength: 3 },
+      { type: "attack", text: "Gravitic Flux 24", damage: 24 },
+    ],
+  },
+  moira: {
+    id: "moira",
+    name: "Moira",
+    asset: moiraImg,
+    hp: [280, 280],
+    isBoss: true,
+    mechanic: "phase",
+    mechanicName: "BIOTIC DESCENT",
+    moves: [
+      { type: "attack_block", text: "Biotic Grasp 12+14", damage: 12, block: 14 },
+      { type: "debuff", text: "Decay 3 Weak", weak: 3 },
+      { type: "attack", text: "Coalescence x2 12", damage: 12, hits: 2 },
+      { type: "attack", text: "Necrotic Burst 26", damage: 26 },
+    ],
+  },
   nullsector: {
     id: "nullsector",
     name: "Null Sector OR-14",
@@ -92,19 +152,8 @@ export const BOSSES: Record<string, EnemyDef> = {
       { type: "attack", text: "Annihilator 18", damage: 18 },
     ],
   },
-  reaper: {
-    id: "reaper",
-    name: "Reaper",
-    asset: reaperImg,
-    hp: [140, 140],
-    isBoss: true,
-    moves: [
-      { type: "attack", text: "Hellfire x2 9", damage: 9, hits: 2 },
-      { type: "debuff", text: "Wraith Curse 2 Weak", weak: 2 },
-      { type: "buff", text: "The Reaping +3 Str", strength: 3 },
-      { type: "attack", text: "Death Blossom 22", damage: 22 },
-    ],
-  },
 };
 
-export const ACT_BOSSES = ["nullsector", "reaper"];
+export const ACT_BOSSES = ["reaper", "widowmaker", "sigma", "moira"];
+export const ACT_COUNT = ACT_BOSSES.length;
+
