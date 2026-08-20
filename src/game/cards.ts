@@ -17,6 +17,9 @@ export const CARDS: Record<string, CardDef> = {
   tracer_hnr: { id: "tracer_hnr", name: "Hit & Run", type: "attack", cost: 1, hero: "tracer", rarity: "common", damage: 5, block: 4, text: "Deal 5 damage. Gain 4 Block.", up: { damage: 7, block: 6 } },
   tracer_reload: { id: "tracer_reload", name: "Quick Reload", type: "skill", cost: 0, hero: "tracer", rarity: "common", draw: 2, text: "Draw 2 cards.", up: { draw: 3 } },
   tracer_dual: { id: "tracer_dual", name: "Dual Wield", type: "attack", cost: 1, hero: "tracer", rarity: "uncommon", damage: 3, hits: 3, text: "Deal 3 damage 3 times.", up: { damage: 4 } },
+  tracer_flurry: { id: "tracer_flurry", name: "Chrono Flurry", type: "attack", cost: 1, hero: "tracer", rarity: "uncommon", damage: 4, damagePerCardPlayed: 3, text: "Deal 4 damage, +3 for each other card played this turn.", up: { damage: 5, damagePerCardPlayed: 4 } },
+  tracer_overclock: { id: "tracer_overclock", name: "Overclock", type: "skill", cost: 0, hero: "tracer", rarity: "rare", exhaust: true, overclock: { blockPerEnergy: 4, damagePerEnergy: 2 }, text: "At end of turn, each unspent Energy grants 4 Block and 2 damage to a random enemy. Exhaust." },
+
 
   // ---------------- MERCY (support / attrition) ----------------
   mercy_blaster: { id: "mercy_blaster", name: "Caduceus Blaster", type: "attack", cost: 1, hero: "mercy", rarity: "starter", damage: 5, text: "Deal 5 damage.", up: { damage: 7 } },
@@ -28,6 +31,9 @@ export const CARDS: Record<string, CardDef> = {
   mercy_pacify: { id: "mercy_pacify", name: "Pacify", type: "skill", cost: 0, hero: "mercy", rarity: "common", weak: 2, text: "Apply 2 Weak.", up: { weak: 3 } },
   mercy_regen: { id: "mercy_regen", name: "Regeneration", type: "skill", cost: 0, hero: "mercy", rarity: "common", heal: 3, text: "Heal 3.", up: { heal: 5 } },
   mercy_blight: { id: "mercy_blight", name: "Blight", type: "attack", cost: 1, hero: "mercy", rarity: "uncommon", damage: 4, vulnerable: 2, text: "Deal 4 damage. Apply 2 Vulnerable.", up: { damage: 6, vulnerable: 3 } },
+  mercy_lastrites: { id: "mercy_lastrites", name: "Last Rites", type: "attack", cost: 1, hero: "mercy", rarity: "uncommon", damage: 4, damagePerMissingHp: 6, text: "Deal 4 damage, +1 for every 6 HP you are missing.", up: { damage: 6, damagePerMissingHp: 4 } },
+  mercy_overflow: { id: "mercy_overflow", name: "Overflow Barrier", type: "skill", cost: 1, hero: "mercy", rarity: "uncommon", heal: 8, overheal: true, text: "Heal 8. Healing above max HP becomes Block.", up: { heal: 12 } },
+
 
   // ---------------- GENJI (combo) ----------------
   genji_shuriken: { id: "genji_shuriken", name: "Shuriken", type: "attack", cost: 0, hero: "genji", rarity: "starter", damage: 4, text: "Deal 4 damage.", up: { damage: 6 } },
@@ -39,6 +45,9 @@ export const CARDS: Record<string, CardDef> = {
   genji_riposte: { id: "genji_riposte", name: "Riposte", type: "attack", cost: 1, hero: "genji", rarity: "common", damage: 5, block: 5, text: "Deal 5 damage. Gain 5 Block.", up: { damage: 7, block: 8 } },
   genji_dash: { id: "genji_dash", name: "Dash", type: "attack", cost: 0, hero: "genji", rarity: "common", damage: 3, draw: 1, text: "Deal 3 damage. Draw 1 card.", up: { damage: 5 } },
   genji_storm: { id: "genji_storm", name: "Storm of Blades", type: "attack", cost: 2, hero: "genji", rarity: "rare", damage: 4, hits: 3, text: "Deal 4 damage 3 times.", up: { damage: 6 } },
+  genji_rush: { id: "genji_rush", name: "Dragon Rush", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 7, freeIfAttack: true, text: "Deal 7 damage. Costs 0 if you played an Attack this turn.", up: { damage: 10 } },
+  genji_windcut: { id: "genji_windcut", name: "Wind Cut", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 6, comboCards: 2, comboDraw: 1, comboEnergy: 1, text: "Deal 6 damage. If you played 2+ cards this turn, draw 1 and gain 1 Energy.", up: { damage: 9 } },
+
 
   // ---------------- JUNKRAT (chaos / area) ----------------
   junkrat_launcher: { id: "junkrat_launcher", name: "Frag Launcher", type: "attack", cost: 1, hero: "junkrat", rarity: "starter", damage: 7, text: "Deal 7 damage.", up: { damage: 10 } },
@@ -50,6 +59,9 @@ export const CARDS: Record<string, CardDef> = {
   junkrat_armor: { id: "junkrat_armor", name: "Junk Armor", type: "skill", cost: 0, hero: "junkrat", rarity: "common", block: 4, text: "Gain 4 Block.", up: { block: 7 } },
   junkrat_frag: { id: "junkrat_frag", name: "Frag Toss", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 5, vulnerable: 1, text: "Deal 5 damage. Apply 1 Vulnerable.", up: { damage: 7 } },
   junkrat_blast: { id: "junkrat_blast", name: "Total Mayhem", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 8, aoe: true, text: "Deal 8 damage to ALL enemies.", up: { damage: 11 } },
+  junkrat_loose: { id: "junkrat_loose", name: "Loose Cannon", type: "attack", cost: 1, hero: "junkrat", rarity: "uncommon", randomDamage: [2, 10], text: "Deal 2-10 damage at random.", up: { randomDamage: [5, 13] } },
+  junkrat_scrap: { id: "junkrat_scrap", name: "Scrap Heap", type: "attack", cost: 2, hero: "junkrat", rarity: "rare", damage: 3, damagePerDiscard: 1, shuffleDiscard: true, text: "Deal 3 damage, +1 per card in your discard pile. Then shuffle discard into your draw pile.", up: { damage: 6 } },
+
 
   // ---------------- DOOMFIST (bruiser / tank) ----------------
   doomfist_punch: { id: "doomfist_punch", name: "Rocket Punch", type: "attack", cost: 1, hero: "doomfist", rarity: "starter", damage: 8, text: "Deal 8 damage.", up: { damage: 11 } },
@@ -61,6 +73,9 @@ export const CARDS: Record<string, CardDef> = {
   doomfist_bruise: { id: "doomfist_bruise", name: "Bruise", type: "attack", cost: 0, hero: "doomfist", rarity: "common", damage: 4, text: "Deal 4 damage.", up: { damage: 6 } },
   doomfist_fortify: { id: "doomfist_fortify", name: "Fortify", type: "skill", cost: 1, hero: "doomfist", rarity: "common", block: 6, draw: 1, text: "Gain 6 Block. Draw 1 card.", up: { block: 9 } },
   doomfist_quake: { id: "doomfist_quake", name: "Ground Quake", type: "attack", cost: 2, hero: "doomfist", rarity: "rare", damage: 6, hits: 2, aoe: true, text: "Deal 6 damage twice to ALL enemies.", up: { damage: 8 } },
+  doomfist_executioner: { id: "doomfist_executioner", name: "Executioner", type: "attack", cost: 2, hero: "doomfist", rarity: "uncommon", damage: 11, strengthOnKill: 2, text: "Deal 11 damage. If this kills an enemy, gain 2 Strength for the rest of combat.", up: { damage: 14, strengthOnKill: 3 } },
+  doomfist_momentum: { id: "doomfist_momentum", name: "Vengeful Momentum", type: "attack", cost: 3, hero: "doomfist", rarity: "rare", damage: 14, costPerDamageTaken: 12, text: "Deal 14 damage. Costs 1 less per 12 damage you have taken this combat.", up: { damage: 18 } },
+
 
   // ---------------- NEUTRAL (reward pool, any hero) ----------------
   n_block: { id: "n_block", name: "Reinforce", type: "skill", cost: 0, rarity: "common", block: 4, text: "Gain 4 Block.", up: { block: 6 } },
@@ -87,6 +102,11 @@ export function makeCard(defId: string, upgraded = false): CardInstance {
     if (up.cost !== undefined) merged.cost = up.cost;
     if (up.vulnerable !== undefined) merged.vulnerable = up.vulnerable;
     if (up.weak !== undefined) merged.weak = up.weak;
+    if (up.damagePerCardPlayed !== undefined) merged.damagePerCardPlayed = up.damagePerCardPlayed;
+    if (up.damagePerMissingHp !== undefined) merged.damagePerMissingHp = up.damagePerMissingHp;
+    if (up.damagePerDiscard !== undefined) merged.damagePerDiscard = up.damagePerDiscard;
+    if (up.strengthOnKill !== undefined) merged.strengthOnKill = up.strengthOnKill;
+    if (up.randomDamage !== undefined) merged.randomDamage = up.randomDamage;
     if (up.strength !== undefined) merged.strength = up.strength;
     if (up.energyGain !== undefined) merged.energyGain = up.energyGain;
     if (up.bonusIfAttack !== undefined) merged.bonusIfAttack = up.bonusIfAttack;

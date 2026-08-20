@@ -62,6 +62,8 @@ export interface Combat {
   bg: string;
   nodeType: NodeType;
   ultUsedThisCombat: boolean;
+  damageTakenThisCombat: number;
+  overclock: { blockPerEnergy: number; damagePerEnergy: number } | null;
 }
 
 export interface GameState {
@@ -211,9 +213,42 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
     remaining -= absorbed;
   }
   c.hp -= remaining;
+  c.damageTakenThisCombat += remaining;
   // thorn mail
   return remaining;
 }
+
+/** Does this card deal damage in any form (fixed, random or scaling)? */
+export function cardDealsDamage(card: CardInstance): boolean {
+  return (
+    (card.damage ?? 0) > 0 ||
+    !!card.randomDamage ||
+    !!card.damagePerDiscard ||
+    !!card.damagePerCardPlayed ||
+    !!card.damagePerMissingHp
+  );
+}
+
+/** Cost after dynamic discounts (Genji free-if-attack, Doomfist momentum). */
+export function effectiveCost(card: CardInstance, c: Combat): number {
+  let cost = card.cost;
+  if (card.freeIfAttack && c.attacksPlayedThisTurn > 0) return 0;
+  if (card.costPerDamageTaken) {
+    cost -= Math.floor(c.damageTakenThisCombat / card.costPerDamageTaken);
+  }
+  return Math.max(0, cost);
+}
+
+/** Damage this card would deal right now, before enemy modifiers. */
+export function scaledDamage(card: CardInstance, c: Combat, roll?: number): number {
+  if (card.randomDamage) return roll ?? card.randomDamage[0];
+  let dmg = card.damage ?? 0;
+  if (card.damagePerCardPlayed) dmg += card.damagePerCardPlayed * c.cardsPlayedThisTurn;
+  if (card.damagePerMissingHp) dmg += Math.floor((c.maxHp - c.hp) / card.damagePerMissingHp);
+  if (card.damagePerDiscard) dmg += card.damagePerDiscard * c.discardPile.length;
+  return dmg;
+}
+
 
 function pushLog(c: Combat, text: string) {
   c.log.push(text);
@@ -372,6 +407,8 @@ export const useGame = create<GameState>((set, get) => ({
       bg,
       nodeType,
       ultUsedThisCombat: false,
+      damageTakenThisCombat: 0,
+      overclock: null,
     };
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
@@ -395,9 +432,9 @@ export const useGame = create<GameState>((set, get) => ({
     const idx = c.hand.findIndex((x) => x.uid === uid);
     if (idx < 0) return;
     const card = c.hand[idx]!;
-    if (card.cost > c.energy) return;
+    if (effectiveCost(card, c) > c.energy) return;
     const livingEnemies = c.enemies.filter((e) => !e.isDead && !e.untargetable);
-    const needsTarget = (card.damage ?? 0) > 0 && !card.aoe && livingEnemies.length > 1;
+    const needsTarget = cardDealsDamage(card) && !card.aoe && livingEnemies.length > 1;
     if (needsTarget && !targetUid) {
       set({ combat: { ...c, targetingCardUid: uid } });
       return;
@@ -423,14 +460,33 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const c = s.combat;
     if (!c || !c.active) return;
+    // Tracer: Overclock cashes unspent energy into Block + chip damage
+    const charge = { v: c.ultCharge };
+    const relics = s.relics;
+    if (c.overclock && c.energy > 0) {
+      const oc = c.overclock;
+      const gainedBlock = oc.blockPerEnergy * c.energy;
+      const chip = oc.damagePerEnergy * c.energy;
+      c.block += gainedBlock;
+      pushFloat(c, `+${gainedBlock}`, "block", "player");
+      const living = c.enemies.filter((e) => !e.isDead && !e.untargetable);
+      if (chip > 0 && living.length > 0) {
+        const rng = new Rng(hashSeed(`${s.seed}_oc_${c.turn}`));
+        const t = rng.pick(living)!;
+        const dealt = applyEnemyDamage(c, t, chip, charge, relics.includes("power_cell"));
+        pushFloat(c, `${dealt}`, "dmg", t.uid);
+      }
+      pushLog(c, `Overclock burns ${c.energy} Energy.`);
+      c.energy = 0;
+    }
+    c.overclock = null;
     // discard hand (non-retain)
     const retain = c.hand.filter((card) => card.retain);
     const discard = c.hand.filter((card) => !card.retain);
     c.discardPile = [...c.discardPile, ...discard];
     c.hand = retain;
     // enemy phase
-    const charge = { v: c.ultCharge };
-    const relics = s.relics;
+
     // ---- act boss mechanics ----
     for (const e of c.enemies) {
       if (e.isDead || !e.mechanic) continue;
@@ -781,8 +837,16 @@ function resolveCard(
   const relics = s.relics;
   const powerCell = relics.includes("power_cell");
   const charge = { v: c.ultCharge };
+  // damage / combo scaling read the board BEFORE this card counts itself
+  const rollRng = card.randomDamage
+    ? new Rng(hashSeed(`${s.seed}_${card.uid}_${c.turn}_${c.cardsPlayedThisTurn}`))
+    : null;
+  const roll = card.randomDamage && rollRng ? rollRng.int(card.randomDamage[0], card.randomDamage[1]) : undefined;
+  const scaled = scaledDamage(card, c, roll);
+  const comboMet = card.comboCards !== undefined && c.cardsPlayedThisTurn >= card.comboCards;
+
   if (!isUlt) {
-    c.energy -= card.cost;
+    c.energy -= effectiveCost(card, c);
     // remove from hand
     c.hand = c.hand.filter((x) => x.uid !== card.uid);
   }
@@ -806,15 +870,32 @@ function resolveCard(
     c.block += card.block;
     pushFloat(c, `+${card.block}`, "block", "player");
   }
-  // heal
+  // heal (overheal converts the wasted portion into Block)
   if (card.heal) {
-    c.hp = Math.min(c.maxHp, c.hp + card.heal);
-    pushFloat(c, `+${card.heal}`, "heal", "player");
+    const healed = Math.min(card.heal, c.maxHp - c.hp);
+    c.hp += healed;
+    if (healed > 0) pushFloat(c, `+${healed}`, "heal", "player");
+    const wasted = card.heal - healed;
+    if (card.overheal && wasted > 0) {
+      c.block += wasted;
+      pushFloat(c, `+${wasted}`, "block", "player");
+    }
   }
   // energy gain
   if (card.energyGain) c.energy += card.energyGain;
   // draw
   if (card.draw) drawCards(c, card.draw);
+  // combo payoff (Genji)
+  if (comboMet) {
+    if (card.comboDraw) drawCards(c, card.comboDraw);
+    if (card.comboEnergy) c.energy += card.comboEnergy;
+    pushFloat(c, "COMBO", "buff", "player");
+  }
+  // overclock arms the end-of-turn energy payoff (Tracer)
+  if (card.overclock) {
+    c.overclock = card.overclock;
+    pushFloat(c, "OVERCLOCK", "buff", "player");
+  }
   // self damage
   if (card.selfDamage) {
     // Junkrat's Total Mayhem soaks the first 3 damage of every self-blast.
@@ -822,15 +903,16 @@ function resolveCard(
     const selfDmg = Math.max(0, card.selfDamage - soak);
     if (selfDmg > 0) {
       c.hp -= selfDmg;
+      c.damageTakenThisCombat += selfDmg;
       pushFloat(c, `-${selfDmg}`, "dmg", "player");
     }
   }
   // deal damage
-  if (card.damage && card.damage > 0) {
+  if (scaled > 0) {
     const hits = card.hits ?? 1;
     let bonus = 0;
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
-    const totalBase = card.damage + bonus;
+    const totalBase = scaled + bonus;
     const targets: EnemyInstance[] = card.aoe
       ? c.enemies.filter((e) => !e.isDead && !e.untargetable)
       : [
@@ -843,9 +925,22 @@ function resolveCard(
         if (t.isDead) break;
         const dealt = applyEnemyDamage(c, t, totalBase, charge, powerCell);
         pushFloat(c, `${dealt}`, "dmg", t.uid);
+        // Doomfist: executions feed permanent Strength
+        if (t.isDead && card.strengthOnKill) {
+          c.strength += card.strengthOnKill;
+          pushFloat(c, `+${card.strengthOnKill} STR`, "buff", "player");
+          pushLog(c, `${card.name} executes ${t.name} — +${card.strengthOnKill} Strength.`);
+        }
       }
     }
   }
+  // Junkrat: recycle the discard pile back into the deck
+  if (card.shuffleDiscard && c.discardPile.length > 0) {
+    c.drawPile = shuffleInPlace([...c.drawPile, ...c.discardPile]);
+    c.discardPile = [];
+    pushLog(c, "Scrap Heap recycles the discard pile.");
+  }
+
   // apply debuffs to target
   if (card.vulnerable || card.weak) {
     const targets: EnemyInstance[] = card.aoe

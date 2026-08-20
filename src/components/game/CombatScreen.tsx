@@ -1,4 +1,4 @@
-import { useGame } from "@/game/store";
+import { useGame, effectiveCost } from "@/game/store";
 import { HEROES } from "@/game/heroes";
 import { AnimatePresence, motion } from "motion/react";
 import { CardView } from "./CardView";
@@ -223,7 +223,7 @@ export function CombatScreen() {
       <div className="relative z-10 flex shrink-0 items-end justify-center px-2 pb-6 pt-3">
         <AnimatePresence mode="popLayout">
           {hand.map((card, i) => {
-            const dimmed = card.cost > combat.energy;
+            const dimmed = effectiveCost(card, combat) > combat.energy;
             const offset = i - mid;
             return (
               <motion.div

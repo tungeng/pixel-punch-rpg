@@ -56,6 +56,16 @@ import dragonblade from "../assets/icons/dragonblade.png";
 import riptire from "../assets/icons/riptire.png";
 import meteorfist from "../assets/icons/meteorfist.png";
 import fireburst from "../assets/icons/fireburst.png";
+import chronoflurry from "../assets/icons/chronoflurry.png";
+import overclockicon from "../assets/icons/overclock.png";
+import lastrites from "../assets/icons/lastrites.png";
+import overflowbarrier from "../assets/icons/overflowbarrier.png";
+import dragonrush from "../assets/icons/dragonrush.png";
+import windcut from "../assets/icons/windcut.png";
+import loosecannon from "../assets/icons/loosecannon.png";
+import scrapheap from "../assets/icons/scrapheap.png";
+import executionericon from "../assets/icons/executioner.png";
+import momentum from "../assets/icons/momentum.png";
 
 /** Per-card pixel-art effect icon (replaces hero portraits on cards). */
 export const CARD_ICONS: Record<string, string> = {
@@ -69,6 +79,8 @@ export const CARD_ICONS: Record<string, string> = {
   tracer_hnr: bootshield,
   tracer_reload: reload,
   tracer_dual: crossblades,
+  tracer_flurry: chronoflurry,
+  tracer_overclock: overclockicon,
   tracer_pulse: pulsebomb,
   // Mercy
   mercy_blaster: caduceus,
@@ -80,6 +92,8 @@ export const CARD_ICONS: Record<string, string> = {
   mercy_pacify: hush,
   mercy_regen: regenheart,
   mercy_blight: poisonskull,
+  mercy_lastrites: lastrites,
+  mercy_overflow: overflowbarrier,
   mercy_valkyrie: valkyrie,
   // Genji
   genji_shuriken: shuriken,
@@ -91,6 +105,8 @@ export const CARD_ICONS: Record<string, string> = {
   genji_riposte: parry,
   genji_dash: dashfoot,
   genji_storm: bladefan,
+  genji_rush: dragonrush,
+  genji_windcut: windcut,
   genji_dragon: dragonblade,
   // Junkrat
   junkrat_launcher: grenadelauncher,
@@ -102,6 +118,8 @@ export const CARD_ICONS: Record<string, string> = {
   junkrat_armor: junkshield,
   junkrat_frag: frag,
   junkrat_blast: explosion,
+  junkrat_loose: loosecannon,
+  junkrat_scrap: scrapheap,
   junkrat_riptire: riptire,
   // Doomfist
   doomfist_punch: gauntlet,
@@ -113,6 +131,8 @@ export const CARD_ICONS: Record<string, string> = {
   doomfist_bruise: bruise,
   doomfist_fortify: fortify,
   doomfist_quake: quake,
+  doomfist_executioner: executionericon,
+  doomfist_momentum: momentum,
   doomfist_meteor: meteorfist,
   // Neutral
   n_block: reinforce,

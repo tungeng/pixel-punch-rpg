@@ -1,5 +1,6 @@
 import type { CardInstance } from "@/game/types";
 import { CARD_ICONS, FALLBACK_ICON } from "@/game/icons";
+import { useGame, effectiveCost, scaledDamage, cardDealsDamage } from "@/game/store";
 import { motion } from "motion/react";
 
 type Family = "attack" | "defense" | "utility" | "ultimate";
@@ -45,6 +46,19 @@ export function CardView({
   const h = big ? 186 : 138;
   const icon = CARD_ICONS[card.id] ?? FALLBACK_ICON;
   const rar = RARITY[card.rarity] ?? RARITY["common"]!;
+
+  // live values so scaling cards show what they'd actually do right now
+  const combat = useGame((s) => s.combat);
+  const live = !big && combat?.active ? combat : null;
+  const shownCost = live ? effectiveCost(card, live) : card.cost;
+  const discounted = shownCost < card.cost;
+  const dynamicDamage =
+    live && cardDealsDamage(card) && !card.randomDamage
+      ? scaledDamage(card, live)
+      : null;
+  const scalingCard =
+    !!card.damagePerCardPlayed || !!card.damagePerMissingHp || !!card.damagePerDiscard;
+
 
   const hover = dimmed ? undefined : { y: -14, scale: 1.06 };
   const tap = dimmed ? undefined : { scale: 0.96 };
@@ -122,7 +136,16 @@ export function CardView({
           }}
         >
           {card.text}
+          {scalingCard && dynamicDamage !== null && (
+            <div
+              className="text-pixel mt-[2px]"
+              style={{ fontSize: big ? 7 : 6, color: "#ffcc4d" }}
+            >
+              NOW {dynamicDamage}
+            </div>
+          )}
         </div>
+
 
         {/* footer */}
         <div
@@ -152,13 +175,16 @@ export function CardView({
           color: "#1a1200",
           background: dimmed
             ? "linear-gradient(180deg,#8f8f9c,#4c4c58)"
-            : "linear-gradient(180deg,#ffe27a,#e0a021)",
+            : discounted
+              ? "linear-gradient(180deg,#9dffc4,#22a45f)"
+              : "linear-gradient(180deg,#ffe27a,#e0a021)",
           border: "3px solid #07060c",
-          boxShadow: dimmed ? "none" : "0 0 10px -1px #ffcc4d",
+          boxShadow: dimmed ? "none" : `0 0 10px -1px ${discounted ? "#54d98c" : "#ffcc4d"}`,
         }}
       >
-        {card.cost}
+        {shownCost}
       </div>
+
 
       {card.exhaust && (
         <div
