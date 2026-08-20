@@ -4,6 +4,9 @@ import sniperImg from "../assets/enemy_sniper.png";
 import omnicImg from "../assets/enemy_omnic.png";
 import nullImg from "../assets/boss_nullsector.png";
 import reaperImg from "../assets/boss_reaper.png";
+import widowImg from "../assets/boss_widowmaker.png";
+import sigmaImg from "../assets/boss_sigma.png";
+import moiraImg from "../assets/boss_moira.png";
 import type { EnemyDef } from "./types";
 
 export const ENEMIES: Record<string, EnemyDef> = {
