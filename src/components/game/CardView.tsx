@@ -47,6 +47,19 @@ export function CardView({
   const icon = CARD_ICONS[card.id] ?? FALLBACK_ICON;
   const rar = RARITY[card.rarity] ?? RARITY["common"]!;
 
+  // live values so scaling cards show what they'd actually do right now
+  const combat = useGame((s) => s.combat);
+  const live = !big && combat?.active ? combat : null;
+  const shownCost = live ? effectiveCost(card, live) : card.cost;
+  const discounted = shownCost < card.cost;
+  const dynamicDamage =
+    live && cardDealsDamage(card) && !card.randomDamage
+      ? scaledDamage(card, live)
+      : null;
+  const scalingCard =
+    !!card.damagePerCardPlayed || !!card.damagePerMissingHp || !!card.damagePerDiscard;
+
+
   const hover = dimmed ? undefined : { y: -14, scale: 1.06 };
   const tap = dimmed ? undefined : { scale: 0.96 };
 
