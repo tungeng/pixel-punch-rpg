@@ -105,8 +105,8 @@ export const ENEMIES: Record<string, EnemyDef> = {
     asset: hexDroneImg,
     hp: [12, 15],
     moves: [
-      { type: "debuff", text: "Hex 2 Weak", weak: 2 },
-      { type: "debuff", text: "Fracture 2 Vuln", vulnerable: 2 },
+      { type: "debuff", text: "Hex 1 Weak", weak: 1 },
+      { type: "debuff", text: "Fracture 1 Vuln", vulnerable: 1 },
       { type: "attack", text: "Arc Bolt 6", damage: 6 },
     ],
   },
@@ -143,9 +143,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     asset: stalkerImg,
     hp: [21, 25],
     moves: [
-      { type: "debuff", text: "Venom Spit 3 Poison", poison: 3 },
+      { type: "debuff", text: "Venom Spit 2 Poison", poison: 2 },
       { type: "attack", text: "Pounce x2 6", damage: 6, hits: 2 },
-      { type: "debuff", text: "Corrode 2 Vuln", vulnerable: 2 },
+      { type: "debuff", text: "Corrode 1 Vuln", vulnerable: 1 },
       { type: "attack", text: "Mandibles 11", damage: 11 },
     ],
   },
@@ -157,7 +157,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     moves: [
       { type: "buff", text: "Overclock +2 Str", strength: 2 },
       { type: "attack", text: "Chain Lightning x3 5", damage: 5, hits: 3 },
-      { type: "debuff", text: "Static 2 Weak", weak: 2 },
+      { type: "debuff", text: "Static 1 Weak", weak: 1 },
     ],
   },
   null_titan: {
@@ -182,7 +182,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     traitName: "SOUL DRAIN",
     moves: [
       { type: "attack", text: "Rend x2 8", damage: 8, hits: 2 },
-      { type: "debuff", text: "Dread 2 Weak", weak: 2, poison: 2 },
+      { type: "debuff", text: "Dread 1 Weak", weak: 1, poison: 1 },
       { type: "attack", text: "Echo Scythe 14", damage: 14 },
     ],
   },
@@ -238,7 +238,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     traitName: "PHALANX FIELD",
     moves: [
       { type: "attack_block", text: "Crush 9+10", damage: 9, block: 10 },
-      { type: "debuff", text: "Lockdown 2 Weak", weak: 2 },
+      { type: "debuff", text: "Lockdown 1 Weak", weak: 1 },
       { type: "attack", text: "Repulsor Beam x2 8", damage: 8, hits: 2 },
     ],
   },
@@ -266,7 +266,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "curse",
     traitName: "TOXIC AURA",
     moves: [
-      { type: "debuff", text: "Necrotoxin 3 Poison", poison: 3 },
+      { type: "debuff", text: "Necrotoxin 2 Poison", poison: 2 },
       { type: "attack", text: "Pounce x3 7", damage: 7, hits: 3 },
       { type: "attack_block", text: "Carapace 10+10", damage: 10, block: 10 },
     ],
@@ -295,7 +295,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     traitName: "REVENANT FEAST",
     moves: [
       { type: "attack", text: "Rend x3 8", damage: 8, hits: 3 },
-      { type: "debuff", text: "Death Mark 2 Vuln", vulnerable: 2, poison: 2 },
+      { type: "debuff", text: "Death Mark 1 Vuln", vulnerable: 1, poison: 1 },
       { type: "attack", text: "Echo Scythe 18", damage: 18 },
     ],
   },

@@ -376,8 +376,8 @@ export const useGame = create<GameState>((set, get) => ({
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
       if (e.trait === "curse") {
-        combat.weak = Math.max(combat.weak, 2);
-        combat.vulnerable = Math.max(combat.vulnerable, 2);
+        combat.weak = Math.max(combat.weak, 1);
+        combat.vulnerable = Math.max(combat.vulnerable, 1);
         combat.log.push(`${e.name}'s ${e.traitName ?? "aura"} weakens you.`);
       }
       if (e.trait === "aegis") e.block += 5;
