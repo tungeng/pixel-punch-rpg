@@ -475,7 +475,7 @@ function EnemyView({
       )}
 
 
-      <div className={hit ? "hit-shake" : "idle-bob-slow"}>
+      <div className={`relative ${hit ? "hit-shake" : "idle-bob-slow"}`}>
         <img
           src={enemy.asset}
           alt={enemy.name}
@@ -488,7 +488,41 @@ function EnemyView({
             transition: "filter 0.1s",
           }}
         />
+        {/* impact — white flash + pixel shrapnel burst */}
+        <AnimatePresence>
+          {hit && (
+            <motion.div
+              key="impact"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28 }}
+              className="pointer-events-none absolute inset-0"
+            >
+              <div
+                className="absolute inset-0"
+                style={{ background: "radial-gradient(circle, #ffffffcc, transparent 70%)" }}
+              />
+              {BURST.map((b, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                  animate={{ x: b.x, y: b.y, opacity: 0, scale: 0.4 }}
+                  transition={{ duration: 0.34, ease: "easeOut" }}
+                  className="absolute left-1/2 top-1/2"
+                  style={{
+                    width: 5,
+                    height: 5,
+                    background: i % 2 ? "#ffcc4d" : "#ff5555",
+                    boxShadow: "0 0 6px #ff9f43",
+                  }}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
 
       {targeting && !enemy.isDead && (
         <div className="text-pixel absolute -top-1 text-[10px] text-destructive">✖</div>
