@@ -349,7 +349,7 @@ export const useGame = create<GameState>((set, get) => ({
     } else {
       const pool = enemyPoolFor(s.act);
       const r = rng.next();
-      const count = s.act >= 2 ? (r < 0.5 ? 1 : r < 0.95 ? 2 : 3) : r < 0.4 ? 1 : r < 0.9 ? 2 : 3;
+      const count = s.act >= 2 ? (r < 0.4 ? 1 : r < 0.9 ? 2 : 3) : r < 0.25 ? 1 : r < 0.85 ? 2 : 3;
       for (let i = 0; i < count; i++) {
         const id = rng.pick(pool);
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
@@ -375,7 +375,7 @@ export const useGame = create<GameState>((set, get) => ({
     }
     const maxEnergy = maxEnergyFor(s.heroId, s.relics);
     const drawN = drawCountFor(s.heroId, s.relics);
-    const maxHp = s.hp;
+    const maxHp = s.maxHp;
     let deck = s.deck.map((c) => makeCard(c.id, c.upgraded));
     deck = rng.shuffle(deck);
     const hand = deck.splice(0, drawN);
