@@ -475,7 +475,7 @@ export const useGame = create<GameState>((set, get) => ({
           const taken = applyPlayerDamage(get, c, intent.damage ?? 0, e.strength, e.weak);
           charge.v += taken * 1.5;
           if (e.trait === "leech" && taken > 0) {
-            const drained = Math.min(e.maxHp - e.hp, Math.ceil(taken * 0.5));
+            const drained = Math.min(e.maxHp - e.hp, Math.ceil(taken * 0.35));
             if (drained > 0) {
               e.hp += drained;
               pushFloat(c, `+${drained}`, "heal", e.uid);
@@ -509,7 +509,7 @@ export const useGame = create<GameState>((set, get) => ({
         const sdef = intent.summonId ? ENEMIES[intent.summonId] : undefined;
         if (sdef && alive < 4) {
           const add = spawnEnemy(sdef, summonRng, `add_${Date.now()}_${alive}`);
-          const scaled = Math.round(add.maxHp * (1 + e.maxHp / 260));
+          const scaled = Math.round(add.maxHp * 0.85);
           add.hp = scaled;
           add.maxHp = scaled;
           add.strength = Math.max(0, e.strength - 1);
@@ -521,16 +521,16 @@ export const useGame = create<GameState>((set, get) => ({
         }
       }
       // ---- persistent enemy traits ----
-      if (e.trait === "rampage") {
+      if (e.trait === "rampage" && c.turn % 2 === 0) {
         e.strength += 1;
         pushFloat(c, "+1 STR", "buff", e.uid);
       }
       if (e.trait === "regen" && e.hp < e.maxHp) {
-        const healed = Math.min(e.maxHp - e.hp, Math.max(2, Math.round(e.maxHp * 0.04)));
+        const healed = Math.min(e.maxHp - e.hp, Math.max(2, Math.round(e.maxHp * 0.025)));
         e.hp += healed;
         pushFloat(c, `+${healed}`, "heal", e.uid);
       }
-      if (e.trait === "aegis") e.block += Math.round(4 + e.maxHp * 0.06);
+      if (e.trait === "aegis") e.block += Math.round(3 + e.maxHp * 0.03);
     }
     c.ultCharge = Math.min(100, charge.v);
     // advance enemy intents
