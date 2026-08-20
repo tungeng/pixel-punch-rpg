@@ -375,7 +375,7 @@ export const useGame = create<GameState>((set, get) => ({
     }
     const maxEnergy = maxEnergyFor(s.heroId, s.relics);
     const drawN = drawCountFor(s.heroId, s.relics);
-    const maxHp = s.hp;
+    const maxHp = s.maxHp;
     let deck = s.deck.map((c) => makeCard(c.id, c.upgraded));
     deck = rng.shuffle(deck);
     const hand = deck.splice(0, drawN);
