@@ -213,6 +213,7 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
     remaining -= absorbed;
   }
   c.hp -= remaining;
+  c.damageTakenThisCombat += remaining;
   // thorn mail
   return remaining;
 }
