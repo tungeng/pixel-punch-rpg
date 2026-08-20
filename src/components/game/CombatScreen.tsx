@@ -6,13 +6,6 @@ import { Bar } from "./Bar";
 import { PixelButton } from "./PixelButton";
 import { useEffect, useRef, useState } from "react";
 
-const INTENT_ICON: Record<string, string> = {
-  attack: "⚔",
-  block: "🛡",
-  buff: "▲",
-  debuff: "☠",
-  attack_block: "⚔",
-};
 
 /** Slay-the-Spire style intent readout: what the enemy will do, and for how much. */
 function intentParts(intent: {
