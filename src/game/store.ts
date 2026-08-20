@@ -613,7 +613,7 @@ export const useGame = create<GameState>((set, get) => ({
 }));
 
 // ---------------- helpers ----------------
-function spawnEnemy(def: { id: string; name: string; asset: string; hp: [number, number]; isBoss?: boolean; moves: any[] }, rng: Rng, uidBase: string): EnemyInstance {
+function spawnEnemy(def: EnemyDef, rng: Rng, uidBase: string): EnemyInstance {
   const hp = def.isBoss ? def.hp[0] : rng.int(def.hp[0], def.hp[1]);
   const moveIndex = rng.int(0, def.moves.length - 1);
   return {
@@ -622,6 +622,10 @@ function spawnEnemy(def: { id: string; name: string; asset: string; hp: [number,
     name: def.name,
     asset: def.asset,
     isBoss: !!def.isBoss,
+    mechanic: def.mechanic,
+    mechanicName: def.mechanicName,
+    untargetable: false,
+    enraged: false,
     hp,
     maxHp: hp,
     block: 0,
@@ -633,6 +637,7 @@ function spawnEnemy(def: { id: string; name: string; asset: string; hp: [number,
     isDead: false,
   };
 }
+
 
 function drawCards(c: Combat, n: number) {
   for (let i = 0; i < n; i++) {
