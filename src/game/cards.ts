@@ -31,6 +31,9 @@ export const CARDS: Record<string, CardDef> = {
   mercy_pacify: { id: "mercy_pacify", name: "Pacify", type: "skill", cost: 0, hero: "mercy", rarity: "common", weak: 2, text: "Apply 2 Weak.", up: { weak: 3 } },
   mercy_regen: { id: "mercy_regen", name: "Regeneration", type: "skill", cost: 0, hero: "mercy", rarity: "common", heal: 3, text: "Heal 3.", up: { heal: 5 } },
   mercy_blight: { id: "mercy_blight", name: "Blight", type: "attack", cost: 1, hero: "mercy", rarity: "uncommon", damage: 4, vulnerable: 2, text: "Deal 4 damage. Apply 2 Vulnerable.", up: { damage: 6, vulnerable: 3 } },
+  mercy_lastrites: { id: "mercy_lastrites", name: "Last Rites", type: "attack", cost: 1, hero: "mercy", rarity: "uncommon", damage: 4, damagePerMissingHp: 6, text: "Deal 4 damage, +1 for every 6 HP you are missing.", up: { damage: 6, damagePerMissingHp: 4 } },
+  mercy_overflow: { id: "mercy_overflow", name: "Overflow Barrier", type: "skill", cost: 1, hero: "mercy", rarity: "uncommon", heal: 8, overheal: true, text: "Heal 8. Healing above max HP becomes Block.", up: { heal: 12 } },
+
 
   // ---------------- GENJI (combo) ----------------
   genji_shuriken: { id: "genji_shuriken", name: "Shuriken", type: "attack", cost: 0, hero: "genji", rarity: "starter", damage: 4, text: "Deal 4 damage.", up: { damage: 6 } },
