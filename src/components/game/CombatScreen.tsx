@@ -52,12 +52,20 @@ export function CombatScreen() {
 
   const [shake, setShake] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
+  const [flying, setFlying] = useState<CardInstance | null>(null);
+  const [lunge, setLunge] = useState(0);
+  const [blockFlash, setBlockFlash] = useState(0);
+  const [healFlash, setHealFlash] = useState(0);
   const prevHp = useRef<number | null>(null);
+  const prevBlock = useRef<number | null>(null);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     const t = setInterval(pruneFloats, 400);
     return () => clearInterval(t);
   }, [pruneFloats]);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const hp = combat?.hp ?? null;
   useEffect(() => {
@@ -68,9 +76,17 @@ export function CombatScreen() {
       prevHp.current = hp;
       return () => clearTimeout(t);
     }
+    if (prevHp.current != null && hp > prevHp.current) setHealFlash((n) => n + 1);
     prevHp.current = hp;
     return;
   }, [hp]);
+
+  const blockVal = combat?.block ?? null;
+  useEffect(() => {
+    if (blockVal == null) return;
+    if (prevBlock.current != null && blockVal > prevBlock.current) setBlockFlash((n) => n + 1);
+    prevBlock.current = blockVal;
+  }, [blockVal]);
 
   const turn = combat?.turn ?? 0;
   useEffect(() => {
@@ -88,6 +104,36 @@ export function CombatScreen() {
   const AVAIL = 400;
   const overlap =
     hand.length > 1 ? Math.max(0, (hand.length * CARD_W - AVAIL) / (hand.length - 1)) : 0;
+
+  /** play the card only after its fly-to-center + hero lunge has read on screen */
+  const launch = (card: CardInstance, resolve: () => void) => {
+    if (flying) return;
+    setFlying(card);
+    if (cardDealsDamage(card)) setLunge((n) => n + 1);
+    const t = setTimeout(() => {
+      setFlying(null);
+      resolve();
+    }, 260);
+    timers.current.push(t);
+  };
+
+  const onPlayCard = (card: CardInstance) => {
+    if (effectiveCost(card, combat) > combat.energy) return;
+    const living = combat.enemies.filter((e) => !e.isDead && !e.untargetable);
+    const needsTarget = cardDealsDamage(card) && !card.aoe && living.length > 1;
+    if (needsTarget) {
+      playCard(card.uid);
+      return;
+    }
+    launch(card, () => playCard(card.uid));
+  };
+
+  const onSelectTarget = (enemyUid: string) => {
+    const card = combat.hand.find((c) => c.uid === combat.targetingCardUid);
+    if (!card) return selectTarget(enemyUid);
+    return launch(card, () => selectTarget(enemyUid));
+  };
+
 
   return (
     <div
