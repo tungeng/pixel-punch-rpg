@@ -1,10 +1,12 @@
-import { useGame, effectiveCost } from "@/game/store";
+import { useGame, effectiveCost, cardDealsDamage } from "@/game/store";
 import { HEROES } from "@/game/heroes";
 import { AnimatePresence, motion } from "motion/react";
 import { CardView } from "./CardView";
 import { Bar } from "./Bar";
 import { PixelButton } from "./PixelButton";
 import { useEffect, useRef, useState } from "react";
+import type { CardInstance } from "@/game/types";
+
 
 
 /** Slay-the-Spire style intent readout: what the enemy will do, and for how much. */
