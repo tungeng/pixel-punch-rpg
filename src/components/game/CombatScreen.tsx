@@ -404,17 +404,6 @@ function EnemyView({
   );
 }
 
-function intentColor(type: string) {
-  return type === "attack"
-    ? "#ff3b3b"
-    : type === "block"
-      ? "#54a8ff"
-      : type === "buff"
-        ? "#54d98c"
-        : type === "debuff"
-          ? "#c47bff"
-          : "#ffcc4d";
-}
 
 function Badge({ text, color }: { text: string; color: string }) {
   return (
