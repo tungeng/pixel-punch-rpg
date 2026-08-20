@@ -79,7 +79,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     id: "talon_rusher",
     name: "Talon Rusher",
     asset: rusherImg,
-    hp: [15, 19],
+    hp: [12, 15],
     moves: [
       { type: "attack", text: "Knife Flurry x2 4", damage: 4, hits: 2 },
       { type: "attack", text: "Lunge x3 3", damage: 3, hits: 3 },
@@ -90,7 +90,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     id: "shield_drone",
     name: "Bulwark Drone",
     asset: shieldDroneImg,
-    hp: [20, 24],
+    hp: [15, 18],
     trait: "aegis",
     traitName: "AEGIS FIELD",
     moves: [
@@ -103,7 +103,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     id: "hex_drone",
     name: "Hex Drone",
     asset: hexDroneImg,
-    hp: [16, 20],
+    hp: [12, 15],
     moves: [
       { type: "debuff", text: "Hex 2 Weak", weak: 2 },
       { type: "debuff", text: "Fracture 2 Vuln", vulnerable: 2 },
@@ -114,7 +114,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     id: "assembler_pod",
     name: "Assembler Pod",
     asset: podImg,
-    hp: [24, 30],
+    hp: [19, 23],
     moves: [
       { type: "summon", text: "Assemble Grunt", summonId: "omnic_grunt" },
       { type: "block", text: "Seal Hatch 7", block: 7 },
@@ -128,7 +128,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     id: "talon_breacher",
     name: "Talon Breacher",
     asset: breacherImg,
-    hp: [32, 38],
+    hp: [26, 31],
     trait: "aegis",
     traitName: "RIOT SHIELD",
     moves: [
@@ -141,7 +141,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     id: "venom_stalker",
     name: "Venom Stalker",
     asset: stalkerImg,
-    hp: [26, 32],
+    hp: [21, 25],
     moves: [
       { type: "debuff", text: "Venom Spit 3 Poison", poison: 3 },
       { type: "attack", text: "Pounce x2 6", damage: 6, hits: 2 },
@@ -153,7 +153,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     id: "arc_caster",
     name: "Arc Caster",
     asset: arcImg,
-    hp: [22, 28],
+    hp: [17, 21],
     moves: [
       { type: "buff", text: "Overclock +2 Str", strength: 2 },
       { type: "attack", text: "Chain Lightning x3 5", damage: 5, hits: 3 },
@@ -164,7 +164,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     id: "null_titan",
     name: "Null Titan",
     asset: titanImg,
-    hp: [38, 44],
+    hp: [32, 38],
     trait: "regen",
     traitName: "SELF-REPAIR",
     moves: [
@@ -177,7 +177,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     id: "wraith_echo",
     name: "Wraith Echo",
     asset: wraithImg,
-    hp: [30, 36],
+    hp: [24, 28],
     trait: "leech",
     traitName: "SOUL DRAIN",
     moves: [
