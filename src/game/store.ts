@@ -167,10 +167,10 @@ function drawCountFor(heroId: string, relics: string[]): number {
   return d;
 }
 
-function maxHpFor(heroId: string, relics: string[]): number {
+function maxHpFor(heroId: string, relics: string[], act = 0): number {
   let h = getHero(heroId).maxHp;
   if (relics.includes("gold_heart")) h += 25;
-  return h;
+  return h + act * 12;
 }
 
 function rngForRun(seed: number, salt: number): Rng {
@@ -871,7 +871,7 @@ function handleCombatWin(set: any, get: () => GameState) {
     if (s.act < ACT_BOSSES.length - 1) {
       const nextAct = s.act + 1;
       const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
-      const nextMaxHp = maxHpFor(s.heroId, s.relics) + nextAct * 12;
+      const nextMaxHp = maxHpFor(s.heroId, s.relics, nextAct);
       set({
         hp: Math.min(nextMaxHp, hp + Math.floor(nextMaxHp * 0.35)),
         maxHp: nextMaxHp,
@@ -900,7 +900,7 @@ function handleCombatWin(set: any, get: () => GameState) {
 
   set({
     hp,
-    maxHp: maxHpFor(s.heroId, s.relics),
+    maxHp: maxHpFor(s.heroId, s.relics, s.act),
     gold,
     floorsCleared,
     phase: "reward",
