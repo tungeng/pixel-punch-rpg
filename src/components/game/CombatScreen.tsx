@@ -16,8 +16,11 @@ function intentParts(intent: {
   strength?: number;
   vulnerable?: number;
   weak?: number;
+  poison?: number;
+  summonId?: string;
 }) {
   const out: { icon: string; text: string; color: string }[] = [];
+  if (intent.type === "summon") out.push({ icon: "SUM", text: "+1", color: "#ff9f43" });
   if (intent.damage) {
     out.push({
       icon: "ATK",
@@ -29,6 +32,7 @@ function intentParts(intent: {
   if (intent.strength) out.push({ icon: "STR", text: `+${intent.strength}`, color: "#54d98c" });
   if (intent.vulnerable) out.push({ icon: "VULN", text: `${intent.vulnerable}`, color: "#ffcc4d" });
   if (intent.weak) out.push({ icon: "WEAK", text: `${intent.weak}`, color: "#c47bff" });
+  if (intent.poison) out.push({ icon: "PSN", text: `${intent.poison}`, color: "#5ce68a" });
   if (out.length === 0) out.push({ icon: "?", text: "", color: "#cbd5e1" });
   return out;
 }
@@ -393,6 +397,7 @@ function EnemyView({
         {enemy.strength > 0 && <Badge text={`▲${enemy.strength}`} color="#ff7a45" />}
         {enemy.vulnerable > 0 && <Badge text={`V${enemy.vulnerable}`} color="#ffcc4d" />}
         {enemy.weak > 0 && <Badge text={`W${enemy.weak}`} color="#c47bff" />}
+        {enemy.traitName && <Badge text={enemy.traitName} color="#ffb020" />}
         {enemy.untargetable && <Badge text="PHASED" color="#8d8dff" />}
         {enemy.enraged && <Badge text="ENRAGED" color="#ff3b3b" />}
       </div>

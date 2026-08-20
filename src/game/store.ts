@@ -10,7 +10,7 @@ import type {
 import { Rng, hashSeed, randomSeed } from "./rng";
 import { makeCard, CARDS, NEUTRAL_POOL } from "./cards";
 import { HEROES, UNLOCKABLE_HEROES } from "./heroes";
-import { ENEMIES, ELITE_POOL, BOSSES, ACT_BOSSES } from "./enemies";
+import { ENEMIES, BOSSES, ACT_BOSSES, enemyPoolFor, elitePoolFor } from "./enemies";
 import { RELICS, ALL_RELIC_IDS } from "./relics";
 import { generateMap } from "./mapgen";
 import tracerImg from "../assets/tracer.png";
@@ -303,17 +303,18 @@ export const useGame = create<GameState>((set, get) => ({
       enemies = [spawnEnemy(def, rng, `e_${Date.now()}`)];
       isBoss = true;
     } else if (nodeType === "elite") {
-      const id = rng.pick(ELITE_POOL);
+      const elitePool = elitePoolFor(s.act);
+      const id = rng.pick(elitePool);
       const def = ENEMIES[id]!;
       enemies = [spawnEnemy(def, rng, `e_${Date.now()}_0`)];
-      if (rng.chance(0.3 + s.act * 0.15)) {
-        const id2 = rng.pick(ELITE_POOL.filter((x) => x !== id)) ?? ELITE_POOL[0]!;
-        enemies.push(spawnEnemy(ENEMIES[id2]!, rng, `e_${Date.now()}_1`));
+      if (rng.chance(0.2 + s.act * 0.1)) {
+        const escort = rng.pick(enemyPoolFor(s.act));
+        enemies.push(spawnEnemy(ENEMIES[escort]!, rng, `e_${Date.now()}_1`));
       }
     } else {
-      const pool = ["talon_trooper", "omnic_grunt", "sweeper_bot", "sniper"];
+      const pool = enemyPoolFor(s.act);
       const r = rng.next();
-      const count = r < 0.4 ? 1 : r < 0.9 ? 2 : 3;
+      const count = s.act >= 2 ? (r < 0.5 ? 1 : r < 0.95 ? 2 : 3) : r < 0.4 ? 1 : r < 0.9 ? 2 : 3;
       for (let i = 0; i < count; i++) {
         const id = rng.pick(pool);
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
@@ -372,6 +373,14 @@ export const useGame = create<GameState>((set, get) => ({
       nodeType,
       ultUsedThisCombat: false,
     };
+    // elite modifier: curse enemies hex you the moment the fight opens
+    for (const e of enemies) {
+      if (e.trait === "curse") {
+        combat.weak = Math.max(combat.weak, 1);
+        combat.vulnerable = Math.max(combat.vulnerable, 1);
+        combat.log.push(`${e.name}'s ${e.traitName ?? "aura"} weakens you.`);
+      }
+    }
     // barrier_start relic
     if (s.relics.includes("barrier_start")) combat.block = 10;
     // berserker relic
@@ -453,6 +462,7 @@ export const useGame = create<GameState>((set, get) => ({
         pushLog(c, "Moira drops her barrier and burns biotic energy.");
       }
     }
+    const summonRng = new Rng(hashSeed(`${get().seed}_summon_${c.turn}`));
     for (const e of c.enemies) {
       if (e.isDead) continue;
       e.block = 0; // reset block before acting
@@ -463,6 +473,13 @@ export const useGame = create<GameState>((set, get) => ({
           if (c.hp <= 0) break;
           const taken = applyPlayerDamage(get, c, intent.damage ?? 0, e.strength, e.weak);
           charge.v += taken * 1.5;
+          if (e.trait === "leech" && taken > 0) {
+            const drained = Math.min(e.maxHp - e.hp, Math.ceil(taken * 0.35));
+            if (drained > 0) {
+              e.hp += drained;
+              pushFloat(c, `+${drained}`, "heal", e.uid);
+            }
+          }
           if (relics.includes("thorn_mail") && taken > 0) {
             e.hp -= 2;
             pushFloat(c, "2", "dmg", e.uid);
@@ -481,7 +498,38 @@ export const useGame = create<GameState>((set, get) => ({
       if (intent.type === "debuff") {
         if (intent.weak) c.weak = Math.max(c.weak, intent.weak);
         if (intent.vulnerable) c.vulnerable = Math.max(c.vulnerable, intent.vulnerable);
+        if (intent.poison) {
+          c.poison += intent.poison;
+          pushFloat(c, `+${intent.poison} PSN`, "debuff", "player");
+        }
       }
+      if (intent.type === "summon") {
+        const alive = c.enemies.filter((x) => !x.isDead).length;
+        const sdef = intent.summonId ? ENEMIES[intent.summonId] : undefined;
+        if (sdef && alive < 3) {
+          const add = spawnEnemy(sdef, summonRng, `add_${Date.now()}_${alive}`);
+          const scaled = Math.round(add.maxHp * 0.85);
+          add.hp = scaled;
+          add.maxHp = scaled;
+          add.strength = Math.max(0, e.strength - 1);
+          c.enemies.push(add);
+          pushFloat(c, "SUMMON", "buff", e.uid);
+          pushLog(c, `${e.name} assembles a ${add.name}.`);
+        } else {
+          e.block += 6;
+        }
+      }
+      // ---- persistent enemy traits ----
+      if (e.trait === "rampage" && c.turn % 2 === 0) {
+        e.strength += 1;
+        pushFloat(c, "+1 STR", "buff", e.uid);
+      }
+      if (e.trait === "regen" && e.hp < e.maxHp) {
+        const healed = Math.min(e.maxHp - e.hp, Math.max(2, Math.round(e.maxHp * 0.025)));
+        e.hp += healed;
+        pushFloat(c, `+${healed}`, "heal", e.uid);
+      }
+      if (e.trait === "aegis" && c.turn % 2 === 1) e.block += Math.round(2 + e.maxHp * 0.02);
     }
     c.ultCharge = Math.min(100, charge.v);
     // advance enemy intents
@@ -673,6 +721,9 @@ function spawnEnemy(def: EnemyDef, rng: Rng, uidBase: string): EnemyInstance {
     name: def.name,
     asset: def.asset,
     isBoss: !!def.isBoss,
+    isElite: def.isElite,
+    trait: def.trait,
+    traitName: def.traitName,
     mechanic: def.mechanic,
     mechanicName: def.mechanicName,
     untargetable: false,
