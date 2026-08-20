@@ -530,7 +530,7 @@ export const useGame = create<GameState>((set, get) => ({
         e.hp += healed;
         pushFloat(c, `+${healed}`, "heal", e.uid);
       }
-      if (e.trait === "aegis") e.block += Math.round(3 + e.maxHp * 0.03);
+      if (e.trait === "aegis" && c.turn % 2 === 1) e.block += Math.round(2 + e.maxHp * 0.02);
     }
     c.ultCharge = Math.min(100, charge.v);
     // advance enemy intents
