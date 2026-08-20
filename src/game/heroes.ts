@@ -17,7 +17,7 @@ export const HEROES: Record<string, HeroDef> = {
     startingDeck: [
       "tracer_blink", "tracer_blink", "tracer_pistols", "tracer_pistols",
       "tracer_recall", "tracer_strafe", "tracer_strafe", "tracer_hnr",
-
+      "tracer_reload", "tracer_dual",
     ],
     cardPool: [
       "tracer_strafe", "tracer_charged", "tracer_adrenaline", "tracer_hnr",
@@ -75,7 +75,7 @@ export const HEROES: Record<string, HeroDef> = {
     startingDeck: [
       "genji_shuriken", "genji_shuriken", "genji_swift", "genji_swift",
       "genji_deflect", "genji_fang", "genji_agility", "genji_riposte",
-
+      "genji_dash", "genji_storm",
     ],
     cardPool: [
       "genji_fang", "genji_agility", "genji_spirit", "genji_riposte",
@@ -104,7 +104,7 @@ export const HEROES: Record<string, HeroDef> = {
     startingDeck: [
       "junkrat_launcher", "junkrat_launcher", "junkrat_trap", "junkrat_trap",
       "junkrat_concussive", "junkrat_mine", "junkrat_scatter", "junkrat_armor",
-
+      "junkrat_frag", "junkrat_blast",
     ],
     cardPool: [
       "junkrat_concussive", "junkrat_mine", "junkrat_rpg", "junkrat_scatter",
