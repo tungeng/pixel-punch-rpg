@@ -179,6 +179,7 @@ function rngForRun(seed: number, salt: number): Rng {
 
 // ---- damage helpers (mutate combat + enemy) ----
 function applyEnemyDamage(c: Combat, enemy: EnemyInstance, base: number, charge: { v: number }, relicPower: boolean): number {
+  if (enemy.untargetable) return 0;
   let dmg = base + c.strength;
   if (c.weak > 0) dmg = Math.floor(dmg * 0.75);
   if (enemy.vulnerable > 0) dmg = Math.floor(dmg * 1.5);
@@ -383,7 +384,7 @@ export const useGame = create<GameState>((set, get) => ({
     if (idx < 0) return;
     const card = c.hand[idx]!;
     if (card.cost > c.energy) return;
-    const livingEnemies = c.enemies.filter((e) => !e.isDead);
+    const livingEnemies = c.enemies.filter((e) => !e.isDead && !e.untargetable);
     const needsTarget = (card.damage ?? 0) > 0 && !card.aoe && livingEnemies.length > 1;
     if (needsTarget && !targetUid) {
       set({ combat: { ...c, targetingCardUid: uid } });
@@ -418,6 +419,37 @@ export const useGame = create<GameState>((set, get) => ({
     // enemy phase
     const charge = { v: c.ultCharge };
     const relics = s.relics;
+    // ---- act boss mechanics ----
+    for (const e of c.enemies) {
+      if (e.isDead || !e.mechanic) continue;
+      if (e.mechanic === "wraith") {
+        if (c.turn % 3 === 0) {
+          const healed = Math.max(1, Math.floor((e.maxHp - e.hp) * 0.25));
+          e.hp = Math.min(e.maxHp, e.hp + healed);
+          e.untargetable = true;
+          pushFloat(c, `+${healed}`, "heal", e.uid);
+          pushLog(c, "Reaper slips into WRAITH FORM — untargetable.");
+        } else {
+          e.untargetable = false;
+        }
+      }
+      if (e.mechanic === "venom") {
+        c.poison += 2;
+        c.weak = Math.max(c.weak, 2);
+        pushFloat(c, "VENOM", "debuff", "player");
+      }
+      if (e.mechanic === "gravity" && c.turn % 2 === 0) {
+        scrambleHand(c);
+        pushLog(c, "Gravitic Flux warps a card in your hand.");
+      }
+      if (e.mechanic === "phase" && !e.enraged && e.hp <= e.maxHp * 0.5) {
+        e.enraged = true;
+        e.strength += 5;
+        e.block += 20;
+        pushFloat(c, "COALESCENCE", "buff", e.uid);
+        pushLog(c, "Moira drops her barrier and burns biotic energy.");
+      }
+    }
     for (const e of c.enemies) {
       if (e.isDead) continue;
       e.block = 0; // reset block before acting
@@ -481,6 +513,19 @@ export const useGame = create<GameState>((set, get) => ({
     // start player turn
     c.turn += 1;
     c.block = 0;
+    if (c.poison > 0) {
+      c.hp -= c.poison;
+      pushFloat(c, `-${c.poison}`, "dmg", "player");
+      pushLog(c, `Venom deals ${c.poison} damage.`);
+      c.poison -= 1;
+      if (c.hp <= 0) {
+        c.hp = 0;
+        c.active = false;
+        handleDeath(set, get);
+        set({ combat: { ...c } });
+        return;
+      }
+    }
     if (c.vulnerable > 0) c.vulnerable -= 1;
     if (c.weak > 0) c.weak -= 1;
     const maxEnergy = maxEnergyFor(s.heroId, relics);
@@ -733,8 +778,11 @@ function resolveCard(
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
     const totalBase = card.damage + bonus;
     const targets: EnemyInstance[] = card.aoe
-      ? c.enemies.filter((e) => !e.isDead)
-      : [c.enemies.find((e) => e.uid === targetUid && !e.isDead) ?? c.enemies.find((e) => !e.isDead)!].filter(Boolean);
+      ? c.enemies.filter((e) => !e.isDead && !e.untargetable)
+      : [
+          c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
+            c.enemies.find((e) => !e.isDead && !e.untargetable)!,
+        ].filter(Boolean);
     for (const t of targets) {
       if (!t) continue;
       for (let h = 0; h < hits; h++) {
@@ -747,8 +795,11 @@ function resolveCard(
   // apply debuffs to target
   if (card.vulnerable || card.weak) {
     const targets: EnemyInstance[] = card.aoe
-      ? c.enemies.filter((e) => !e.isDead)
-      : [c.enemies.find((e) => e.uid === targetUid && !e.isDead) ?? c.enemies.find((e) => !e.isDead)!].filter(Boolean);
+      ? c.enemies.filter((e) => !e.isDead && !e.untargetable)
+      : [
+          c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
+            c.enemies.find((e) => !e.isDead && !e.untargetable)!,
+        ].filter(Boolean);
     for (const t of targets) {
       if (!t) continue;
       if (card.vulnerable) t.vulnerable += card.vulnerable;
