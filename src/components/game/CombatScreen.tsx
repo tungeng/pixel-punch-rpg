@@ -184,13 +184,11 @@ export function CombatScreen() {
               {combat.energy}
             </motion.div>
           </div>
-          <div
-            className="flex gap-2 text-[12px] text-foreground/75"
-            style={{ fontFamily: "var(--font-pixel-body)" }}
-          >
-            <span>🂠 {combat.drawPile.length}</span>
-            <span>♻ {combat.discardPile.length}</span>
+          <div className="flex gap-1">
+            <PileChip label="DRAW" value={combat.drawPile.length} color="#54a8ff" />
+            <PileChip label="DISCARD" value={combat.discardPile.length} color="#c47bff" />
           </div>
+
         </div>
       </div>
 
@@ -346,14 +344,17 @@ function EnemyView({
           animate={{ y: 0, opacity: 1 }}
           className="mb-1 flex flex-col items-center"
         >
-          <div
-            className="text-pixel px-1.5 py-0.5 text-[9px] text-black"
-            style={{
-              background: intentColor(enemy.intent.type),
-              border: "2px solid #07060c",
-            }}
-          >
-            {INTENT_ICON[enemy.intent.type] ?? "?"}
+          <div className="flex items-center gap-1">
+            {intentParts(enemy.intent).map((p, i) => (
+              <div
+                key={i}
+                className="text-pixel flex items-center gap-0.5 px-1 py-0.5 text-[9px] text-black"
+                style={{ background: p.color, border: "2px solid #07060c" }}
+              >
+                <span>{p.icon}</span>
+                {p.text && <span>{p.text}</span>}
+              </div>
+            ))}
           </div>
           <div
             className="text-[12px] text-foreground/85"
@@ -363,6 +364,7 @@ function EnemyView({
           </div>
         </motion.div>
       )}
+
 
       <div className={hit ? "hit-shake" : "idle-bob-slow"}>
         <img
