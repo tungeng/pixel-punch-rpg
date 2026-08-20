@@ -458,3 +458,22 @@ function FloatText({ text, kind }: { text: string; kind: string }) {
     </motion.div>
   );
 }
+
+function PileChip({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div
+      className="flex flex-col items-center px-1 py-[1px]"
+      style={{ background: "#07060c", border: `2px solid ${color}` }}
+    >
+      <span className="text-pixel text-[5.5px]" style={{ color }}>
+        {label}
+      </span>
+      <span
+        className="text-[13px] leading-[12px] text-foreground"
+        style={{ fontFamily: "var(--font-pixel-body)" }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
