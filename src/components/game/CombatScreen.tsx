@@ -1,10 +1,12 @@
-import { useGame, effectiveCost } from "@/game/store";
+import { useGame, effectiveCost, cardDealsDamage } from "@/game/store";
 import { HEROES } from "@/game/heroes";
 import { AnimatePresence, motion } from "motion/react";
 import { CardView } from "./CardView";
 import { Bar } from "./Bar";
 import { PixelButton } from "./PixelButton";
 import { useEffect, useRef, useState } from "react";
+import type { CardInstance } from "@/game/types";
+
 
 
 /** Slay-the-Spire style intent readout: what the enemy will do, and for how much. */
@@ -38,6 +40,11 @@ function intentParts(intent: {
 }
 
 
+const BURST = Array.from({ length: 8 }, (_, i) => {
+  const a = (i / 8) * Math.PI * 2;
+  return { x: Math.cos(a) * 34, y: Math.sin(a) * 30 };
+});
+
 export function CombatScreen() {
   const combat = useGame((s) => s.combat);
   const heroId = useGame((s) => s.heroId);
@@ -50,12 +57,20 @@ export function CombatScreen() {
 
   const [shake, setShake] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
+  const [flying, setFlying] = useState<CardInstance | null>(null);
+  const [lunge, setLunge] = useState(0);
+  const [blockFlash, setBlockFlash] = useState(0);
+  const [healFlash, setHealFlash] = useState(0);
   const prevHp = useRef<number | null>(null);
+  const prevBlock = useRef<number | null>(null);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
     const t = setInterval(pruneFloats, 400);
     return () => clearInterval(t);
   }, [pruneFloats]);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const hp = combat?.hp ?? null;
   useEffect(() => {
@@ -66,9 +81,17 @@ export function CombatScreen() {
       prevHp.current = hp;
       return () => clearTimeout(t);
     }
+    if (prevHp.current != null && hp > prevHp.current) setHealFlash((n) => n + 1);
     prevHp.current = hp;
     return;
   }, [hp]);
+
+  const blockVal = combat?.block ?? null;
+  useEffect(() => {
+    if (blockVal == null) return;
+    if (prevBlock.current != null && blockVal > prevBlock.current) setBlockFlash((n) => n + 1);
+    prevBlock.current = blockVal;
+  }, [blockVal]);
 
   const turn = combat?.turn ?? 0;
   useEffect(() => {
@@ -86,6 +109,36 @@ export function CombatScreen() {
   const AVAIL = 400;
   const overlap =
     hand.length > 1 ? Math.max(0, (hand.length * CARD_W - AVAIL) / (hand.length - 1)) : 0;
+
+  /** play the card only after its fly-to-center + hero lunge has read on screen */
+  const launch = (card: CardInstance, resolve: () => void) => {
+    if (flying) return;
+    setFlying(card);
+    if (cardDealsDamage(card)) setLunge((n) => n + 1);
+    const t = setTimeout(() => {
+      setFlying(null);
+      resolve();
+    }, 260);
+    timers.current.push(t);
+  };
+
+  const onPlayCard = (card: CardInstance) => {
+    if (effectiveCost(card, combat) > combat.energy) return;
+    const living = combat.enemies.filter((e) => !e.isDead && !e.untargetable);
+    const needsTarget = cardDealsDamage(card) && !card.aoe && living.length > 1;
+    if (needsTarget) {
+      playCard(card.uid);
+      return;
+    }
+    launch(card, () => playCard(card.uid));
+  };
+
+  const onSelectTarget = (enemyUid: string) => {
+    const card = combat.hand.find((c) => c.uid === combat.targetingCardUid);
+    if (!card) return selectTarget(enemyUid);
+    return launch(card, () => selectTarget(enemyUid));
+  };
+
 
   return (
     <div
@@ -105,7 +158,7 @@ export function CombatScreen() {
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <div className="flex flex-1 items-center justify-center gap-3 px-3 pt-3">
           {combat.enemies.map((e) => (
-            <EnemyView key={e.uid} enemyUid={e.uid} targeting={targeting} onSelect={selectTarget} />
+            <EnemyView key={e.uid} enemyUid={e.uid} targeting={targeting} onSelect={onSelectTarget} />
           ))}
         </div>
 
@@ -132,14 +185,55 @@ export function CombatScreen() {
       <div className="relative z-10 flex shrink-0 items-end justify-between px-3">
 
         <div className="relative">
-          <motion.img
-            src={hero.asset}
-            alt={hero.name}
-            className="pixelated idle-bob h-24 w-24 object-contain"
-            animate={shake ? { x: [0, -5, 4, 0] } : { x: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{ filter: "drop-shadow(0 6px 0 rgba(0,0,0,0.6))" }}
-          />
+          <motion.div
+            key={`lunge-${lunge}`}
+            initial={{ x: 0, y: 0 }}
+            animate={lunge > 0 ? { x: [0, 22, 30, 0], y: [0, -14, -6, 0] } : { x: 0, y: 0 }}
+            transition={{ duration: 0.34, times: [0, 0.35, 0.55, 1], ease: "easeOut" }}
+          >
+            <motion.img
+              src={hero.asset}
+              alt={hero.name}
+              className="pixelated idle-bob h-24 w-24 object-contain"
+              animate={shake ? { x: [0, -5, 4, 0] } : { x: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ filter: "drop-shadow(0 6px 0 rgba(0,0,0,0.6))" }}
+            />
+          </motion.div>
+
+          {/* block gained — blue shield flash */}
+          <AnimatePresence>
+            {blockFlash > 0 && (
+              <motion.div
+                key={`blk-${blockFlash}`}
+                initial={{ opacity: 0.9, scale: 0.6 }}
+                animate={{ opacity: 0, scale: 1.35 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.55, ease: "easeOut" }}
+                className="pointer-events-none absolute inset-0 rounded-full"
+                style={{
+                  border: "3px solid #54a8ff",
+                  boxShadow: "0 0 18px 4px #54a8ff inset, 0 0 16px 2px #54a8ff",
+                }}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* healed — green pulse */}
+          <AnimatePresence>
+            {healFlash > 0 && (
+              <motion.div
+                key={`heal-${healFlash}`}
+                initial={{ opacity: 0.75, scale: 0.7 }}
+                animate={{ opacity: 0, scale: 1.3 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="pointer-events-none absolute inset-0 rounded-full"
+                style={{ background: "radial-gradient(circle, #54d98caa, transparent 68%)" }}
+              />
+            )}
+          </AnimatePresence>
+
           <AnimatePresence>
             {combat.floats
               .filter((f) => f.target === "player")
@@ -148,6 +242,7 @@ export function CombatScreen() {
                 <FloatText key={f.id} text={f.text} kind={f.kind} />
               ))}
           </AnimatePresence>
+
           <div className="absolute -right-1 top-0 flex flex-col items-end gap-1">
             {combat.block > 0 && <Badge text={`🛡 ${combat.block}`} color="#54a8ff" />}
             {combat.strength > 0 && <Badge text={`▲ ${combat.strength}`} color="#ff7a45" />}
@@ -244,12 +339,33 @@ export function CombatScreen() {
                   transformOrigin: "bottom center",
                 }}
               >
-                <CardView card={card} dimmed={dimmed} onClick={() => playCard(card.uid)} />
+                <CardView
+                  card={card}
+                  dimmed={dimmed || flying?.uid === card.uid}
+                  onClick={() => onPlayCard(card)}
+                />
               </motion.div>
             );
           })}
         </AnimatePresence>
       </div>
+
+      {/* card in flight — flies from hand up to the arena before resolving */}
+      <AnimatePresence>
+        {flying && (
+          <motion.div
+            key={flying.uid}
+            initial={{ y: 0, scale: 0.9, opacity: 0.95, rotate: 0 }}
+            animate={{ y: -230, scale: 1.15, opacity: 0, rotate: 6 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.26, ease: "easeOut" }}
+            className="pointer-events-none absolute bottom-10 left-1/2 z-40 -translate-x-1/2"
+          >
+            <CardView card={flying} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* targeting overlay */}
       <AnimatePresence>
@@ -364,7 +480,7 @@ function EnemyView({
       )}
 
 
-      <div className={hit ? "hit-shake" : "idle-bob-slow"}>
+      <div className={`relative ${hit ? "hit-shake" : "idle-bob-slow"}`}>
         <img
           src={enemy.asset}
           alt={enemy.name}
@@ -377,7 +493,41 @@ function EnemyView({
             transition: "filter 0.1s",
           }}
         />
+        {/* impact — white flash + pixel shrapnel burst */}
+        <AnimatePresence>
+          {hit && (
+            <motion.div
+              key="impact"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28 }}
+              className="pointer-events-none absolute inset-0"
+            >
+              <div
+                className="absolute inset-0"
+                style={{ background: "radial-gradient(circle, #ffffffcc, transparent 70%)" }}
+              />
+              {BURST.map((b, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                  animate={{ x: b.x, y: b.y, opacity: 0, scale: 0.4 }}
+                  transition={{ duration: 0.34, ease: "easeOut" }}
+                  className="absolute left-1/2 top-1/2"
+                  style={{
+                    width: 5,
+                    height: 5,
+                    background: i % 2 ? "#ffcc4d" : "#ff5555",
+                    boxShadow: "0 0 6px #ff9f43",
+                  }}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
 
       {targeting && !enemy.isDead && (
         <div className="text-pixel absolute -top-1 text-[10px] text-destructive">✖</div>
