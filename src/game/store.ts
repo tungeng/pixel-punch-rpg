@@ -46,6 +46,7 @@ export interface Combat {
   strength: number;
   vulnerable: number;
   weak: number;
+  poison: number;
   drawPile: CardInstance[];
   hand: CardInstance[];
   discardPile: CardInstance[];
@@ -297,14 +298,14 @@ export const useGame = create<GameState>((set, get) => ({
     let enemies: EnemyInstance[] = [];
     let isBoss = false;
     if (nodeType === "boss") {
-      const def = BOSSES[ACT_BOSSES[s.act] ?? ACT_BOSSES[0]!]!;
+      const def = BOSSES[ACT_BOSSES[s.act] ?? ACT_BOSSES[ACT_BOSSES.length - 1]!]!;
       enemies = [spawnEnemy(def, rng, `e_${Date.now()}`)];
       isBoss = true;
     } else if (nodeType === "elite") {
       const id = rng.pick(ELITE_POOL);
       const def = ENEMIES[id]!;
       enemies = [spawnEnemy(def, rng, `e_${Date.now()}_0`)];
-      if (rng.chance(0.3)) {
+      if (rng.chance(0.3 + s.act * 0.15)) {
         const id2 = rng.pick(ELITE_POOL.filter((x) => x !== id)) ?? ELITE_POOL[0]!;
         enemies.push(spawnEnemy(ENEMIES[id2]!, rng, `e_${Date.now()}_1`));
       }
@@ -319,8 +320,9 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // Difficulty curve: the breach hardens the deeper you fall.
     const floor = s.floorsCleared;
-    const hpScale = 1 + floor * 0.085 + s.act * 0.15;
-    const strBonus = Math.floor(floor / 4) + (nodeType === "elite" ? 2 : 0);
+    const hpScale = 1 + floor * 0.085 + s.act * 0.3;
+    const strBonus =
+      Math.floor(floor / 4) + s.act + (nodeType === "elite" ? 2 + s.act : 0);
     for (const e of enemies) {
       const scaled = Math.round(e.maxHp * hpScale);
       e.hp = scaled;
@@ -338,7 +340,7 @@ export const useGame = create<GameState>((set, get) => ({
     let deck = s.deck.map((c) => makeCard(c.id, c.upgraded));
     deck = rng.shuffle(deck);
     const hand = deck.splice(0, drawN);
-    const bg = s.act === 0 ? kingsrowImg : factoryImg;
+    const bg = s.act % 2 === 0 ? kingsrowImg : factoryImg;
     const combat: Combat = {
       active: true,
       turn: 1,
