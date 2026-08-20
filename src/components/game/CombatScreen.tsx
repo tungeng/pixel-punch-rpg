@@ -1,4 +1,4 @@
-import { useGame } from "@/game/store";
+import { useGame, effectiveCost } from "@/game/store";
 import { HEROES } from "@/game/heroes";
 import { AnimatePresence, motion } from "motion/react";
 import { CardView } from "./CardView";
