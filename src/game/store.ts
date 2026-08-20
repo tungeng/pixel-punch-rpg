@@ -62,6 +62,8 @@ export interface Combat {
   bg: string;
   nodeType: NodeType;
   ultUsedThisCombat: boolean;
+  damageTakenThisCombat: number;
+  overclock: { blockPerEnergy: number; damagePerEnergy: number } | null;
 }
 
 export interface GameState {
