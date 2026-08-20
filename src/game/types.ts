@@ -65,6 +65,11 @@ export interface CardDef {
       | "strength"
       | "energyGain"
       | "bonusIfAttack"
+      | "damagePerCardPlayed"
+      | "damagePerMissingHp"
+      | "damagePerDiscard"
+      | "strengthOnKill"
+      | "randomDamage"
     >
   >;
 }
