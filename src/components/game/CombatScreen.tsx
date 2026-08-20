@@ -397,6 +397,7 @@ function EnemyView({
         {enemy.strength > 0 && <Badge text={`▲${enemy.strength}`} color="#ff7a45" />}
         {enemy.vulnerable > 0 && <Badge text={`V${enemy.vulnerable}`} color="#ffcc4d" />}
         {enemy.weak > 0 && <Badge text={`W${enemy.weak}`} color="#c47bff" />}
+        {enemy.traitName && <Badge text={enemy.traitName} color="#ffb020" />}
         {enemy.untargetable && <Badge text="PHASED" color="#8d8dff" />}
         {enemy.enraged && <Badge text="ENRAGED" color="#ff3b3b" />}
       </div>
