@@ -73,6 +73,9 @@ export const CARDS: Record<string, CardDef> = {
   doomfist_bruise: { id: "doomfist_bruise", name: "Bruise", type: "attack", cost: 0, hero: "doomfist", rarity: "common", damage: 4, text: "Deal 4 damage.", up: { damage: 6 } },
   doomfist_fortify: { id: "doomfist_fortify", name: "Fortify", type: "skill", cost: 1, hero: "doomfist", rarity: "common", block: 6, draw: 1, text: "Gain 6 Block. Draw 1 card.", up: { block: 9 } },
   doomfist_quake: { id: "doomfist_quake", name: "Ground Quake", type: "attack", cost: 2, hero: "doomfist", rarity: "rare", damage: 6, hits: 2, aoe: true, text: "Deal 6 damage twice to ALL enemies.", up: { damage: 8 } },
+  doomfist_executioner: { id: "doomfist_executioner", name: "Executioner", type: "attack", cost: 2, hero: "doomfist", rarity: "uncommon", damage: 11, strengthOnKill: 2, text: "Deal 11 damage. If this kills an enemy, gain 2 Strength for the rest of combat.", up: { damage: 14, strengthOnKill: 3 } },
+  doomfist_momentum: { id: "doomfist_momentum", name: "Vengeful Momentum", type: "attack", cost: 3, hero: "doomfist", rarity: "rare", damage: 14, costPerDamageTaken: 12, text: "Deal 14 damage. Costs 1 less per 12 damage you have taken this combat.", up: { damage: 18 } },
+
 
   // ---------------- NEUTRAL (reward pool, any hero) ----------------
   n_block: { id: "n_block", name: "Reinforce", type: "skill", cost: 0, rarity: "common", block: 4, text: "Gain 4 Block.", up: { block: 6 } },
