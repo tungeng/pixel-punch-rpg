@@ -353,6 +353,7 @@ export const useGame = create<GameState>((set, get) => ({
       strength: 0,
       vulnerable: 0,
       weak: 0,
+      poison: 0,
       drawPile: deck,
       hand,
       discardPile: [],
