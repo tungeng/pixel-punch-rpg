@@ -153,7 +153,7 @@ export function CombatScreen() {
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <div className="flex flex-1 items-center justify-center gap-3 px-3 pt-3">
           {combat.enemies.map((e) => (
-            <EnemyView key={e.uid} enemyUid={e.uid} targeting={targeting} onSelect={selectTarget} />
+            <EnemyView key={e.uid} enemyUid={e.uid} targeting={targeting} onSelect={onSelectTarget} />
           ))}
         </div>
 
