@@ -59,6 +59,9 @@ export const CARDS: Record<string, CardDef> = {
   junkrat_armor: { id: "junkrat_armor", name: "Junk Armor", type: "skill", cost: 0, hero: "junkrat", rarity: "common", block: 4, text: "Gain 4 Block.", up: { block: 7 } },
   junkrat_frag: { id: "junkrat_frag", name: "Frag Toss", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 5, vulnerable: 1, text: "Deal 5 damage. Apply 1 Vulnerable.", up: { damage: 7 } },
   junkrat_blast: { id: "junkrat_blast", name: "Total Mayhem", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 8, aoe: true, text: "Deal 8 damage to ALL enemies.", up: { damage: 11 } },
+  junkrat_loose: { id: "junkrat_loose", name: "Loose Cannon", type: "attack", cost: 1, hero: "junkrat", rarity: "uncommon", randomDamage: [2, 10], text: "Deal 2-10 damage at random.", up: { randomDamage: [5, 13] } },
+  junkrat_scrap: { id: "junkrat_scrap", name: "Scrap Heap", type: "attack", cost: 2, hero: "junkrat", rarity: "rare", damage: 3, damagePerDiscard: 1, shuffleDiscard: true, text: "Deal 3 damage, +1 per card in your discard pile. Then shuffle discard into your draw pile.", up: { damage: 6 } },
+
 
   // ---------------- DOOMFIST (bruiser / tank) ----------------
   doomfist_punch: { id: "doomfist_punch", name: "Rocket Punch", type: "attack", cost: 1, hero: "doomfist", rarity: "starter", damage: 8, text: "Deal 8 damage.", up: { damage: 11 } },
