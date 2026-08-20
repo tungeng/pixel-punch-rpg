@@ -102,6 +102,11 @@ export function makeCard(defId: string, upgraded = false): CardInstance {
     if (up.cost !== undefined) merged.cost = up.cost;
     if (up.vulnerable !== undefined) merged.vulnerable = up.vulnerable;
     if (up.weak !== undefined) merged.weak = up.weak;
+    if (up.damagePerCardPlayed !== undefined) merged.damagePerCardPlayed = up.damagePerCardPlayed;
+    if (up.damagePerMissingHp !== undefined) merged.damagePerMissingHp = up.damagePerMissingHp;
+    if (up.damagePerDiscard !== undefined) merged.damagePerDiscard = up.damagePerDiscard;
+    if (up.strengthOnKill !== undefined) merged.strengthOnKill = up.strengthOnKill;
+    if (up.randomDamage !== undefined) merged.randomDamage = up.randomDamage;
     if (up.strength !== undefined) merged.strength = up.strength;
     if (up.energyGain !== undefined) merged.energyGain = up.energyGain;
     if (up.bonusIfAttack !== undefined) merged.bonusIfAttack = up.bonusIfAttack;
