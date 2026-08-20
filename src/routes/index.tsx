@@ -93,7 +93,7 @@ function Index() {
                       ? "border-2 border-primary"
                       : "border-2 border-border bg-card/60 hover:border-primary/70"
                 }`}
-                style={isSel && !isLocked ? { background: hero.color } : undefined}
+                {...(isSel && !isLocked ? { style: { background: hero.color } } : {})}
               >
                 <img
                   src={hero.asset}
