@@ -79,6 +79,8 @@ export const CARD_ICONS: Record<string, string> = {
   tracer_hnr: bootshield,
   tracer_reload: reload,
   tracer_dual: crossblades,
+  tracer_flurry: chronoflurry,
+  tracer_overclock: overclockicon,
   tracer_pulse: pulsebomb,
   // Mercy
   mercy_blaster: caduceus,
@@ -90,6 +92,8 @@ export const CARD_ICONS: Record<string, string> = {
   mercy_pacify: hush,
   mercy_regen: regenheart,
   mercy_blight: poisonskull,
+  mercy_lastrites: lastrites,
+  mercy_overflow: overflowbarrier,
   mercy_valkyrie: valkyrie,
   // Genji
   genji_shuriken: shuriken,
@@ -101,6 +105,8 @@ export const CARD_ICONS: Record<string, string> = {
   genji_riposte: parry,
   genji_dash: dashfoot,
   genji_storm: bladefan,
+  genji_rush: dragonrush,
+  genji_windcut: windcut,
   genji_dragon: dragonblade,
   // Junkrat
   junkrat_launcher: grenadelauncher,
@@ -112,6 +118,8 @@ export const CARD_ICONS: Record<string, string> = {
   junkrat_armor: junkshield,
   junkrat_frag: frag,
   junkrat_blast: explosion,
+  junkrat_loose: loosecannon,
+  junkrat_scrap: scrapheap,
   junkrat_riptire: riptire,
   // Doomfist
   doomfist_punch: gauntlet,
@@ -123,6 +131,8 @@ export const CARD_ICONS: Record<string, string> = {
   doomfist_bruise: bruise,
   doomfist_fortify: fortify,
   doomfist_quake: quake,
+  doomfist_executioner: executionericon,
+  doomfist_momentum: momentum,
   doomfist_meteor: meteorfist,
   // Neutral
   n_block: reinforce,
