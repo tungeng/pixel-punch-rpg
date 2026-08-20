@@ -4,7 +4,7 @@ import { useGame } from "@/game/store";
 import { HEROES, STARTER_HEROES, UNLOCKABLE_HEROES } from "@/game/heroes";
 import { PixelButton } from "@/components/game/PixelButton";
 import { motion } from "motion/react";
-import { RELICS } from "@/game/relics";
+import { Heart, Zap, Star, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -76,27 +76,49 @@ function Index() {
         </p>
 
         <div className="text-pixel mt-6 mb-2 text-[8px] text-muted-foreground">SELECT YOUR HERO</div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid w-full grid-cols-5 gap-1.5">
           {all.map((id) => {
             const hero = HEROES[id]!;
             const isLocked = locked(id);
+            const isSel = selected === id;
             return (
               <motion.button
                 key={id}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => !isLocked && setSelected(id)}
-                className="pix-border relative flex flex-col items-center p-1"
-                style={{
-                  background: selected === id ? hero.color : "oklch(0.16 0.03 265)",
-                  opacity: isLocked ? 0.55 : 1,
-                }}
+                className={`group relative flex flex-col items-center gap-0.5 p-1 transition-colors ${
+                  isLocked
+                    ? "border-2 border-border/60 bg-card/40"
+                    : isSel
+                      ? "border-2 border-primary"
+                      : "border-2 border-border bg-card/60 hover:border-primary/70"
+                }`}
+                style={isSel && !isLocked ? { background: hero.color } : undefined}
               >
-                <img src={hero.asset} alt={hero.name} className="pixelated h-16 w-16 object-contain" style={{ filter: isLocked ? "grayscale(1) brightness(0.6)" : "none" }} />
-                <span className="text-pixel text-[7px] text-black">{hero.name}</span>
-                <span className="text-[11px] text-black/70" style={{ fontFamily: "var(--font-pixel-body)" }}>{hero.role}</span>
-                {isLocked && (
-                  <span className="text-pixel absolute inset-0 flex items-center justify-center bg-black/60 text-[8px] text-primary">
-                    🔒{unlockCost}
+                <img
+                  src={hero.asset}
+                  alt={hero.name}
+                  className="pixelated h-12 w-12 object-contain"
+                  style={{ filter: isLocked ? "grayscale(1) brightness(0.4)" : "none" }}
+                />
+                <span
+                  className={`text-pixel text-[6px] leading-tight ${
+                    isSel && !isLocked ? "text-black" : isLocked ? "text-muted-foreground" : "text-foreground"
+                  }`}
+                >
+                  {hero.name}
+                </span>
+                {isLocked ? (
+                  <span className="text-pixel flex items-center gap-0.5 text-[6px] text-primary">
+                    <Lock size={7} strokeWidth={3} />
+                    {unlockCost}
+                  </span>
+                ) : (
+                  <span
+                    className={`text-[10px] leading-none ${isSel ? "text-black/70" : "text-muted-foreground"}`}
+                    style={{ fontFamily: "var(--font-pixel-body)" }}
+                  >
+                    {hero.role}
                   </span>
                 )}
               </motion.button>
@@ -105,25 +127,25 @@ function Index() {
         </div>
 
         {locked(selected) ? (
-          <div className="mt-3">
+          <div className="mt-4">
             <PixelButton onClick={() => unlock(selected)} disabled={meta.credits < unlockCost} color="secondary">
               Unlock for {unlockCost} ⬢
             </PixelButton>
           </div>
         ) : (
           <>
-            <div className="mt-5 w-full">
-              <div className="text-pixel mb-1 text-[7px] text-muted-foreground">RUN SEED (optional)</div>
+            <HeroInfo id={selected} />
+            <div className="mt-3 w-full">
               <input
                 value={seed}
                 onChange={(e) => setSeed(e.target.value)}
-                placeholder="random"
-                className="text-pixel pix-border w-full bg-card px-3 py-2 text-[8px] text-foreground outline-none"
+                placeholder="run seed (optional)"
+                className="w-full border border-border/60 bg-card/40 px-2 py-1.5 text-[13px] text-muted-foreground outline-none placeholder:text-muted-foreground/50 focus:border-primary/60"
+                style={{ fontFamily: "var(--font-pixel-body)" }}
               />
             </div>
-            <HeroInfo id={selected} />
-            <div className="mt-4">
-              <PixelButton onClick={breach} color="danger" className="px-8 py-4 text-[12px]">
+            <div className="mt-5 w-full">
+              <PixelButton onClick={breach} color="danger" className="w-full px-8 py-6 text-[18px]">
                 ▶ BREACH
               </PixelButton>
             </div>
@@ -143,14 +165,25 @@ function Index() {
 function HeroInfo({ id }: { id: string }) {
   const hero = HEROES[id]!;
   return (
-    <div className="mt-4 w-full pix-border bg-card p-3">
-      <div className="text-pixel text-[8px] text-primary">{hero.name}</div>
-      <div className="text-[13px] text-foreground/80" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        HP {hero.maxHp} · {hero.passive}
-      </div>
-      <div className="text-[12px] text-foreground/60" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        Ultimate: {hero.ultimate.name} — {hero.ultimate.text}
+    <div className="mt-3 w-full border-2 border-border bg-card p-3">
+      <div className="text-pixel text-[9px] text-primary">{hero.name}</div>
+      <div className="mt-2 space-y-1" style={{ fontFamily: "var(--font-pixel-body)" }}>
+        <div className="flex items-start gap-1.5 text-[14px] text-foreground/90">
+          <Heart size={13} className="mt-[3px] shrink-0 text-destructive" />
+          <span>{hero.maxHp} HP</span>
+        </div>
+        <div className="flex items-start gap-1.5 text-[14px] text-foreground/90">
+          <Zap size={13} className="mt-[3px] shrink-0 text-primary" />
+          <span>{hero.passive}</span>
+        </div>
+        <div className="flex items-start gap-1.5 text-[14px] text-foreground/75">
+          <Star size={13} className="mt-[3px] shrink-0 text-accent" />
+          <span>
+            {hero.ultimate.name} — {hero.ultimate.text}
+          </span>
+        </div>
       </div>
     </div>
   );
 }
+
