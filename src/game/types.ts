@@ -24,6 +24,32 @@ export interface CardDef {
   aoe?: boolean;
   exhaust?: boolean;
   retain?: boolean;
+  // ---- identity mechanics ----
+  /** +N damage per other card already played this turn (Tracer). */
+  damagePerCardPlayed?: number;
+  /** At end of turn, each unspent Energy becomes Block + damage (Tracer). */
+  overclock?: { blockPerEnergy: number; damagePerEnergy: number };
+  /** +1 damage per N missing HP (Mercy). */
+  damagePerMissingHp?: number;
+  /** Healing above max HP becomes Block instead of being wasted (Mercy). */
+  overheal?: boolean;
+  /** Costs 0 if an Attack was already played this turn (Genji). */
+  freeIfAttack?: boolean;
+  /** If 2+ cards were already played this turn: extra draw / energy (Genji). */
+  comboCards?: number;
+  comboDraw?: number;
+  comboEnergy?: number;
+  /** Random damage roll [min, max] (Junkrat). */
+  randomDamage?: [number, number];
+  /** +N damage per card in the discard pile (Junkrat). */
+  damagePerDiscard?: number;
+  /** Shuffle the discard pile back into the draw pile after resolving. */
+  shuffleDiscard?: boolean;
+  /** Gain permanent Strength if this card kills an enemy (Doomfist). */
+  strengthOnKill?: number;
+  /** Cost drops by 1 per N damage taken this combat (Doomfist). */
+  costPerDamageTaken?: number;
+
   // upgrade deltas applied when upgraded
   up?: Partial<
     Pick<
