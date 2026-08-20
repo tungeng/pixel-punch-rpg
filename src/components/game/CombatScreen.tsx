@@ -180,14 +180,55 @@ export function CombatScreen() {
       <div className="relative z-10 flex shrink-0 items-end justify-between px-3">
 
         <div className="relative">
-          <motion.img
-            src={hero.asset}
-            alt={hero.name}
-            className="pixelated idle-bob h-24 w-24 object-contain"
-            animate={shake ? { x: [0, -5, 4, 0] } : { x: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{ filter: "drop-shadow(0 6px 0 rgba(0,0,0,0.6))" }}
-          />
+          <motion.div
+            key={`lunge-${lunge}`}
+            initial={{ x: 0, y: 0 }}
+            animate={lunge > 0 ? { x: [0, 22, 30, 0], y: [0, -14, -6, 0] } : { x: 0, y: 0 }}
+            transition={{ duration: 0.34, times: [0, 0.35, 0.55, 1], ease: "easeOut" }}
+          >
+            <motion.img
+              src={hero.asset}
+              alt={hero.name}
+              className="pixelated idle-bob h-24 w-24 object-contain"
+              animate={shake ? { x: [0, -5, 4, 0] } : { x: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ filter: "drop-shadow(0 6px 0 rgba(0,0,0,0.6))" }}
+            />
+          </motion.div>
+
+          {/* block gained — blue shield flash */}
+          <AnimatePresence>
+            {blockFlash > 0 && (
+              <motion.div
+                key={`blk-${blockFlash}`}
+                initial={{ opacity: 0.9, scale: 0.6 }}
+                animate={{ opacity: 0, scale: 1.35 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.55, ease: "easeOut" }}
+                className="pointer-events-none absolute inset-0 rounded-full"
+                style={{
+                  border: "3px solid #54a8ff",
+                  boxShadow: "0 0 18px 4px #54a8ff inset, 0 0 16px 2px #54a8ff",
+                }}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* healed — green pulse */}
+          <AnimatePresence>
+            {healFlash > 0 && (
+              <motion.div
+                key={`heal-${healFlash}`}
+                initial={{ opacity: 0.75, scale: 0.7 }}
+                animate={{ opacity: 0, scale: 1.3 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="pointer-events-none absolute inset-0 rounded-full"
+                style={{ background: "radial-gradient(circle, #54d98caa, transparent 68%)" }}
+              />
+            )}
+          </AnimatePresence>
+
           <AnimatePresence>
             {combat.floats
               .filter((f) => f.target === "player")
@@ -196,6 +237,7 @@ export function CombatScreen() {
                 <FloatText key={f.id} text={f.text} kind={f.kind} />
               ))}
           </AnimatePresence>
+
           <div className="absolute -right-1 top-0 flex flex-col items-end gap-1">
             {combat.block > 0 && <Badge text={`🛡 ${combat.block}`} color="#54a8ff" />}
             {combat.strength > 0 && <Badge text={`▲ ${combat.strength}`} color="#ff7a45" />}
