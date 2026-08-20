@@ -321,9 +321,11 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // Difficulty curve: the breach hardens the deeper you fall.
     const floor = s.floorsCleared;
-    const hpScale = 1 + floor * 0.085 + s.act * 0.3;
+    const hpScale = 1 + floor * 0.055 + s.act * 0.16;
     const strBonus =
-      Math.floor(floor / 4) + s.act + (nodeType === "elite" ? 2 + s.act : 0);
+      Math.floor(floor / 5) +
+      Math.floor(s.act / 2) +
+      (nodeType === "elite" ? 2 + Math.floor(s.act / 2) : 0);
     for (const e of enemies) {
       const scaled = Math.round(e.maxHp * hpScale);
       e.hp = scaled;
@@ -869,9 +871,10 @@ function handleCombatWin(set: any, get: () => GameState) {
     if (s.act < ACT_BOSSES.length - 1) {
       const nextAct = s.act + 1;
       const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
+      const nextMaxHp = maxHpFor(s.heroId, s.relics) + nextAct * 12;
       set({
-        hp,
-        maxHp: maxHpFor(s.heroId, s.relics),
+        hp: Math.min(nextMaxHp, hp + Math.floor(nextMaxHp * 0.35)),
+        maxHp: nextMaxHp,
         gold,
         floorsCleared,
         act: nextAct,
