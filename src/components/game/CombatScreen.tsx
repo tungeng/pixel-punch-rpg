@@ -250,6 +250,16 @@ export function CombatScreen() {
             {combat.weak > 0 && <Badge text={`WEAK ${combat.weak}`} color="#c47bff" />}
             {combat.poison > 0 && <Badge text={`VENOM ${combat.poison}`} color="#54d98c" />}
           </div>
+
+          <div className="mt-0.5 w-24">
+            <Bar
+              value={combat.hp}
+              max={combat.maxHp}
+              color="linear-gradient(90deg,#54d98c,#a8ff60)"
+              height={12}
+              label={`${combat.hp}/${combat.maxHp}`}
+            />
+          </div>
         </div>
 
         {/* energy orb + piles */}
