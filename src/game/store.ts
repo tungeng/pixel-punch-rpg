@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type {
   CardInstance,
+  EnemyDef,
   EnemyInstance,
   HeroDef,
   MapNode,
@@ -45,6 +46,7 @@ export interface Combat {
   strength: number;
   vulnerable: number;
   weak: number;
+  poison: number;
   drawPile: CardInstance[];
   hand: CardInstance[];
   discardPile: CardInstance[];
@@ -165,10 +167,10 @@ function drawCountFor(heroId: string, relics: string[]): number {
   return d;
 }
 
-function maxHpFor(heroId: string, relics: string[]): number {
+function maxHpFor(heroId: string, relics: string[], act = 0): number {
   let h = getHero(heroId).maxHp;
   if (relics.includes("gold_heart")) h += 25;
-  return h;
+  return h + act * 12;
 }
 
 function rngForRun(seed: number, salt: number): Rng {
@@ -177,6 +179,7 @@ function rngForRun(seed: number, salt: number): Rng {
 
 // ---- damage helpers (mutate combat + enemy) ----
 function applyEnemyDamage(c: Combat, enemy: EnemyInstance, base: number, charge: { v: number }, relicPower: boolean): number {
+  if (enemy.untargetable) return 0;
   let dmg = base + c.strength;
   if (c.weak > 0) dmg = Math.floor(dmg * 0.75);
   if (enemy.vulnerable > 0) dmg = Math.floor(dmg * 1.5);
@@ -296,14 +299,14 @@ export const useGame = create<GameState>((set, get) => ({
     let enemies: EnemyInstance[] = [];
     let isBoss = false;
     if (nodeType === "boss") {
-      const def = BOSSES[ACT_BOSSES[s.act] ?? ACT_BOSSES[0]!]!;
+      const def = BOSSES[ACT_BOSSES[s.act] ?? ACT_BOSSES[ACT_BOSSES.length - 1]!]!;
       enemies = [spawnEnemy(def, rng, `e_${Date.now()}`)];
       isBoss = true;
     } else if (nodeType === "elite") {
       const id = rng.pick(ELITE_POOL);
       const def = ENEMIES[id]!;
       enemies = [spawnEnemy(def, rng, `e_${Date.now()}_0`)];
-      if (rng.chance(0.3)) {
+      if (rng.chance(0.3 + s.act * 0.15)) {
         const id2 = rng.pick(ELITE_POOL.filter((x) => x !== id)) ?? ELITE_POOL[0]!;
         enemies.push(spawnEnemy(ENEMIES[id2]!, rng, `e_${Date.now()}_1`));
       }
@@ -318,8 +321,11 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // Difficulty curve: the breach hardens the deeper you fall.
     const floor = s.floorsCleared;
-    const hpScale = 1 + floor * 0.085 + s.act * 0.15;
-    const strBonus = Math.floor(floor / 4) + (nodeType === "elite" ? 2 : 0);
+    const hpScale = 1 + floor * 0.055 + s.act * 0.16;
+    const strBonus =
+      Math.floor(floor / 5) +
+      Math.floor(s.act / 2) +
+      (nodeType === "elite" ? 2 + Math.floor(s.act / 2) : 0);
     for (const e of enemies) {
       const scaled = Math.round(e.maxHp * hpScale);
       e.hp = scaled;
@@ -337,7 +343,7 @@ export const useGame = create<GameState>((set, get) => ({
     let deck = s.deck.map((c) => makeCard(c.id, c.upgraded));
     deck = rng.shuffle(deck);
     const hand = deck.splice(0, drawN);
-    const bg = s.act === 0 ? kingsrowImg : factoryImg;
+    const bg = s.act % 2 === 0 ? kingsrowImg : factoryImg;
     const combat: Combat = {
       active: true,
       turn: 1,
@@ -349,6 +355,7 @@ export const useGame = create<GameState>((set, get) => ({
       strength: 0,
       vulnerable: 0,
       weak: 0,
+      poison: 0,
       drawPile: deck,
       hand,
       discardPile: [],
@@ -380,7 +387,7 @@ export const useGame = create<GameState>((set, get) => ({
     if (idx < 0) return;
     const card = c.hand[idx]!;
     if (card.cost > c.energy) return;
-    const livingEnemies = c.enemies.filter((e) => !e.isDead);
+    const livingEnemies = c.enemies.filter((e) => !e.isDead && !e.untargetable);
     const needsTarget = (card.damage ?? 0) > 0 && !card.aoe && livingEnemies.length > 1;
     if (needsTarget && !targetUid) {
       set({ combat: { ...c, targetingCardUid: uid } });
@@ -415,6 +422,37 @@ export const useGame = create<GameState>((set, get) => ({
     // enemy phase
     const charge = { v: c.ultCharge };
     const relics = s.relics;
+    // ---- act boss mechanics ----
+    for (const e of c.enemies) {
+      if (e.isDead || !e.mechanic) continue;
+      if (e.mechanic === "wraith") {
+        if (c.turn % 3 === 0) {
+          const healed = Math.max(1, Math.floor((e.maxHp - e.hp) * 0.25));
+          e.hp = Math.min(e.maxHp, e.hp + healed);
+          e.untargetable = true;
+          pushFloat(c, `+${healed}`, "heal", e.uid);
+          pushLog(c, "Reaper slips into WRAITH FORM — untargetable.");
+        } else {
+          e.untargetable = false;
+        }
+      }
+      if (e.mechanic === "venom") {
+        c.poison += 2;
+        c.weak = Math.max(c.weak, 2);
+        pushFloat(c, "VENOM", "debuff", "player");
+      }
+      if (e.mechanic === "gravity" && c.turn % 2 === 0) {
+        scrambleHand(c);
+        pushLog(c, "Gravitic Flux warps a card in your hand.");
+      }
+      if (e.mechanic === "phase" && !e.enraged && e.hp <= e.maxHp * 0.5) {
+        e.enraged = true;
+        e.strength += 5;
+        e.block += 20;
+        pushFloat(c, "COALESCENCE", "buff", e.uid);
+        pushLog(c, "Moira drops her barrier and burns biotic energy.");
+      }
+    }
     for (const e of c.enemies) {
       if (e.isDead) continue;
       e.block = 0; // reset block before acting
@@ -478,6 +516,19 @@ export const useGame = create<GameState>((set, get) => ({
     // start player turn
     c.turn += 1;
     c.block = 0;
+    if (c.poison > 0) {
+      c.hp -= c.poison;
+      pushFloat(c, `-${c.poison}`, "dmg", "player");
+      pushLog(c, `Venom deals ${c.poison} damage.`);
+      c.poison -= 1;
+      if (c.hp <= 0) {
+        c.hp = 0;
+        c.active = false;
+        handleDeath(set, get);
+        set({ combat: { ...c } });
+        return;
+      }
+    }
     if (c.vulnerable > 0) c.vulnerable -= 1;
     if (c.weak > 0) c.weak -= 1;
     const maxEnergy = maxEnergyFor(s.heroId, relics);
@@ -613,7 +664,7 @@ export const useGame = create<GameState>((set, get) => ({
 }));
 
 // ---------------- helpers ----------------
-function spawnEnemy(def: { id: string; name: string; asset: string; hp: [number, number]; isBoss?: boolean; moves: any[] }, rng: Rng, uidBase: string): EnemyInstance {
+function spawnEnemy(def: EnemyDef, rng: Rng, uidBase: string): EnemyInstance {
   const hp = def.isBoss ? def.hp[0] : rng.int(def.hp[0], def.hp[1]);
   const moveIndex = rng.int(0, def.moves.length - 1);
   return {
@@ -622,6 +673,10 @@ function spawnEnemy(def: { id: string; name: string; asset: string; hp: [number,
     name: def.name,
     asset: def.asset,
     isBoss: !!def.isBoss,
+    mechanic: def.mechanic,
+    mechanicName: def.mechanicName,
+    untargetable: false,
+    enraged: false,
     hp,
     maxHp: hp,
     block: 0,
@@ -633,6 +688,7 @@ function spawnEnemy(def: { id: string; name: string; asset: string; hp: [number,
     isDead: false,
   };
 }
+
 
 function drawCards(c: Combat, n: number) {
   for (let i = 0; i < n; i++) {
@@ -725,8 +781,11 @@ function resolveCard(
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
     const totalBase = card.damage + bonus;
     const targets: EnemyInstance[] = card.aoe
-      ? c.enemies.filter((e) => !e.isDead)
-      : [c.enemies.find((e) => e.uid === targetUid && !e.isDead) ?? c.enemies.find((e) => !e.isDead)!].filter(Boolean);
+      ? c.enemies.filter((e) => !e.isDead && !e.untargetable)
+      : [
+          c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
+            c.enemies.find((e) => !e.isDead && !e.untargetable)!,
+        ].filter(Boolean);
     for (const t of targets) {
       if (!t) continue;
       for (let h = 0; h < hits; h++) {
@@ -739,8 +798,11 @@ function resolveCard(
   // apply debuffs to target
   if (card.vulnerable || card.weak) {
     const targets: EnemyInstance[] = card.aoe
-      ? c.enemies.filter((e) => !e.isDead)
-      : [c.enemies.find((e) => e.uid === targetUid && !e.isDead) ?? c.enemies.find((e) => !e.isDead)!].filter(Boolean);
+      ? c.enemies.filter((e) => !e.isDead && !e.untargetable)
+      : [
+          c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
+            c.enemies.find((e) => !e.isDead && !e.untargetable)!,
+        ].filter(Boolean);
     for (const t of targets) {
       if (!t) continue;
       if (card.vulnerable) t.vulnerable += card.vulnerable;
@@ -806,15 +868,16 @@ function handleCombatWin(set: any, get: () => GameState) {
   }
   // boss -> next act or victory
   if (c.nodeType === "boss") {
-    if (s.act === 0) {
-      // advance to act 1, new map
-      const newMap = generateMap(rngForRun(s.seed, 7000));
+    if (s.act < ACT_BOSSES.length - 1) {
+      const nextAct = s.act + 1;
+      const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
+      const nextMaxHp = maxHpFor(s.heroId, s.relics, nextAct);
       set({
-        hp,
-        maxHp: maxHpFor(s.heroId, s.relics),
+        hp: Math.min(nextMaxHp, hp + Math.floor(nextMaxHp * 0.35)),
+        maxHp: nextMaxHp,
         gold,
         floorsCleared,
-        act: 1,
+        act: nextAct,
         map: newMap,
         currentNodeId: null,
         phase: "map",
@@ -823,17 +886,21 @@ function handleCombatWin(set: any, get: () => GameState) {
         combat: null,
       });
       return;
-    } else {
-      // victory
-      const meta = { ...s.meta, credits: s.meta.credits + 200 + floorsCleared, bestFloor: Math.max(s.meta.bestFloor, floorsCleared), totalRuns: s.meta.totalRuns + 1 };
-      saveMeta(meta);
-      set({ hp, gold, floorsCleared, phase: "victory", combat: null, meta });
-      return;
     }
+    const meta = {
+      ...s.meta,
+      credits: s.meta.credits + 200 + floorsCleared,
+      bestFloor: Math.max(s.meta.bestFloor, floorsCleared),
+      totalRuns: s.meta.totalRuns + 1,
+    };
+    saveMeta(meta);
+    set({ hp, gold, floorsCleared, phase: "victory", combat: null, meta });
+    return;
   }
+
   set({
     hp,
-    maxHp: maxHpFor(s.heroId, s.relics),
+    maxHp: maxHpFor(s.heroId, s.relics, s.act),
     gold,
     floorsCleared,
     phase: "reward",
@@ -886,3 +953,11 @@ export function cardPrice(card: CardInstance): number {
 }
 
 export { HEROES, RELICS, CARDS, tracerImg };
+
+function scrambleHand(c: Combat) {
+  if (c.hand.length === 0) return;
+  const idx = Math.floor(Math.random() * c.hand.length);
+  const ids = Object.keys(CARDS);
+  const newId = ids[Math.floor(Math.random() * ids.length)]!;
+  c.hand[idx] = makeCard(newId, false);
+}

@@ -1,3 +1,4 @@
+import { ACT_COUNT } from "@/game/enemies";
 import { useGame, cardPrice } from "@/game/store";
 import { HEROES } from "@/game/heroes";
 import { RELICS } from "@/game/relics";
@@ -292,7 +293,7 @@ export function Hud() {
         </div>
         <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={12} />
         <div className="mt-0.5 flex items-center justify-between text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
-          <span>F{floors} · ACT {act + 1} · 🂠{deckCount}</span>
+          <span>F{floors} · ACT {act + 1}/{ACT_COUNT} · 🂠{deckCount}</span>
           <div className="flex items-center gap-1">
             {relics.slice(0, 6).map((r) => (
               <div key={r} className="origin-center scale-[0.55]" style={{ width: 24, height: 24 }}>

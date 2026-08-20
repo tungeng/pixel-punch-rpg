@@ -149,6 +149,7 @@ export function CombatScreen() {
             {combat.strength > 0 && <Badge text={`▲ ${combat.strength}`} color="#ff7a45" />}
             {combat.vulnerable > 0 && <Badge text={`VULN ${combat.vulnerable}`} color="#ffcc4d" />}
             {combat.weak > 0 && <Badge text={`WEAK ${combat.weak}`} color="#c47bff" />}
+            {combat.poison > 0 && <Badge text={`VENOM ${combat.poison}`} color="#54d98c" />}
           </div>
         </div>
 
@@ -321,7 +322,7 @@ function EnemyView({
   return (
     <motion.button
       layout
-      onClick={targeting ? () => onSelect(enemyUid) : undefined}
+      onClick={targeting && !enemy.untargetable ? () => onSelect(enemyUid) : undefined}
       animate={
         enemy.isDead
           ? { opacity: 0, scale: 0.3, rotate: 25, y: 20 }
@@ -365,6 +366,7 @@ function EnemyView({
           alt={enemy.name}
           className="pixelated h-24 w-24 object-contain"
           style={{
+            opacity: enemy.untargetable ? 0.45 : 1,
             filter: hit
               ? "drop-shadow(0 0 0 #fff) brightness(3)"
               : "drop-shadow(0 5px 0 rgba(0,0,0,0.55))",
@@ -391,6 +393,8 @@ function EnemyView({
         {enemy.strength > 0 && <Badge text={`▲${enemy.strength}`} color="#ff7a45" />}
         {enemy.vulnerable > 0 && <Badge text={`V${enemy.vulnerable}`} color="#ffcc4d" />}
         {enemy.weak > 0 && <Badge text={`W${enemy.weak}`} color="#c47bff" />}
+        {enemy.untargetable && <Badge text="PHASED" color="#8d8dff" />}
+        {enemy.enraged && <Badge text="ENRAGED" color="#ff3b3b" />}
       </div>
       <AnimatePresence>
         {floats
