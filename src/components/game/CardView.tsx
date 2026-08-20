@@ -1,5 +1,6 @@
 import type { CardInstance } from "@/game/types";
 import { CARD_ICONS, FALLBACK_ICON } from "@/game/icons";
+import { useGame, effectiveCost, scaledDamage, cardDealsDamage } from "@/game/store";
 import { motion } from "motion/react";
 
 type Family = "attack" | "defense" | "utility" | "ultimate";
