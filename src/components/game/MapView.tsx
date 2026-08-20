@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useGame } from "@/game/store";
 import { getStarts } from "@/game/mapgen";
+import { BOSSES, ACT_BOSSES } from "@/game/enemies";
 import type { MapNode } from "@/game/types";
 import { motion } from "motion/react";
 
@@ -153,6 +154,8 @@ export function MapView() {
               pos={posOf(n)}
               canEnter={reachable.has(n.id)}
               isCurrent={n.id === currentId}
+              bossAsset={BOSSES[ACT_BOSSES[act] ?? ""]?.asset ?? null}
+              bossName={BOSSES[ACT_BOSSES[act] ?? ""]?.name ?? "Boss"}
               onEnter={() => enterNode(n.id)}
             />
           ))}
@@ -202,6 +205,8 @@ function NodeButton({
   pos,
   canEnter,
   isCurrent,
+  bossAsset,
+  bossName,
   onEnter,
 }: {
   node: MapNode;
@@ -209,6 +214,8 @@ function NodeButton({
   pos: { leftPct: number; topPx: number };
   canEnter: boolean;
   isCurrent: boolean;
+  bossAsset: string | null;
+  bossName: string;
   onEnter: () => void;
 }) {
   const cfg = NODE[node.type] ?? NODE["combat"]!;
@@ -241,18 +248,29 @@ function NodeButton({
           filter: canEnter || isCurrent ? "none" : "saturate(0.5)",
         }}
       >
-        <span
-          className="text-pixel"
-          style={{ fontSize: node.type === "boss" ? 20 : 14, color: "#07060c" }}
-        >
-          {node.visited ? "✓" : cfg.glyph}
-        </span>
+        {node.type === "boss" && bossAsset && !node.visited ? (
+          <img
+            src={bossAsset}
+            alt={bossName}
+            loading="lazy"
+            width={512}
+            height={512}
+            className="pixelated h-[52px] w-[52px] object-contain"
+          />
+        ) : (
+          <span
+            className="text-pixel"
+            style={{ fontSize: node.type === "boss" ? 20 : 14, color: "#07060c" }}
+          >
+            {node.visited ? "✓" : cfg.glyph}
+          </span>
+        )}
       </div>
       <span
         className="text-pixel mt-1 whitespace-nowrap text-[6px]"
         style={{ color: canEnter ? cfg.color : "rgba(200,205,225,0.45)" }}
       >
-        {cfg.label}
+        {node.type === "boss" ? bossName.toUpperCase() : cfg.label}
       </span>
       {isCurrent && (
         <motion.span
