@@ -17,6 +17,9 @@ export const CARDS: Record<string, CardDef> = {
   tracer_hnr: { id: "tracer_hnr", name: "Hit & Run", type: "attack", cost: 1, hero: "tracer", rarity: "common", damage: 5, block: 4, text: "Deal 5 damage. Gain 4 Block.", up: { damage: 7, block: 6 } },
   tracer_reload: { id: "tracer_reload", name: "Quick Reload", type: "skill", cost: 0, hero: "tracer", rarity: "common", draw: 2, text: "Draw 2 cards.", up: { draw: 3 } },
   tracer_dual: { id: "tracer_dual", name: "Dual Wield", type: "attack", cost: 1, hero: "tracer", rarity: "uncommon", damage: 3, hits: 3, text: "Deal 3 damage 3 times.", up: { damage: 4 } },
+  tracer_flurry: { id: "tracer_flurry", name: "Chrono Flurry", type: "attack", cost: 1, hero: "tracer", rarity: "uncommon", damage: 4, damagePerCardPlayed: 3, text: "Deal 4 damage, +3 for each other card played this turn.", up: { damage: 5, damagePerCardPlayed: 4 } },
+  tracer_overclock: { id: "tracer_overclock", name: "Overclock", type: "skill", cost: 0, hero: "tracer", rarity: "rare", exhaust: true, overclock: { blockPerEnergy: 4, damagePerEnergy: 2 }, text: "At end of turn, each unspent Energy grants 4 Block and 2 damage to a random enemy. Exhaust." },
+
 
   // ---------------- MERCY (support / attrition) ----------------
   mercy_blaster: { id: "mercy_blaster", name: "Caduceus Blaster", type: "attack", cost: 1, hero: "mercy", rarity: "starter", damage: 5, text: "Deal 5 damage.", up: { damage: 7 } },
