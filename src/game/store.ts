@@ -865,15 +865,15 @@ function handleCombatWin(set: any, get: () => GameState) {
   }
   // boss -> next act or victory
   if (c.nodeType === "boss") {
-    if (s.act === 0) {
-      // advance to act 1, new map
-      const newMap = generateMap(rngForRun(s.seed, 7000));
+    if (s.act < ACT_BOSSES.length - 1) {
+      const nextAct = s.act + 1;
+      const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
       set({
         hp,
         maxHp: maxHpFor(s.heroId, s.relics),
         gold,
         floorsCleared,
-        act: 1,
+        act: nextAct,
         map: newMap,
         currentNodeId: null,
         phase: "map",
@@ -882,14 +882,18 @@ function handleCombatWin(set: any, get: () => GameState) {
         combat: null,
       });
       return;
-    } else {
-      // victory
-      const meta = { ...s.meta, credits: s.meta.credits + 200 + floorsCleared, bestFloor: Math.max(s.meta.bestFloor, floorsCleared), totalRuns: s.meta.totalRuns + 1 };
-      saveMeta(meta);
-      set({ hp, gold, floorsCleared, phase: "victory", combat: null, meta });
-      return;
     }
+    const meta = {
+      ...s.meta,
+      credits: s.meta.credits + 200 + floorsCleared,
+      bestFloor: Math.max(s.meta.bestFloor, floorsCleared),
+      totalRuns: s.meta.totalRuns + 1,
+    };
+    saveMeta(meta);
+    set({ hp, gold, floorsCleared, phase: "victory", combat: null, meta });
+    return;
   }
+
   set({
     hp,
     maxHp: maxHpFor(s.heroId, s.relics),
@@ -945,3 +949,11 @@ export function cardPrice(card: CardInstance): number {
 }
 
 export { HEROES, RELICS, CARDS, tracerImg };
+
+function scrambleHand(c: Combat) {
+  if (c.hand.length === 0) return;
+  const idx = Math.floor(Math.random() * c.hand.length);
+  const ids = Object.keys(CARDS);
+  const newId = ids[Math.floor(Math.random() * ids.length)]!;
+  c.hand[idx] = makeCard(newId, false);
+}
