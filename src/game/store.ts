@@ -380,7 +380,6 @@ export const useGame = create<GameState>((set, get) => ({
         combat.vulnerable = Math.max(combat.vulnerable, 1);
         combat.log.push(`${e.name}'s ${e.traitName ?? "aura"} weakens you.`);
       }
-      if (e.trait === "aegis") e.block += 5;
     }
     // barrier_start relic
     if (s.relics.includes("barrier_start")) combat.block = 10;
@@ -507,7 +506,7 @@ export const useGame = create<GameState>((set, get) => ({
       if (intent.type === "summon") {
         const alive = c.enemies.filter((x) => !x.isDead).length;
         const sdef = intent.summonId ? ENEMIES[intent.summonId] : undefined;
-        if (sdef && alive < 4) {
+        if (sdef && alive < 3) {
           const add = spawnEnemy(sdef, summonRng, `add_${Date.now()}_${alive}`);
           const scaled = Math.round(add.maxHp * 0.85);
           add.hp = scaled;

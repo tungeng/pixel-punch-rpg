@@ -132,7 +132,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "aegis",
     traitName: "RIOT SHIELD",
     moves: [
-      { type: "attack", text: "Slug x2 7", damage: 7, hits: 2 },
+      { type: "attack", text: "Slug x2 6", damage: 6, hits: 2 },
       { type: "attack_block", text: "Shield Bash 6+8", damage: 6, block: 8 },
       { type: "attack", text: "Breach Charge 13", damage: 13 },
     ],
@@ -156,7 +156,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     hp: [17, 21],
     moves: [
       { type: "buff", text: "Overclock +2 Str", strength: 2 },
-      { type: "attack", text: "Chain Lightning x3 5", damage: 5, hits: 3 },
+      { type: "attack", text: "Chain Lightning x2 5", damage: 5, hits: 2 },
       { type: "debuff", text: "Static 1 Weak", weak: 1 },
     ],
   },
@@ -223,7 +223,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "aegis",
     traitName: "SENTRY LOCK",
     moves: [
-      { type: "attack", text: "Minigun x3 6", damage: 6, hits: 3 },
+      { type: "attack", text: "Minigun x2 7", damage: 7, hits: 2 },
       { type: "block", text: "Fortify 12", block: 12 },
       { type: "attack", text: "Tank Shell 17", damage: 17 },
     ],
@@ -267,7 +267,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     traitName: "TOXIC AURA",
     moves: [
       { type: "debuff", text: "Necrotoxin 2 Poison", poison: 2 },
-      { type: "attack", text: "Pounce x3 7", damage: 7, hits: 3 },
+      { type: "attack", text: "Pounce x2 8", damage: 8, hits: 2 },
       { type: "attack_block", text: "Carapace 10+10", damage: 10, block: 10 },
     ],
   },
@@ -282,7 +282,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     moves: [
       { type: "attack", text: "Siege Cannon 16", damage: 16 },
       { type: "attack_block", text: "Stomp 11+14", damage: 11, block: 14 },
-      { type: "attack", text: "Twin Guns x3 8", damage: 8, hits: 3 },
+      { type: "attack", text: "Twin Guns x2 9", damage: 9, hits: 2 },
     ],
   },
   elite_wraith: {
@@ -294,7 +294,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "leech",
     traitName: "REVENANT FEAST",
     moves: [
-      { type: "attack", text: "Rend x3 8", damage: 8, hits: 3 },
+      { type: "attack", text: "Rend x2 9", damage: 9, hits: 2 },
       { type: "debuff", text: "Death Mark 1 Vuln", vulnerable: 1, poison: 1 },
       { type: "attack", text: "Echo Scythe 18", damage: 18 },
     ],
