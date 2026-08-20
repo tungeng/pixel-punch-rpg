@@ -175,13 +175,16 @@ export function CardView({
           color: "#1a1200",
           background: dimmed
             ? "linear-gradient(180deg,#8f8f9c,#4c4c58)"
-            : "linear-gradient(180deg,#ffe27a,#e0a021)",
+            : discounted
+              ? "linear-gradient(180deg,#9dffc4,#22a45f)"
+              : "linear-gradient(180deg,#ffe27a,#e0a021)",
           border: "3px solid #07060c",
-          boxShadow: dimmed ? "none" : "0 0 10px -1px #ffcc4d",
+          boxShadow: dimmed ? "none" : `0 0 10px -1px ${discounted ? "#54d98c" : "#ffcc4d"}`,
         }}
       >
-        {card.cost}
+        {shownCost}
       </div>
+
 
       {card.exhaust && (
         <div
