@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type {
   CardInstance,
+  EnemyDef,
   EnemyInstance,
   HeroDef,
   MapNode,
