@@ -374,6 +374,8 @@ export const useGame = create<GameState>((set, get) => ({
       bg,
       nodeType,
       ultUsedThisCombat: false,
+      damageTakenThisCombat: 0,
+      overclock: null,
     };
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
