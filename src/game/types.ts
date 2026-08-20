@@ -76,12 +76,16 @@ export interface EnemyMove {
   weak?: number;
 }
 
+export type BossMechanic = "wraith" | "venom" | "gravity" | "phase";
+
 export interface EnemyDef {
   id: string;
   name: string;
   asset: string;
   hp: [number, number];
   isBoss?: boolean;
+  mechanic?: BossMechanic;
+  mechanicName?: string;
   moves: EnemyMove[];
 }
 
@@ -91,6 +95,10 @@ export interface EnemyInstance {
   name: string;
   asset: string;
   isBoss: boolean;
+  mechanic?: BossMechanic;
+  mechanicName?: string;
+  untargetable: boolean;
+  enraged: boolean;
   hp: number;
   maxHp: number;
   block: number;
@@ -101,6 +109,7 @@ export interface EnemyInstance {
   intent: EnemyMove;
   isDead: boolean;
 }
+
 
 export interface RelicDef {
   id: string;
