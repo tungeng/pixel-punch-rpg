@@ -56,6 +56,16 @@ import dragonblade from "../assets/icons/dragonblade.png";
 import riptire from "../assets/icons/riptire.png";
 import meteorfist from "../assets/icons/meteorfist.png";
 import fireburst from "../assets/icons/fireburst.png";
+import chronoflurry from "../assets/icons/chronoflurry.png";
+import overclockicon from "../assets/icons/overclock.png";
+import lastrites from "../assets/icons/lastrites.png";
+import overflowbarrier from "../assets/icons/overflowbarrier.png";
+import dragonrush from "../assets/icons/dragonrush.png";
+import windcut from "../assets/icons/windcut.png";
+import loosecannon from "../assets/icons/loosecannon.png";
+import scrapheap from "../assets/icons/scrapheap.png";
+import executionericon from "../assets/icons/executioner.png";
+import momentum from "../assets/icons/momentum.png";
 
 /** Per-card pixel-art effect icon (replaces hero portraits on cards). */
 export const CARD_ICONS: Record<string, string> = {
