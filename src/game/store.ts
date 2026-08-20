@@ -460,14 +460,33 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const c = s.combat;
     if (!c || !c.active) return;
+    // Tracer: Overclock cashes unspent energy into Block + chip damage
+    const charge = { v: c.ultCharge };
+    const relics = s.relics;
+    if (c.overclock && c.energy > 0) {
+      const oc = c.overclock;
+      const gainedBlock = oc.blockPerEnergy * c.energy;
+      const chip = oc.damagePerEnergy * c.energy;
+      c.block += gainedBlock;
+      pushFloat(c, `+${gainedBlock}`, "block", "player");
+      const living = c.enemies.filter((e) => !e.isDead && !e.untargetable);
+      if (chip > 0 && living.length > 0) {
+        const rng = new Rng(hashSeed(`${s.seed}_oc_${c.turn}`));
+        const t = rng.pick(living)!;
+        const dealt = applyEnemyDamage(c, t, chip, charge, relics.includes("power_cell"));
+        pushFloat(c, `${dealt}`, "dmg", t.uid);
+      }
+      pushLog(c, `Overclock burns ${c.energy} Energy.`);
+      c.energy = 0;
+    }
+    c.overclock = null;
     // discard hand (non-retain)
     const retain = c.hand.filter((card) => card.retain);
     const discard = c.hand.filter((card) => !card.retain);
     c.discardPile = [...c.discardPile, ...discard];
     c.hand = retain;
     // enemy phase
-    const charge = { v: c.ultCharge };
-    const relics = s.relics;
+
     // ---- act boss mechanics ----
     for (const e of c.enemies) {
       if (e.isDead || !e.mechanic) continue;
