@@ -1,0 +1,127 @@
+import dash from "../assets/icons/dash.png";
+import dualpistols from "../assets/icons/dualpistols.png";
+import rewind from "../assets/icons/rewind.png";
+import bullets from "../assets/icons/bullets.png";
+import plasma from "../assets/icons/plasma.png";
+import syringe from "../assets/icons/syringe.png";
+import bootshield from "../assets/icons/bootshield.png";
+import reload from "../assets/icons/reload.png";
+import crossblades from "../assets/icons/crossblades.png";
+import caduceus from "../assets/icons/caduceus.png";
+import healbeam from "../assets/icons/healbeam.png";
+import boostarrow from "../assets/icons/boostarrow.png";
+import wingshield from "../assets/icons/wingshield.png";
+import halo from "../assets/icons/halo.png";
+import crossbullet from "../assets/icons/crossbullet.png";
+import hush from "../assets/icons/hush.png";
+import regenheart from "../assets/icons/regenheart.png";
+import poisonskull from "../assets/icons/poisonskull.png";
+import shuriken from "../assets/icons/shuriken.png";
+import slasharc from "../assets/icons/slasharc.png";
+import deflect from "../assets/icons/deflect.png";
+import dragonfang from "../assets/icons/dragonfang.png";
+import speedwing from "../assets/icons/speedwing.png";
+import spiritdragon from "../assets/icons/spiritdragon.png";
+import parry from "../assets/icons/parry.png";
+import dashfoot from "../assets/icons/dashfoot.png";
+import bladefan from "../assets/icons/bladefan.png";
+import grenadelauncher from "../assets/icons/grenadelauncher.png";
+import beartrap from "../assets/icons/beartrap.png";
+import mine from "../assets/icons/mine.png";
+import tirebomb from "../assets/icons/tirebomb.png";
+import rpg from "../assets/icons/rpg.png";
+import pellets from "../assets/icons/pellets.png";
+import junkshield from "../assets/icons/junkshield.png";
+import frag from "../assets/icons/frag.png";
+import explosion from "../assets/icons/explosion.png";
+import gauntlet from "../assets/icons/gauntlet.png";
+import groundslam from "../assets/icons/groundslam.png";
+import energybarrier from "../assets/icons/energybarrier.png";
+import uppercut from "../assets/icons/uppercut.png";
+import swordshield from "../assets/icons/swordshield.png";
+import meteor from "../assets/icons/meteor.png";
+import bruise from "../assets/icons/bruise.png";
+import fortify from "../assets/icons/fortify.png";
+import quake from "../assets/icons/quake.png";
+import reinforce from "../assets/icons/reinforce.png";
+import sword from "../assets/icons/sword.png";
+import crosshair from "../assets/icons/crosshair.png";
+import medkit from "../assets/icons/medkit.png";
+import focuseye from "../assets/icons/focuseye.png";
+import lightning from "../assets/icons/lightning.png";
+import carddraw from "../assets/icons/carddraw.png";
+import pulsebomb from "../assets/icons/pulsebomb.png";
+import valkyrie from "../assets/icons/valkyrie.png";
+import dragonblade from "../assets/icons/dragonblade.png";
+import riptire from "../assets/icons/riptire.png";
+import meteorfist from "../assets/icons/meteorfist.png";
+import fireburst from "../assets/icons/fireburst.png";
+
+/** Per-card pixel-art effect icon (replaces hero portraits on cards). */
+export const CARD_ICONS: Record<string, string> = {
+  // Tracer
+  tracer_blink: dash,
+  tracer_pistols: dualpistols,
+  tracer_recall: rewind,
+  tracer_strafe: bullets,
+  tracer_charged: plasma,
+  tracer_adrenaline: syringe,
+  tracer_hnr: bootshield,
+  tracer_reload: reload,
+  tracer_dual: crossblades,
+  tracer_pulse: pulsebomb,
+  // Mercy
+  mercy_blaster: caduceus,
+  mercy_heal: healbeam,
+  mercy_boost: boostarrow,
+  mercy_guardian: wingshield,
+  mercy_resurrect: halo,
+  mercy_shot: crossbullet,
+  mercy_pacify: hush,
+  mercy_regen: regenheart,
+  mercy_blight: poisonskull,
+  mercy_valkyrie: valkyrie,
+  // Genji
+  genji_shuriken: shuriken,
+  genji_swift: slasharc,
+  genji_deflect: deflect,
+  genji_fang: dragonfang,
+  genji_agility: speedwing,
+  genji_spirit: spiritdragon,
+  genji_riposte: parry,
+  genji_dash: dashfoot,
+  genji_storm: bladefan,
+  genji_dragon: dragonblade,
+  // Junkrat
+  junkrat_launcher: grenadelauncher,
+  junkrat_trap: beartrap,
+  junkrat_concussive: mine,
+  junkrat_mine: tirebomb,
+  junkrat_rpg: rpg,
+  junkrat_scatter: pellets,
+  junkrat_armor: junkshield,
+  junkrat_frag: frag,
+  junkrat_blast: explosion,
+  junkrat_riptire: riptire,
+  // Doomfist
+  doomfist_punch: gauntlet,
+  doomfist_slam: groundslam,
+  doomfist_shield: energybarrier,
+  doomfist_uppercut: uppercut,
+  doomfist_bestdefense: swordshield,
+  doomfist_charge: meteor,
+  doomfist_bruise: bruise,
+  doomfist_fortify: fortify,
+  doomfist_quake: quake,
+  doomfist_meteor: meteorfist,
+  // Neutral
+  n_block: reinforce,
+  n_strike: sword,
+  n_vuln: crosshair,
+  n_heal: medkit,
+  n_focus: focuseye,
+  n_power: lightning,
+};
+
+export const FALLBACK_ICON = fireburst;
+export const CARD_DRAW_ICON = carddraw;

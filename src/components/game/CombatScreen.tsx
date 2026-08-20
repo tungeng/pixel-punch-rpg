@@ -6,13 +6,33 @@ import { Bar } from "./Bar";
 import { PixelButton } from "./PixelButton";
 import { useEffect, useRef, useState } from "react";
 
-const INTENT_ICON: Record<string, string> = {
-  attack: "⚔",
-  block: "🛡",
-  buff: "▲",
-  debuff: "☠",
-  attack_block: "⚔🛡",
-};
+
+/** Slay-the-Spire style intent readout: what the enemy will do, and for how much. */
+function intentParts(intent: {
+  type: string;
+  damage?: number;
+  hits?: number;
+  block?: number;
+  strength?: number;
+  vulnerable?: number;
+  weak?: number;
+}) {
+  const out: { icon: string; text: string; color: string }[] = [];
+  if (intent.damage) {
+    out.push({
+      icon: "⚔",
+      text: `${intent.damage}${intent.hits && intent.hits > 1 ? `x${intent.hits}` : ""}`,
+      color: "#ff3b3b",
+    });
+  }
+  if (intent.block) out.push({ icon: "🛡", text: `${intent.block}`, color: "#54a8ff" });
+  if (intent.strength) out.push({ icon: "▲", text: `+${intent.strength}`, color: "#54d98c" });
+  if (intent.vulnerable) out.push({ icon: "☠", text: `V${intent.vulnerable}`, color: "#ffcc4d" });
+  if (intent.weak) out.push({ icon: "☠", text: `W${intent.weak}`, color: "#c47bff" });
+  if (out.length === 0) out.push({ icon: "?", text: "", color: "#cbd5e1" });
+  return out;
+}
+
 
 export function CombatScreen() {
   const combat = useGame((s) => s.combat);
@@ -157,13 +177,11 @@ export function CombatScreen() {
               {combat.energy}
             </motion.div>
           </div>
-          <div
-            className="flex gap-2 text-[12px] text-foreground/75"
-            style={{ fontFamily: "var(--font-pixel-body)" }}
-          >
-            <span>🂠 {combat.drawPile.length}</span>
-            <span>♻ {combat.discardPile.length}</span>
+          <div className="flex gap-1">
+            <PileChip label="DRAW" value={combat.drawPile.length} color="#54a8ff" />
+            <PileChip label="DISCARD" value={combat.discardPile.length} color="#c47bff" />
           </div>
+
         </div>
       </div>
 
@@ -319,14 +337,17 @@ function EnemyView({
           animate={{ y: 0, opacity: 1 }}
           className="mb-1 flex flex-col items-center"
         >
-          <div
-            className="text-pixel px-1.5 py-0.5 text-[9px] text-black"
-            style={{
-              background: intentColor(enemy.intent.type),
-              border: "2px solid #07060c",
-            }}
-          >
-            {INTENT_ICON[enemy.intent.type] ?? "?"}
+          <div className="flex items-center gap-1">
+            {intentParts(enemy.intent).map((p, i) => (
+              <div
+                key={i}
+                className="text-pixel flex items-center gap-0.5 px-1 py-0.5 text-[9px] text-black"
+                style={{ background: p.color, border: "2px solid #07060c" }}
+              >
+                <span>{p.icon}</span>
+                {p.text && <span>{p.text}</span>}
+              </div>
+            ))}
           </div>
           <div
             className="text-[12px] text-foreground/85"
@@ -336,6 +357,7 @@ function EnemyView({
           </div>
         </motion.div>
       )}
+
 
       <div className={hit ? "hit-shake" : "idle-bob-slow"}>
         <img
@@ -382,17 +404,6 @@ function EnemyView({
   );
 }
 
-function intentColor(type: string) {
-  return type === "attack"
-    ? "#ff3b3b"
-    : type === "block"
-      ? "#54a8ff"
-      : type === "buff"
-        ? "#54d98c"
-        : type === "debuff"
-          ? "#c47bff"
-          : "#ffcc4d";
-}
 
 function Badge({ text, color }: { text: string; color: string }) {
   return (
@@ -427,5 +438,24 @@ function FloatText({ text, kind }: { text: string; kind: string }) {
     >
       {text}
     </motion.div>
+  );
+}
+
+function PileChip({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div
+      className="flex flex-col items-center px-1 py-[1px]"
+      style={{ background: "#07060c", border: `2px solid ${color}` }}
+    >
+      <span className="text-pixel text-[5.5px]" style={{ color }}>
+        {label}
+      </span>
+      <span
+        className="text-[13px] leading-[12px] text-foreground"
+        style={{ fontFamily: "var(--font-pixel-body)" }}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
