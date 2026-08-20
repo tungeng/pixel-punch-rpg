@@ -10,7 +10,7 @@ import type {
 import { Rng, hashSeed, randomSeed } from "./rng";
 import { makeCard, CARDS, NEUTRAL_POOL } from "./cards";
 import { HEROES, UNLOCKABLE_HEROES } from "./heroes";
-import { ENEMIES, ELITE_POOL, BOSSES, ACT_BOSSES } from "./enemies";
+import { ENEMIES, BOSSES, ACT_BOSSES, enemyPoolFor, elitePoolFor } from "./enemies";
 import { RELICS, ALL_RELIC_IDS } from "./relics";
 import { generateMap } from "./mapgen";
 import tracerImg from "../assets/tracer.png";
@@ -303,19 +303,22 @@ export const useGame = create<GameState>((set, get) => ({
       enemies = [spawnEnemy(def, rng, `e_${Date.now()}`)];
       isBoss = true;
     } else if (nodeType === "elite") {
-      const id = rng.pick(ELITE_POOL);
+      const elitePool = elitePoolFor(s.act);
+      const id = rng.pick(elitePool);
       const def = ENEMIES[id]!;
       enemies = [spawnEnemy(def, rng, `e_${Date.now()}_0`)];
-      if (rng.chance(0.3 + s.act * 0.15)) {
-        const id2 = rng.pick(ELITE_POOL.filter((x) => x !== id)) ?? ELITE_POOL[0]!;
-        enemies.push(spawnEnemy(ENEMIES[id2]!, rng, `e_${Date.now()}_1`));
+      if (rng.chance(0.2 + s.act * 0.1)) {
+        const escort = rng.pick(enemyPoolFor(s.act));
+        enemies.push(spawnEnemy(ENEMIES[escort]!, rng, `e_${Date.now()}_1`));
       }
     } else {
-      const pool = ["talon_trooper", "omnic_grunt", "sweeper_bot", "sniper"];
+      const pool = enemyPoolFor(s.act);
       const r = rng.next();
       const count = r < 0.4 ? 1 : r < 0.9 ? 2 : 3;
+      const used: string[] = [];
       for (let i = 0; i < count; i++) {
         const id = rng.pick(pool);
+        used.push(id);
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
       }
     }
