@@ -136,7 +136,16 @@ export function CardView({
           }}
         >
           {card.text}
+          {scalingCard && dynamicDamage !== null && (
+            <div
+              className="text-pixel mt-[2px]"
+              style={{ fontSize: big ? 7 : 6, color: "#ffcc4d" }}
+            >
+              NOW {dynamicDamage}
+            </div>
+          )}
         </div>
+
 
         {/* footer */}
         <div
