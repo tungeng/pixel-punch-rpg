@@ -26,8 +26,8 @@ export const ENEMIES: Record<string, EnemyDef> = {
     asset: talonImg,
     hp: [22, 28],
     moves: [
-      { type: "attack", text: "Burst 7", damage: 7 },
-      { type: "attack", text: "Spray 5", damage: 5 },
+      { type: "attack", text: "Burst 8", damage: 8 },
+      { type: "attack", text: "Spray 6", damage: 6 },
       { type: "block", text: "Bunker 4", block: 4 },
     ],
   },
@@ -37,8 +37,8 @@ export const ENEMIES: Record<string, EnemyDef> = {
     asset: omnicImg,
     hp: [14, 18],
     moves: [
-      { type: "attack", text: "Pulse 5", damage: 5 },
-      { type: "attack", text: "Jab 4", damage: 4 },
+      { type: "attack", text: "Pulse 6", damage: 6 },
+      { type: "attack", text: "Jab 5", damage: 5 },
       { type: "block", text: "Shield 3", block: 3 },
     ],
   },
@@ -48,9 +48,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     asset: sniperImg,
     hp: [18, 22],
     moves: [
-      { type: "attack", text: "Headshot 12", damage: 12 },
+      { type: "attack", text: "Headshot 14", damage: 14 },
       { type: "debuff", text: "Suppression 2 Weak", weak: 2 },
-      { type: "attack", text: "Potshot 6", damage: 6 },
+      { type: "attack", text: "Potshot 7", damage: 7 },
     ],
   },
   bastion: {
@@ -59,9 +59,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     asset: bastionImg,
     hp: [30, 36],
     moves: [
-      { type: "attack", text: "Minigun 9", damage: 9 },
+      { type: "attack", text: "Minigun 11", damage: 11 },
       { type: "block", text: "Deploy 6 Block", block: 6 },
-      { type: "attack", text: "Burst x2 6", damage: 6, hits: 2 },
+      { type: "attack", text: "Burst x2 7", damage: 7, hits: 2 },
     ],
   },
   sweeper_bot: {
@@ -70,9 +70,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     asset: omnicImg,
     hp: [16, 20],
     moves: [
-      { type: "attack", text: "Sweep x2 4", damage: 4, hits: 2 },
+      { type: "attack", text: "Sweep x2 5", damage: 5, hits: 2 },
       { type: "debuff", text: "Mark 1 Vuln", vulnerable: 1 },
-      { type: "attack", text: "Slam 6", damage: 6 },
+      { type: "attack", text: "Slam 7", damage: 7 },
     ],
   },
   talon_rusher: {
@@ -81,8 +81,8 @@ export const ENEMIES: Record<string, EnemyDef> = {
     asset: rusherImg,
     hp: [12, 15],
     moves: [
-      { type: "attack", text: "Knife Flurry x2 4", damage: 4, hits: 2 },
-      { type: "attack", text: "Lunge x3 3", damage: 3, hits: 3 },
+      { type: "attack", text: "Knife Flurry x2 5", damage: 5, hits: 2 },
+      { type: "attack", text: "Lunge x3 4", damage: 4, hits: 3 },
       { type: "buff", text: "Adrenaline +1 Str", strength: 1 },
     ],
   },
@@ -94,9 +94,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "aegis",
     traitName: "AEGIS FIELD",
     moves: [
-      { type: "attack", text: "Repulsor 6", damage: 6 },
+      { type: "attack", text: "Repulsor 7", damage: 7 },
       { type: "block", text: "Barrier 8", block: 8 },
-      { type: "attack_block", text: "Ram 4+4", damage: 4, block: 4 },
+      { type: "attack_block", text: "Ram 5+4", damage: 5, block: 4 },
     ],
   },
   hex_drone: {
@@ -107,7 +107,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     moves: [
       { type: "debuff", text: "Hex 1 Weak", weak: 1 },
       { type: "debuff", text: "Fracture 1 Vuln", vulnerable: 1 },
-      { type: "attack", text: "Arc Bolt 6", damage: 6 },
+      { type: "attack", text: "Arc Bolt 7", damage: 7 },
     ],
   },
   assembler_pod: {
@@ -118,7 +118,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     moves: [
       { type: "summon", text: "Assemble Grunt", summonId: "omnic_grunt" },
       { type: "block", text: "Seal Hatch 7", block: 7 },
-      { type: "attack", text: "Scrap Shot 7", damage: 7 },
+      { type: "attack", text: "Scrap Shot 8", damage: 8 },
       { type: "summon", text: "Assemble Sweeper", summonId: "sweeper_bot" },
     ],
   },
@@ -132,9 +132,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "aegis",
     traitName: "RIOT SHIELD",
     moves: [
-      { type: "attack", text: "Slug x2 6", damage: 6, hits: 2 },
-      { type: "attack_block", text: "Shield Bash 6+8", damage: 6, block: 8 },
-      { type: "attack", text: "Breach Charge 13", damage: 13 },
+      { type: "attack", text: "Slug x2 7", damage: 7, hits: 2 },
+      { type: "attack_block", text: "Shield Bash 7+8", damage: 7, block: 8 },
+      { type: "attack", text: "Breach Charge 15", damage: 15 },
     ],
   },
   venom_stalker: {
@@ -144,9 +144,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     hp: [21, 25],
     moves: [
       { type: "debuff", text: "Venom Spit 2 Poison", poison: 2 },
-      { type: "attack", text: "Pounce x2 6", damage: 6, hits: 2 },
+      { type: "attack", text: "Pounce x2 7", damage: 7, hits: 2 },
       { type: "debuff", text: "Corrode 1 Vuln", vulnerable: 1 },
-      { type: "attack", text: "Mandibles 11", damage: 11 },
+      { type: "attack", text: "Mandibles 13", damage: 13 },
     ],
   },
   arc_caster: {
@@ -156,7 +156,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
     hp: [17, 21],
     moves: [
       { type: "buff", text: "Overclock +2 Str", strength: 2 },
-      { type: "attack", text: "Chain Lightning x2 5", damage: 5, hits: 2 },
+      { type: "attack", text: "Chain Lightning x2 6", damage: 6, hits: 2 },
       { type: "debuff", text: "Static 1 Weak", weak: 1 },
     ],
   },
@@ -168,9 +168,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "regen",
     traitName: "SELF-REPAIR",
     moves: [
-      { type: "attack", text: "Siege Cannon 16", damage: 16 },
-      { type: "attack_block", text: "Stomp 9+10", damage: 9, block: 10 },
-      { type: "attack", text: "Twin Guns x2 9", damage: 9, hits: 2 },
+      { type: "attack", text: "Siege Cannon 19", damage: 19 },
+      { type: "attack_block", text: "Stomp 11+10", damage: 11, block: 10 },
+      { type: "attack", text: "Twin Guns x2 11", damage: 11, hits: 2 },
     ],
   },
   wraith_echo: {
@@ -181,9 +181,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "leech",
     traitName: "SOUL DRAIN",
     moves: [
-      { type: "attack", text: "Rend x2 8", damage: 8, hits: 2 },
+      { type: "attack", text: "Rend x2 9", damage: 9, hits: 2 },
       { type: "debuff", text: "Dread 1 Weak", weak: 1, poison: 1 },
-      { type: "attack", text: "Echo Scythe 14", damage: 14 },
+      { type: "attack", text: "Echo Scythe 17", damage: 17 },
     ],
   },
   talon_heavy: {
@@ -192,10 +192,10 @@ export const ENEMIES: Record<string, EnemyDef> = {
     asset: talonImg,
     hp: [34, 40],
     moves: [
-      { type: "attack", text: "Slug 8", damage: 8 },
-      { type: "attack_block", text: "Bulwark 5+5", damage: 5, block: 5 },
+      { type: "attack", text: "Slug 9", damage: 9 },
+      { type: "attack_block", text: "Bulwark 6+5", damage: 6, block: 5 },
       { type: "buff", text: "Rage +2 Str", strength: 2 },
-      { type: "attack", text: "Suppress 11", damage: 11 },
+      { type: "attack", text: "Suppress 13", damage: 13 },
     ],
   },
 
@@ -209,9 +209,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "rampage",
     traitName: "WARCRY",
     moves: [
-      { type: "attack", text: "Slug 10", damage: 10 },
-      { type: "attack_block", text: "Bulwark 7+7", damage: 7, block: 7 },
-      { type: "attack", text: "Suppress x2 8", damage: 8, hits: 2 },
+      { type: "attack", text: "Slug 13", damage: 13 },
+      { type: "attack_block", text: "Bulwark 9+7", damage: 9, block: 7 },
+      { type: "attack", text: "Suppress x2 10", damage: 10, hits: 2 },
     ],
   },
   elite_bastion: {
@@ -223,9 +223,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "aegis",
     traitName: "SENTRY LOCK",
     moves: [
-      { type: "attack", text: "Minigun x2 7", damage: 7, hits: 2 },
+      { type: "attack", text: "Minigun x2 9", damage: 9, hits: 2 },
       { type: "block", text: "Fortify 12", block: 12 },
-      { type: "attack", text: "Tank Shell 17", damage: 17 },
+      { type: "attack", text: "Tank Shell 22", damage: 22 },
     ],
   },
   elite_warden: {
@@ -237,9 +237,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "aegis",
     traitName: "PHALANX FIELD",
     moves: [
-      { type: "attack_block", text: "Crush 9+10", damage: 9, block: 10 },
+      { type: "attack_block", text: "Crush 12+10", damage: 12, block: 10 },
       { type: "debuff", text: "Lockdown 1 Weak", weak: 1 },
-      { type: "attack", text: "Repulsor Beam x2 8", damage: 8, hits: 2 },
+      { type: "attack", text: "Repulsor Beam x2 10", damage: 10, hits: 2 },
     ],
   },
   elite_matriarch: {
@@ -252,9 +252,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     traitName: "NANO-FORGE",
     moves: [
       { type: "summon", text: "Deploy Rusher", summonId: "talon_rusher" },
-      { type: "attack", text: "Scrap Storm x2 8", damage: 8, hits: 2 },
+      { type: "attack", text: "Scrap Storm x2 10", damage: 10, hits: 2 },
       { type: "summon", text: "Deploy Hex Drone", summonId: "hex_drone" },
-      { type: "attack", text: "Foundry Blast 15", damage: 15 },
+      { type: "attack", text: "Foundry Blast 19", damage: 19 },
     ],
   },
   elite_venom: {
@@ -267,8 +267,8 @@ export const ENEMIES: Record<string, EnemyDef> = {
     traitName: "TOXIC AURA",
     moves: [
       { type: "debuff", text: "Necrotoxin 2 Poison", poison: 2 },
-      { type: "attack", text: "Pounce x2 8", damage: 8, hits: 2 },
-      { type: "attack_block", text: "Carapace 10+10", damage: 10, block: 10 },
+      { type: "attack", text: "Pounce x2 10", damage: 10, hits: 2 },
+      { type: "attack_block", text: "Carapace 13+10", damage: 13, block: 10 },
     ],
   },
   elite_titan: {
@@ -280,9 +280,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "rampage",
     traitName: "SIEGE PROTOCOL",
     moves: [
-      { type: "attack", text: "Siege Cannon 16", damage: 16 },
-      { type: "attack_block", text: "Stomp 11+14", damage: 11, block: 14 },
-      { type: "attack", text: "Twin Guns x2 9", damage: 9, hits: 2 },
+      { type: "attack", text: "Siege Cannon 20", damage: 20 },
+      { type: "attack_block", text: "Stomp 14+14", damage: 14, block: 14 },
+      { type: "attack", text: "Twin Guns x2 12", damage: 12, hits: 2 },
     ],
   },
   elite_wraith: {
@@ -294,9 +294,9 @@ export const ENEMIES: Record<string, EnemyDef> = {
     trait: "leech",
     traitName: "REVENANT FEAST",
     moves: [
-      { type: "attack", text: "Rend x2 9", damage: 9, hits: 2 },
+      { type: "attack", text: "Rend x2 12", damage: 12, hits: 2 },
       { type: "debuff", text: "Death Mark 1 Vuln", vulnerable: 1, poison: 1 },
-      { type: "attack", text: "Echo Scythe 18", damage: 18 },
+      { type: "attack", text: "Echo Scythe 23", damage: 23 },
     ],
   },
 };
