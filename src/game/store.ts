@@ -400,9 +400,9 @@ export const useGame = create<GameState>((set, get) => ({
     const idx = c.hand.findIndex((x) => x.uid === uid);
     if (idx < 0) return;
     const card = c.hand[idx]!;
-    if (card.cost > c.energy) return;
+    if (effectiveCost(card, c) > c.energy) return;
     const livingEnemies = c.enemies.filter((e) => !e.isDead && !e.untargetable);
-    const needsTarget = (card.damage ?? 0) > 0 && !card.aoe && livingEnemies.length > 1;
+    const needsTarget = cardDealsDamage(card) && !card.aoe && livingEnemies.length > 1;
     if (needsTarget && !targetUid) {
       set({ combat: { ...c, targetingCardUid: uid } });
       return;
