@@ -66,7 +66,7 @@ export interface HeroDef {
 }
 
 export interface EnemyMove {
-  type: "attack" | "block" | "buff" | "debuff" | "attack_block";
+  type: "attack" | "block" | "buff" | "debuff" | "attack_block" | "summon";
   text: string;
   damage?: number;
   hits?: number;
@@ -74,9 +74,19 @@ export interface EnemyMove {
   strength?: number;
   vulnerable?: number;
   weak?: number;
+  poison?: number;
+  summonId?: string;
 }
 
 export type BossMechanic = "wraith" | "venom" | "gravity" | "phase";
+
+/** Persistent enemy behaviours layered on top of the move rotation. */
+export type EnemyTrait =
+  | "aegis" // regains block every turn — soaks the first hits
+  | "rampage" // gains strength each turn
+  | "leech" // heals when it lands an attack
+  | "curse" // applies weak + vulnerable at battle start
+  | "regen"; // heals a flat amount each turn
 
 export interface EnemyDef {
   id: string;
@@ -84,6 +94,9 @@ export interface EnemyDef {
   asset: string;
   hp: [number, number];
   isBoss?: boolean;
+  isElite?: boolean;
+  trait?: EnemyTrait;
+  traitName?: string;
   mechanic?: BossMechanic;
   mechanicName?: string;
   moves: EnemyMove[];
@@ -95,6 +108,9 @@ export interface EnemyInstance {
   name: string;
   asset: string;
   isBoss: boolean;
+  isElite?: boolean | undefined;
+  trait?: EnemyTrait | undefined;
+  traitName?: string | undefined;
   mechanic?: BossMechanic | undefined;
   mechanicName?: string | undefined;
   untargetable: boolean;
