@@ -334,12 +334,33 @@ export function CombatScreen() {
                   transformOrigin: "bottom center",
                 }}
               >
-                <CardView card={card} dimmed={dimmed} onClick={() => playCard(card.uid)} />
+                <CardView
+                  card={card}
+                  dimmed={dimmed || flying?.uid === card.uid}
+                  onClick={() => onPlayCard(card)}
+                />
               </motion.div>
             );
           })}
         </AnimatePresence>
       </div>
+
+      {/* card in flight — flies from hand up to the arena before resolving */}
+      <AnimatePresence>
+        {flying && (
+          <motion.div
+            key={flying.uid}
+            initial={{ y: 0, scale: 0.9, opacity: 0.95, rotate: 0 }}
+            animate={{ y: -230, scale: 1.15, opacity: 0, rotate: 6 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.26, ease: "easeOut" }}
+            className="pointer-events-none absolute bottom-10 left-1/2 z-40 -translate-x-1/2"
+          >
+            <CardView card={flying} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* targeting overlay */}
       <AnimatePresence>
