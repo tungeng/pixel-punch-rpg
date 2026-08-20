@@ -20,15 +20,15 @@ function intentParts(intent: {
   const out: { icon: string; text: string; color: string }[] = [];
   if (intent.damage) {
     out.push({
-      icon: "⚔",
+      icon: "ATK",
       text: `${intent.damage}${intent.hits && intent.hits > 1 ? `x${intent.hits}` : ""}`,
       color: "#ff3b3b",
     });
   }
-  if (intent.block) out.push({ icon: "🛡", text: `${intent.block}`, color: "#54a8ff" });
-  if (intent.strength) out.push({ icon: "▲", text: `+${intent.strength}`, color: "#54d98c" });
-  if (intent.vulnerable) out.push({ icon: "☠", text: `V${intent.vulnerable}`, color: "#ffcc4d" });
-  if (intent.weak) out.push({ icon: "☠", text: `W${intent.weak}`, color: "#c47bff" });
+  if (intent.block) out.push({ icon: "DEF", text: `${intent.block}`, color: "#54a8ff" });
+  if (intent.strength) out.push({ icon: "STR", text: `+${intent.strength}`, color: "#54d98c" });
+  if (intent.vulnerable) out.push({ icon: "VULN", text: `${intent.vulnerable}`, color: "#ffcc4d" });
+  if (intent.weak) out.push({ icon: "WEAK", text: `${intent.weak}`, color: "#c47bff" });
   if (out.length === 0) out.push({ icon: "?", text: "", color: "#cbd5e1" });
   return out;
 }
