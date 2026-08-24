@@ -691,6 +691,7 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const c = s.combat;
     if (!c || !c.active || c.ultCharge < 100) return;
+    pushRewind(c);
     const hero = getHero(s.heroId);
     const ult = { ...hero.ultimate, uid: `ult_${c.turn}`, upgraded: false } as CardInstance;
     c.ultCharge = 0;
