@@ -9,16 +9,15 @@ import { Heart, Zap, Star, Lock } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "OVERTUNG — Pixel Deck Roguelike" },
+      { title: "Overtung" },
       {
         name: "description",
-        content:
-          "A pixel-art Overwatch deck-roguelike. Bend time, break the breach. Slay-the-Spire-style card combat across a fractured timeline.",
+        content: "TUNGVERWATCH",
       },
-      { property: "og:title", content: "OVERTUNG" },
+      { property: "og:title", content: "Overtung" },
       {
         property: "og:description",
-        content: "A pixel-art Overwatch deck-roguelike. Bend time. Break the breach.",
+        content: "TUNGVERWATCH",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
