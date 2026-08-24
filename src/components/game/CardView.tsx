@@ -93,7 +93,11 @@ export function CardView({
       ? scaledDamage(card, live)
       : null;
   const scalingCard =
-    !!card.damagePerCardPlayed || !!card.damagePerMissingHp || !!card.damagePerDiscard;
+    !!card.damagePerCardPlayed ||
+    !!card.damagePerMissingHp ||
+    !!card.damagePerDiscard ||
+    !!card.damagePerBlock;
+
 
 
   const synergy = !!live && !dimmed && cardSynergyActive(card, live);
