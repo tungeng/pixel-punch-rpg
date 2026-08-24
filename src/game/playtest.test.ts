@@ -29,6 +29,7 @@ function simulateRun(hero: string, seed: string): RunResult {
       credits: 0,
       bestFloor: 0,
       totalRuns: 0,
+      upgrades: {},
     },
   });
   g().startRun(hero, seed);
