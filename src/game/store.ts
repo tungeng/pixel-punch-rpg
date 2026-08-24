@@ -404,12 +404,15 @@ export const useGame = create<GameState>((set, get) => ({
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
       }
     }
-    // Difficulty curve: the breach hardens the deeper you fall.
+    // Difficulty curve: the breach hardens the deeper you fall — and it adapts
+    // to how much relic power you're carrying, so a stacked run still bites.
     const floor = s.floorsCleared;
-    const hpScale = 1 + floor * 0.055 + s.act * 0.16;
+    const relicCount = s.relics.length;
+    const hpScale = 1 + floor * 0.085 + s.act * 0.22 + relicCount * 0.055;
     const strBonus =
-      Math.floor(floor / 5) +
+      Math.floor(floor / 4) +
       Math.floor(s.act / 2) +
+      Math.floor(relicCount / 3) +
       (nodeType === "elite" ? 2 + Math.floor(s.act / 2) : 0);
     for (const e of enemies) {
       const scaled = Math.round(e.maxHp * hpScale);
@@ -417,6 +420,7 @@ export const useGame = create<GameState>((set, get) => ({
       e.maxHp = scaled;
       e.strength = strBonus;
     }
+
 
     // junkrat passive: enemies start with 1 vulnerable
     if (s.heroId === "junkrat") {
