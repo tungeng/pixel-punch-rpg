@@ -238,7 +238,8 @@ function applyEnemyDamage(
     enemy.hp = 0;
     enemy.isDead = true;
   }
-  charge.v += relicPower ? dmg * 1.6 : dmg;
+  // Ults no longer charge off their own damage, so normal card damage charges faster.
+  charge.v += dmg * (relicPower ? 2.2 : 1.4);
   return dmg;
 }
 
