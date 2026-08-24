@@ -139,6 +139,7 @@ export const HEROES: Record<string, HeroDef> = {
     cardPool: [
       "moira_decay", "moira_surge", "moira_bloom", "moira_miasma",
       "moira_bioticfield", "moira_rot", "moira_leech", "moira_contagion",
+      "moira_purge",
     ],
     ultimate: {
       id: "moira_coalescence",
