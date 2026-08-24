@@ -5,7 +5,7 @@ export function Bar({
   max,
   color,
   label,
-  height = 16,
+  height = 18,
 }: {
   value: number;
   max: number;
@@ -29,7 +29,7 @@ export function Bar({
       />
       {label && (
         <div
-          className="absolute inset-0 flex items-center justify-center text-pixel text-[8px] text-white"
+          className="absolute inset-0 flex items-center justify-center text-pixel text-[9px] text-white"
           style={{ textShadow: "1px 1px 0 #000" }}
         >
           {label}

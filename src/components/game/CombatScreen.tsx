@@ -257,10 +257,11 @@ export function CombatScreen() {
               value={combat.hp}
               max={combat.maxHp}
               color="linear-gradient(90deg,#54d98c,#a8ff60)"
-              height={12}
+              height={16}
               label={`${combat.hp}/${combat.maxHp}`}
             />
           </div>
+
         </div>
 
         {/* energy orb + piles */}
@@ -549,10 +550,11 @@ function EnemyView({
           value={enemy.hp}
           max={enemy.maxHp}
           color="linear-gradient(90deg,#ff3b3b,#ff7a45)"
-          height={10}
+          height={14}
           label={`${enemy.hp}/${enemy.maxHp}`}
         />
       </div>
+
       <div className="mt-0.5 flex flex-wrap justify-center gap-0.5">
         {enemy.block > 0 && <Badge text={`🛡${enemy.block}`} color="#54a8ff" />}
         {enemy.strength > 0 && <Badge text={`▲${enemy.strength}`} color="#ff7a45" />}
