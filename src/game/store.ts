@@ -1265,9 +1265,18 @@ function resolveCard(
 
   // move to discard/exhaust
   if (!isUlt) {
-    if (card.exhaust) c.exhaustPile.push(card);
-    else c.discardPile.push(card);
+    if (card.exhaust) {
+      c.exhaustPile.push(card);
+      if (relics.includes("phoenix_core")) {
+        const healed = Math.min(c.maxHp - c.hp, 3);
+        if (healed > 0) {
+          c.hp += healed;
+          pushFloat(c, `+${healed}`, "heal", "player");
+        }
+      }
+    } else c.discardPile.push(card);
   }
+
   pushLog(c, `Played ${card.name}`);
 
   // check combat win
