@@ -16,6 +16,7 @@ import { generateMap } from "./mapgen";
 import tracerImg from "../assets/tracer.png";
 import kingsrowImg from "../assets/bg_kingsrow.jpg";
 import factoryImg from "../assets/bg_factory.jpg";
+import { UPGRADES, tierOf, upgradeBonusMaxHp, upgradeCacheRelicChance, upgradeCreditMult, upgradeStartGold } from "./upgrades";
 
 export type Phase =
   | "map"
@@ -84,6 +85,8 @@ export interface GameState {
     credits: number;
     bestFloor: number;
     totalRuns: number;
+    /** permanent Archive upgrades: upgrade id -> purchased tier */
+    upgrades: Record<string, number>;
   };
   // run
   inRun: boolean;
@@ -129,6 +132,7 @@ export interface GameState {
   leaveShop: () => void;
   toMap: () => void;
   abandon: () => void;
+  buyUpgrade: (id: string) => void;
   addFloat: (f: Omit<Float, "id" | "at">) => void;
   pruneFloats: () => void;
 }
@@ -137,7 +141,7 @@ const META_KEY = "overtung_meta_v1";
 const LEGACY_META_KEY = "chronobreak_meta_v1";
 
 function defaultMeta() {
-  return { unlockedHeroes: [...STARTER_HEROES], credits: 0, bestFloor: 0, totalRuns: 0 };
+  return { unlockedHeroes: [...STARTER_HEROES], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number> };
 }
 
 let floatId = 1;
@@ -149,6 +153,7 @@ function loadMetaFromStorage() {
       window.localStorage.getItem(META_KEY) ?? window.localStorage.getItem(LEGACY_META_KEY);
     if (!raw) return defaultMeta();
     const m = { ...defaultMeta(), ...JSON.parse(raw) };
+    if (!m.upgrades || typeof m.upgrades !== "object") m.upgrades = {};
     if (!Array.isArray(m.unlockedHeroes)) m.unlockedHeroes = [...STARTER_HEROES];
     // starters are always available (new starter heroes reach old saves too)
     m.unlockedHeroes = Array.from(new Set([...STARTER_HEROES, ...m.unlockedHeroes]));
@@ -185,9 +190,10 @@ function drawCountFor(heroId: string, relics: string[]): number {
   return d;
 }
 
-function maxHpFor(heroId: string, relics: string[], act = 0): number {
+function maxHpFor(heroId: string, relics: string[], act = 0, upgrades?: Record<string, number>): number {
   let h = getHero(heroId).maxHp;
   if (relics.includes("gold_heart")) h += 25;
+  h += upgradeBonusMaxHp(upgrades);
   return h + act * 12;
 }
 
@@ -316,7 +322,8 @@ export const useGame = create<GameState>((set, get) => ({
     const label = seedLabel && seedLabel.trim() ? seedLabel.trim() : Math.floor(Math.random() * 999999).toString();
     const seed = hashSeed(label);
     const relics: string[] = [];
-    const maxHp = maxHpFor(heroId, relics);
+    const meta = get().meta;
+    const maxHp = maxHpFor(heroId, relics, 0, meta.upgrades);
     const deck = getHero(heroId).startingDeck.map((id) => makeCard(id));
     const rng = rngForRun(seed, 1);
     const map = generateMap(rng);
@@ -327,7 +334,7 @@ export const useGame = create<GameState>((set, get) => ({
       heroId,
       hp: maxHp,
       maxHp,
-      gold: 0,
+      gold: upgradeStartGold(meta.upgrades),
       deck,
       relics,
       map,
@@ -843,6 +850,19 @@ export const useGame = create<GameState>((set, get) => ({
       return;
     }
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
+    if (!rng.chance(upgradeCacheRelicChance(s.meta.upgrades))) {
+      // scanner missed: cache yields a card reward instead
+      const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
+      const remaining = [...pool];
+      const choices: CardInstance[] = [];
+      for (let i = 0; i < 3 && remaining.length > 0; i++) {
+        const id = rng.pick(remaining);
+        remaining.splice(remaining.indexOf(id), 1);
+        choices.push(makeCard(id, rng.chance(0.12)));
+      }
+      set({ phase: "reward", rewardChoices: choices, rewardGold: 0 });
+      return;
+    }
     const relic = rng.pick(avail);
     // hold on the treasure screen so the player sees what they got
     set({ relics: [...s.relics, relic], pendingRelic: relic });
@@ -890,6 +910,23 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   toMap: () => set({ phase: "map" }),
+
+  buyUpgrade: (id) => {
+    const s = get();
+    const def = UPGRADES.find((u) => u.id === id);
+    if (!def) return;
+    const tier = tierOf(s.meta.upgrades, id);
+    if (tier >= def.maxTier) return;
+    const cost = def.costs[tier]!;
+    if (s.meta.credits < cost) return;
+    const meta = {
+      ...s.meta,
+      credits: s.meta.credits - cost,
+      upgrades: { ...s.meta.upgrades, [id]: tier + 1 },
+    };
+    saveMeta(meta);
+    set({ meta });
+  },
 
   abandon: () => {
     set({ inRun: false, combat: null, phase: "map" });
@@ -1218,7 +1255,7 @@ function handleCombatWin(set: any, get: () => GameState) {
     if (s.act < ACT_BOSSES.length - 1) {
       const nextAct = s.act + 1;
       const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
-      const nextMaxHp = maxHpFor(s.heroId, s.relics, nextAct);
+      const nextMaxHp = maxHpFor(s.heroId, s.relics, nextAct, s.meta.upgrades);
       set({
         hp: Math.min(nextMaxHp, hp + Math.floor(nextMaxHp * 0.35)),
         maxHp: nextMaxHp,
@@ -1236,7 +1273,7 @@ function handleCombatWin(set: any, get: () => GameState) {
     }
     const meta = {
       ...s.meta,
-      credits: s.meta.credits + 200 + floorsCleared,
+      credits: s.meta.credits + Math.floor((200 + floorsCleared) * upgradeCreditMult(s.meta.upgrades)),
       bestFloor: Math.max(s.meta.bestFloor, floorsCleared),
       totalRuns: s.meta.totalRuns + 1,
     };
@@ -1247,7 +1284,7 @@ function handleCombatWin(set: any, get: () => GameState) {
 
   set({
     hp,
-    maxHp: maxHpFor(s.heroId, s.relics, s.act),
+    maxHp: maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades),
     gold,
     floorsCleared,
     phase: "reward",
@@ -1259,7 +1296,7 @@ function handleCombatWin(set: any, get: () => GameState) {
 
 function handleDeath(set: any, get: () => GameState) {
   const s = get();
-  const credits = Math.floor(s.floorsCleared * 8 + s.gold * 0.2);
+  const credits = Math.floor((s.floorsCleared * 8 + s.gold * 0.2) * upgradeCreditMult(s.meta.upgrades));
   const meta = {
     ...s.meta,
     credits: s.meta.credits + credits,
