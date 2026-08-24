@@ -413,6 +413,8 @@ export const useGame = create<GameState>((set, get) => ({
       ultUsedThisCombat: false,
       damageTakenThisCombat: 0,
       overclock: null,
+      rewindsLeft: 1 + (s.relics.includes("chrono_anchor") ? 1 : 0),
+      rewindStack: [],
     };
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
