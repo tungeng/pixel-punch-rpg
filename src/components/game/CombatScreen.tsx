@@ -35,6 +35,7 @@ function intentParts(intent: {
   if (intent.vulnerable) out.push({ icon: "VULN", text: `${intent.vulnerable}`, color: "#ffcc4d" });
   if (intent.weak) out.push({ icon: "WEAK", text: `${intent.weak}`, color: "#c47bff" });
   if (intent.poison) out.push({ icon: "PSN", text: `${intent.poison}`, color: "#5ce68a" });
+  if (intent.hack) out.push({ icon: "HACK", text: intent.hack.toUpperCase(), color: "#ff5cf0" });
   if (out.length === 0) out.push({ icon: "?", text: "", color: "#cbd5e1" });
   return out;
 }
@@ -287,6 +288,12 @@ export function CombatScreen() {
             {combat.vulnerable > 0 && <Badge text={`VULN ${combat.vulnerable}`} color="#ffcc4d" />}
             {combat.weak > 0 && <Badge text={`WEAK ${combat.weak}`} color="#c47bff" />}
             {combat.poison > 0 && <Badge text={`VENOM ${combat.poison}`} color="#54d98c" />}
+            {combat.regen > 0 && <Badge text={`REGEN ${combat.regen}`} color="#7cf5c4" />}
+            {combat.poisonBoost > 0 && <Badge text={`SURGE +${combat.poisonBoost}`} color="#c47bff" />}
+            {combat.beams.length > 0 && <Badge text="COALESCENCE" color="#e879f9" />}
+            {combat.hackedType && (
+              <Badge text={`HACKED ${combat.hackedType.toUpperCase()}`} color="#ff5cf0" />
+            )}
           </div>
 
           <div className="mt-0.5 w-24">
@@ -367,7 +374,9 @@ export function CombatScreen() {
       <div className="relative z-10 flex shrink-0 items-end justify-center px-2 pb-6 pt-3">
         <AnimatePresence mode="popLayout">
           {hand.map((card, i) => {
-            const dimmed = effectiveCost(card, combat) > combat.energy;
+            const dimmed =
+              effectiveCost(card, combat) > combat.energy ||
+              combat.hackedType === card.type;
             const offset = i - mid;
             return (
               <motion.div
@@ -624,6 +633,7 @@ function EnemyView({
         {enemy.strength > 0 && <Badge text={`▲${enemy.strength}`} color="#ff7a45" />}
         {enemy.vulnerable > 0 && <Badge text={`V${enemy.vulnerable}`} color="#ffcc4d" />}
         {enemy.weak > 0 && <Badge text={`W${enemy.weak}`} color="#c47bff" />}
+        {enemy.poison > 0 && <Badge text={`PSN ${enemy.poison}`} color="#5ce68a" />}
         {enemy.traitName && <Badge text={enemy.traitName} color="#ffb020" />}
         {enemy.untargetable && <Badge text="PHASED" color="#8d8dff" />}
         {enemy.enraged && <Badge text="ENRAGED" color="#ff3b3b" />}
