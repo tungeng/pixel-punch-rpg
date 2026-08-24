@@ -64,6 +64,10 @@ export interface Combat {
   ultUsedThisCombat: boolean;
   damageTakenThisCombat: number;
   overclock: { blockPerEnergy: number; damagePerEnergy: number } | null;
+  /** CHRONO REWIND — undo charges left this combat */
+  rewindsLeft: number;
+  /** snapshots of this turn's states, newest last (cleared each turn) */
+  rewindStack: Combat[];
 }
 
 export interface GameState {
@@ -104,6 +108,7 @@ export interface GameState {
   playCard: (uid: string, targetUid?: string) => void;
   selectTarget: (enemyUid: string) => void;
   cancelTarget: () => void;
+  rewind: () => void;
   endTurn: () => void;
   useUltimate: (targetUid?: string) => void;
   pickRewardCard: (cardId: string) => void;
@@ -177,6 +182,15 @@ function maxHpFor(heroId: string, relics: string[], act = 0): number {
 
 function rngForRun(seed: number, salt: number): Rng {
   return new Rng((seed ^ (salt * 0x9e3779b9)) >>> 0);
+}
+
+/** Snapshot the current combat state so CHRONO REWIND can undo the next play. */
+function pushRewind(c: Combat) {
+  if (c.rewindsLeft <= 0) return;
+  const { rewindStack, floats: _f, ...rest } = c;
+  const snap = structuredClone({ ...rest, floats: [] as Float[] }) as Omit<Combat, "rewindStack">;
+  rewindStack.push({ ...snap, rewindStack: [] });
+  if (rewindStack.length > 8) rewindStack.shift();
 }
 
 // ---- damage helpers (mutate combat + enemy) ----
@@ -409,6 +423,8 @@ export const useGame = create<GameState>((set, get) => ({
       ultUsedThisCombat: false,
       damageTakenThisCombat: 0,
       overclock: null,
+      rewindsLeft: 1 + (s.relics.includes("chrono_anchor") ? 1 : 0),
+      rewindStack: [],
     };
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
@@ -439,6 +455,7 @@ export const useGame = create<GameState>((set, get) => ({
       set({ combat: { ...c, targetingCardUid: uid } });
       return;
     }
+    pushRewind(c);
     resolveCard(set, get, card, targetUid ?? livingEnemies[0]?.uid ?? null);
   },
 
@@ -448,6 +465,7 @@ export const useGame = create<GameState>((set, get) => ({
     if (!c || !c.targetingCardUid) return;
     const card = c.hand.find((x) => x.uid === c.targetingCardUid);
     if (!card) return;
+    pushRewind(c);
     resolveCard(set, get, card, enemyUid);
   },
 
@@ -456,10 +474,30 @@ export const useGame = create<GameState>((set, get) => ({
     if (c) set({ combat: { ...c, targetingCardUid: null } });
   },
 
+  rewind: () => {
+    const c = get().combat;
+    if (!c || !c.active) return;
+    if (c.rewindsLeft <= 0 || c.rewindStack.length === 0) return;
+    const stack = [...c.rewindStack];
+    const prev = stack.pop()!;
+    const restored: Combat = {
+      ...prev,
+      rewindStack: stack,
+      rewindsLeft: c.rewindsLeft - 1,
+      targetingCardUid: null,
+      floats: [],
+      log: [...c.log, "CHRONO REWIND — the last play never happened."],
+    };
+    set({ combat: restored });
+  },
+
+
   endTurn: () => {
     const s = get();
     const c = s.combat;
     if (!c || !c.active) return;
+    // rewinds only reach back within the current turn
+    c.rewindStack = [];
     // Tracer: Overclock cashes unspent energy into Block + chip damage
     const charge = { v: c.ultCharge };
     const relics = s.relics;
@@ -653,6 +691,7 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const c = s.combat;
     if (!c || !c.active || c.ultCharge < 100) return;
+    pushRewind(c);
     const hero = getHero(s.heroId);
     const ult = { ...hero.ultimate, uid: `ult_${c.turn}`, upgraded: false } as CardInstance;
     c.ultCharge = 0;

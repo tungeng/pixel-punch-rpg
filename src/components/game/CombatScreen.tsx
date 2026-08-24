@@ -54,6 +54,9 @@ export function CombatScreen() {
   const endTurn = useGame((s) => s.endTurn);
   const useUlt = useGame((s) => s.useUltimate);
   const pruneFloats = useGame((s) => s.pruneFloats);
+  const rewind = useGame((s) => s.rewind);
+  const [rewindFx, setRewindFx] = useState(false);
+
 
   const [shake, setShake] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
@@ -319,10 +322,55 @@ export function CombatScreen() {
             ULT
           </PixelButton>
         </motion.div>
+        <PixelButton
+          onClick={() => {
+            if (combat.rewindsLeft <= 0 || combat.rewindStack.length === 0) return;
+            setRewindFx(true);
+            setTimeout(() => setRewindFx(false), 520);
+            rewind();
+          }}
+          disabled={combat.rewindsLeft <= 0 || combat.rewindStack.length === 0}
+          color="primary"
+          className="px-2 py-2"
+        >
+          ⟲{combat.rewindsLeft}
+        </PixelButton>
         <PixelButton onClick={endTurn} color="secondary" className="px-3 py-2">
           END
         </PixelButton>
       </div>
+
+      {/* chrono rewind flash */}
+      <AnimatePresence>
+        {rewindFx && (
+          <motion.div
+            className="pointer-events-none absolute inset-0 z-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "repeating-linear-gradient(0deg, rgba(196,123,255,0.25) 0 2px, transparent 2px 6px)",
+              }}
+              animate={{ y: [0, -40, 0], opacity: [0.9, 0.4, 0] }}
+              transition={{ duration: 0.5 }}
+            />
+            <motion.div
+              className="text-pixel absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[13px]"
+              style={{ color: "#e9d5ff", textShadow: "0 0 10px #c47bff, 3px 3px 0 #07060c" }}
+              initial={{ scale: 0.6, opacity: 0, rotate: -6 }}
+              animate={{ scale: [0.6, 1.15, 1], opacity: [0, 1, 0], rotate: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              CHRONO REWIND
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* hand — fanned */}
       <div className="relative z-10 flex shrink-0 items-end justify-center px-2 pb-6 pt-3">
