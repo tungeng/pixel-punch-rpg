@@ -110,12 +110,15 @@ export function CombatScreen() {
   const targeting = !!combat.targetingCardUid;
   const hand = combat.hand;
   const mid = (hand.length - 1) / 2;
-  // fit the fan inside the portrait viewport without hiding card text
+  // fit the fan inside the portrait viewport by scaling it down instead of
+  // overlapping cards — overlap used to hide the right edge of each card's text
   const CARD_W = 100;
-  const AVAIL = 396;
+  const CARD_GAP = 2;
+  const AVAIL = 404;
+  const handWidth = hand.length * CARD_W + Math.max(0, hand.length - 1) * CARD_GAP;
+  const handScale = handWidth > AVAIL ? AVAIL / handWidth : 1;
+  const overlap = -CARD_GAP;
 
-  const overlap =
-    hand.length > 1 ? Math.max(0, (hand.length * CARD_W - AVAIL) / (hand.length - 1)) : 0;
 
   /** play the card only after its fly-to-center + hero lunge has read on screen */
   const launch = (card: CardInstance, resolve: () => void) => {
