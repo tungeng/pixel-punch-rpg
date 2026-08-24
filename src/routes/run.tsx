@@ -17,16 +17,15 @@ import {
 export const Route = createFileRoute("/run")({
   head: () => ({
     meta: [
-      { title: "Run in progress — OVERTUNG" },
+      { title: "Run in progress — Overtung" },
       {
         name: "description",
-        content:
-          "Fight through the chrono-fracture: turn-based pixel card combat, branching breach nav, relics and elites.",
+        content: "TUNGVERWATCH",
       },
-      { property: "og:title", content: "OVERTUNG — Run in progress" },
+      { property: "og:title", content: "Run in progress — Overtung" },
       {
         property: "og:description",
-        content: "Turn-based pixel card combat across a shattered timeline.",
+        content: "TUNGVERWATCH",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
