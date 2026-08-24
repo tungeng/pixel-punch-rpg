@@ -110,11 +110,15 @@ export function CombatScreen() {
   const targeting = !!combat.targetingCardUid;
   const hand = combat.hand;
   const mid = (hand.length - 1) / 2;
-  // fit the fan inside the portrait viewport without hiding card text
-  const CARD_W = 92;
-  const AVAIL = 400;
-  const overlap =
-    hand.length > 1 ? Math.max(0, (hand.length * CARD_W - AVAIL) / (hand.length - 1)) : 0;
+  // fit the fan inside the portrait viewport by scaling it down instead of
+  // overlapping cards — overlap used to hide the right edge of each card's text
+  const CARD_W = 100;
+  const CARD_GAP = 2;
+  const AVAIL = 404;
+  const handWidth = hand.length * CARD_W + Math.max(0, hand.length - 1) * CARD_GAP;
+  const handScale = handWidth > AVAIL ? AVAIL / handWidth : 1;
+  const overlap = -CARD_GAP;
+
 
   /** play the card only after its fly-to-center + hero lunge has read on screen */
   const launch = (card: CardInstance, resolve: () => void) => {
@@ -377,43 +381,49 @@ export function CombatScreen() {
         </PixelButton>
       </div>
 
-      {/* hand — fanned */}
-      <div className="relative z-10 flex shrink-0 items-end justify-center px-2 pb-6 pt-3">
-        <AnimatePresence mode="popLayout">
-          {hand.map((card, i) => {
-            const dimmed =
-              effectiveCost(card, combat) > combat.energy ||
-              combat.hackedType === card.type;
-            const offset = i - mid;
-            return (
-              <motion.div
-                key={card.uid}
-                className="shrink-0"
-                layout
-                initial={{ y: 90, opacity: 0, rotate: 0 }}
-                animate={{
-                  y: Math.abs(offset) * 3 - 12,
-                  opacity: 1,
-                  rotate: offset * 3,
-                }}
-                exit={{ y: -140, opacity: 0, scale: 0.7 }}
-                transition={{ type: "spring", stiffness: 320, damping: 26 }}
-                style={{
-                  marginLeft: i === 0 ? 0 : -overlap,
-                  zIndex: 10 + i,
-                  transformOrigin: "bottom center",
-                }}
-              >
-                <CardView
-                  card={card}
-                  dimmed={dimmed || flying?.uid === card.uid}
-                  onClick={() => onPlayCard(card)}
-                />
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+      {/* hand — fanned, scaled to fit so no card text is covered */}
+      <div className="relative z-10 flex shrink-0 items-end justify-center overflow-visible px-2 pb-6 pt-3">
+        <div
+          className="flex items-end justify-center"
+          style={{ transform: `scale(${handScale})`, transformOrigin: "bottom center" }}
+        >
+          <AnimatePresence mode="popLayout">
+            {hand.map((card, i) => {
+              const dimmed =
+                effectiveCost(card, combat) > combat.energy ||
+                combat.hackedType === card.type;
+              const offset = i - mid;
+              return (
+                <motion.div
+                  key={card.uid}
+                  className="shrink-0"
+                  layout
+                  initial={{ y: 90, opacity: 0, rotate: 0 }}
+                  animate={{
+                    y: Math.abs(offset) * 3 - 12,
+                    opacity: 1,
+                    rotate: offset * 2,
+                  }}
+                  exit={{ y: -140, opacity: 0, scale: 0.7 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                  style={{
+                    marginLeft: i === 0 ? 0 : -overlap,
+                    zIndex: 10 + i,
+                    transformOrigin: "bottom center",
+                  }}
+                >
+                  <CardView
+                    card={card}
+                    dimmed={dimmed || flying?.uid === card.uid}
+                    onClick={() => onPlayCard(card)}
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
       </div>
+
 
       {/* card in flight — flies from hand up to the arena before resolving */}
       <AnimatePresence>

@@ -48,10 +48,40 @@ export function CardView({
   const fam = cardFamily(card);
   const t = FAMILY[fam];
   const big = size !== "hand";
-  const w = big ? 132 : 92;
-  const h = big ? 186 : 138;
+  const w = big ? 136 : 100;
+  const h = big ? 200 : 158;
   const icon = CARD_ICONS[card.id] ?? FALLBACK_ICON;
   const rar = RARITY[card.rarity] ?? RARITY["common"]!;
+
+  // auto-shrink rules text so long card text never clips
+  const len = (card.text ?? "").length;
+  const bodySize = big
+    ? len > 110
+      ? 12
+      : len > 80
+        ? 13.5
+        : 15
+    : len > 110
+      ? 9
+      : len > 80
+        ? 10
+        : 11;
+  const bodyLine = Math.round(bodySize * 1.05);
+  // name banner also shrinks with length so nothing gets ellipsised
+  const nameLen = card.name.length + (card.upgraded ? 1 : 0);
+  const nameSize = big
+    ? nameLen > 16
+      ? 6
+      : nameLen > 12
+        ? 6.8
+        : 7.5
+    : nameLen > 16
+      ? 5
+      : nameLen > 12
+        ? 5.6
+        : 6.5;
+
+
 
   // live values so scaling cards show what they'd actually do right now
   const combat = useGame((s) => s.combat);
@@ -112,7 +142,7 @@ export function CardView({
         <div
           className="relative overflow-hidden"
           style={{
-            height: big ? 74 : 52,
+            height: big ? 72 : 46,
             margin: 3,
             border: "2px solid #07060c",
             background: `radial-gradient(circle at 50% 55%, ${t.accent}44, #0b0a14 72%)`,
@@ -122,43 +152,52 @@ export function CardView({
             src={icon}
             alt=""
             className="pixelated absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain"
-            style={{ height: big ? 62 : 44, imageRendering: "pixelated" }}
+            style={{ height: big ? 60 : 40, imageRendering: "pixelated" }}
           />
           <div className="scanlines pointer-events-none absolute inset-0 opacity-40" />
         </div>
 
-        {/* name banner */}
+        {/* name banner — auto-shrinks so long names are never truncated */}
         <div
-          className="text-pixel truncate px-1 py-[3px] text-center text-black"
+          className="text-pixel px-[2px] py-[3px] text-center text-black"
           style={{
             background: t.accent,
-            fontSize: big ? 7.5 : 6.5,
+            fontSize: nameSize,
+            lineHeight: 1.15,
+            letterSpacing: 0,
             margin: "0 3px",
+            overflowWrap: "break-word",
           }}
         >
           {card.name}
           {card.upgraded ? "+" : ""}
         </div>
 
+
         {/* rules text */}
         <div
-          className="flex-1 overflow-hidden px-1 pt-1 text-center leading-[13px]"
+          className="flex flex-1 flex-col items-center justify-center px-[3px] py-1 text-center"
           style={{
             fontFamily: "var(--font-pixel-body)",
-            fontSize: big ? 15 : 11,
+            fontSize: bodySize,
+            lineHeight: `${bodyLine}px`,
             color: "#dfe3f2",
+            overflowWrap: "break-word",
+            hyphens: "auto",
+            minHeight: 0,
           }}
         >
-          {card.text}
+          <span>{card.text}</span>
           {scalingCard && dynamicDamage !== null && (
-            <div
+            <span
               className="text-pixel mt-[2px]"
               style={{ fontSize: big ? 7 : 6, color: "#ffcc4d" }}
             >
               NOW {dynamicDamage}
-            </div>
+            </span>
           )}
         </div>
+
 
 
         {/* footer */}
