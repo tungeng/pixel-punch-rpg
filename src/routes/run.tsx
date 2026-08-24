@@ -13,6 +13,7 @@ import {
   DeathScreen,
   VictoryScreen,
 } from "@/components/game/MetaScreens";
+import { CabinetShell } from "@/components/game/CabinetShell";
 
 export const Route = createFileRoute("/run")({
   head: () => ({
@@ -46,8 +47,9 @@ function RunRoute() {
   if (!inRun) return null;
 
   return (
+    <CabinetShell>
     <div
-      className="flex h-screen flex-col bg-background"
+      className="flex h-screen flex-col overflow-hidden bg-background"
       style={{ maxWidth: 480, margin: "0 auto" }}
     >
       <Hud />
@@ -73,5 +75,6 @@ function RunRoute() {
         </AnimatePresence>
       </div>
     </div>
+    </CabinetShell>
   );
 }

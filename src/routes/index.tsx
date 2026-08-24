@@ -6,6 +6,7 @@ import { PixelButton } from "@/components/game/PixelButton";
 import { motion } from "motion/react";
 import { Heart, Zap, Star, Lock } from "lucide-react";
 import { ArchiveScreen } from "@/components/game/ArchiveScreen";
+import { CabinetShell } from "@/components/game/CabinetShell";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -55,6 +56,7 @@ function Index() {
   }
 
   return (
+    <CabinetShell>
     <div className="scanlines relative min-h-screen overflow-y-auto bg-background px-4 py-6">
       <div className="mx-auto flex max-w-md flex-col items-center">
         <motion.h1
@@ -175,6 +177,7 @@ function Index() {
         {archiveOpen && <ArchiveScreen onClose={() => setArchiveOpen(false)} />}
       </div>
     </div>
+    </CabinetShell>
   );
 }
 
