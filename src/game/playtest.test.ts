@@ -97,7 +97,9 @@ function simulateRun(hero: string, seed: string): RunResult {
           break;
         }
 
-        const playable = c.hand.filter((card) => card.cost <= c.energy);
+        const playable = c.hand.filter(
+          (card) => card.cost <= c.energy && card.type !== c.hackedType,
+        );
         if (playable.length > 0) {
           // greedy: attacks first, then everything else
           const card =
