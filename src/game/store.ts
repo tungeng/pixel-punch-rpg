@@ -267,8 +267,11 @@ export function effectiveCost(card: CardInstance, c: Combat): number {
   if (card.costPerDamageTaken) {
     cost -= Math.floor(c.damageTakenThisCombat / card.costPerDamageTaken);
   }
+  // Haste Module relic
+  if (c.firstCardDiscount && c.cardsPlayedThisTurn === 0) cost -= 1;
   return Math.max(0, cost);
 }
+
 
 /** Damage this card would deal right now, before enemy modifiers. */
 export function scaledDamage(card: CardInstance, c: Combat, roll?: number): number {
