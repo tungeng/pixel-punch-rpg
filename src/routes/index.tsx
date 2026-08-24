@@ -59,21 +59,21 @@ function Index() {
         <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-pixel text-center text-[26px] leading-tight text-primary"
+          className="text-pixel title-flicker text-center text-[26px] leading-tight text-primary"
           style={{ textShadow: "3px 3px 0 oklch(0.1 0.02 265), 6px 6px 0 oklch(0.5 0.18 35)" }}
         >
           CHRONO
           <br />
           BREAK
         </motion.h1>
-        <div className="text-pixel mt-2 text-center text-[8px] text-accent">PIXEL DECK ROGUELIKE</div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-pixel breathe-glow mt-2 text-center text-[8px] text-accent">PIXEL DECK ROGUELIKE</motion.div>
 
-        <p className="mt-5 text-center text-[15px] leading-[18px] text-foreground/85" style={{ fontFamily: "var(--font-pixel-body)" }}>
+        <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.5 }} className="mt-5 text-center text-[15px] leading-[18px] text-foreground/85" style={{ fontFamily: "var(--font-pixel-body)" }}>
           A chrono-fracture tore open over King's Row. Null Sector poured through,
           and wraith-corrupted echoes of fallen agents march with them — Reaper
           leads the breach. Pick a hero. Dive the shattered timeline floor by floor.
           Die, and the timeline snaps back — but the Chrono Cores you banked persist.
-        </p>
+        </motion.p>
 
         <div className="text-pixel mt-6 mb-2 text-[8px] text-muted-foreground">SELECT YOUR HERO</div>
         <div className="grid w-full grid-cols-5 gap-1.5">
@@ -84,7 +84,11 @@ function Index() {
             return (
               <motion.button
                 key={id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 + all.indexOf(id) * 0.07, type: "spring", stiffness: 260, damping: 18 }}
                 whileTap={{ scale: 0.95 }}
+                {...(isLocked ? {} : { whileHover: { y: -4, scale: 1.06 } })}
                 onClick={() => !isLocked && setSelected(id)}
                 className={`group relative flex flex-col items-center gap-0.5 p-1 transition-colors ${
                   isLocked
@@ -98,7 +102,7 @@ function Index() {
                 <img
                   src={hero.asset}
                   alt={hero.name}
-                  className="pixelated h-12 w-12 object-contain"
+                  className={`pixelated h-12 w-12 object-contain ${isLocked ? "" : isSel ? "idle-bob" : "idle-bob-slow"}`}
                   style={{ filter: isLocked ? "grayscale(1) brightness(0.4)" : "none" }}
                 />
                 <span
@@ -134,7 +138,7 @@ function Index() {
           </div>
         ) : (
           <>
-            <HeroInfo id={selected} />
+            <motion.div key={selected} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }} className="w-full"><HeroInfo id={selected} /></motion.div>
             <div className="mt-3 w-full">
               <input
                 value={seed}
@@ -144,11 +148,16 @@ function Index() {
                 style={{ fontFamily: "var(--font-pixel-body)" }}
               />
             </div>
-            <div className="mt-5 w-full">
-              <PixelButton onClick={breach} color="danger" className="w-full px-8 py-6 text-[18px]">
+            <motion.div
+              className="mt-5 w-full"
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 240, damping: 16 }}
+            >
+              <PixelButton onClick={breach} color="danger" className="cta-throb sheen relative w-full overflow-hidden px-8 py-6 text-[18px]">
                 ▶ BREACH
               </PixelButton>
-            </div>
+            </motion.div>
           </>
         )}
 

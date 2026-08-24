@@ -12,7 +12,6 @@ export const RELICS: Record<string, RelicDef> = {
   berserker: { id: "berserker", name: "Berserker", text: "Start each combat with 1 Strength.", icon: "🔥", color: "#dc2626" },
   soul_stone: { id: "soul_stone", name: "Soul Stone", text: "Revive once at 50% HP when you die.", icon: "💎", color: "#6366f1" },
   regen_drone: { id: "regen_drone", name: "Regen Drone", text: "Heal 1 HP at the start of each turn.", icon: "🤖", color: "#06b6d4" },
-  chrono_anchor: { id: "chrono_anchor", name: "Chrono Anchor", text: "+1 Chrono Rewind each combat.", icon: "⏳", color: "#c47bff" },
 };
 
 export const ALL_RELIC_IDS = Object.keys(RELICS);
