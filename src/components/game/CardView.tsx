@@ -1,6 +1,12 @@
 import type { CardInstance } from "@/game/types";
 import { CARD_ICONS, FALLBACK_ICON } from "@/game/icons";
-import { useGame, effectiveCost, scaledDamage, cardDealsDamage } from "@/game/store";
+import {
+  useGame,
+  effectiveCost,
+  scaledDamage,
+  cardDealsDamage,
+  cardSynergyActive,
+} from "@/game/store";
 import { motion } from "motion/react";
 
 type Family = "attack" | "defense" | "utility" | "ultimate";
@@ -60,6 +66,8 @@ export function CardView({
     !!card.damagePerCardPlayed || !!card.damagePerMissingHp || !!card.damagePerDiscard;
 
 
+  const synergy = !!live && !dimmed && cardSynergyActive(card, live);
+
   const hover = dimmed ? undefined : { y: -14, scale: 1.06 };
   const tap = dimmed ? undefined : { scale: 0.96 };
 
@@ -71,19 +79,25 @@ export function CardView({
       onClick={onClick}
       disabled={dimmed}
       animate={selected ? { y: -18 } : { y: 0 }}
-      className="relative shrink-0 select-none text-left"
+      className={`relative shrink-0 select-none text-left ${synergy ? "synergy-pulse" : ""}`}
       style={{
         width: w,
         height: h,
         padding: 3,
         background: `linear-gradient(180deg, ${t.accent}, ${t.deep})`,
-        border: `3px solid ${rar.color}`,
+        border: `3px solid ${synergy ? "#ffe27a" : rar.color}`,
         outline: "2px solid #07060c",
         boxShadow: dimmed
           ? "0 4px 0 0 #07060c"
-          : `0 4px 0 0 #07060c, 0 0 14px -2px ${t.accent}`,
+          : synergy
+            ? `0 4px 0 0 #07060c, 0 0 18px 2px #ffcc4d, 0 0 34px 4px ${t.accent}`
+            : `0 4px 0 0 #07060c, 0 0 14px -2px ${t.accent}`,
         opacity: dimmed ? 0.42 : 1,
-        filter: dimmed ? "saturate(0.15) brightness(0.7)" : "none",
+        filter: dimmed
+          ? "saturate(0.15) brightness(0.7)"
+          : synergy
+            ? "saturate(1.25) brightness(1.18)"
+            : "none",
       }}
     >
       {/* inner slab */}
@@ -185,6 +199,15 @@ export function CardView({
         {shownCost}
       </div>
 
+
+      {synergy && (
+        <div
+          className="text-pixel absolute -top-2 right-1 px-1 text-[5.5px] text-black"
+          style={{ background: "#ffcc4d", border: "2px solid #07060c" }}
+        >
+          CHARGED
+        </div>
+      )}
 
       {card.exhaust && (
         <div
