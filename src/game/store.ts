@@ -1424,10 +1424,15 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
     shopCards.push(makeCard(id, rng.chance(0.25)));
   }
   const owned = new Set(s.relics);
-  const avail = ALL_RELIC_IDS.filter((r) => !owned.has(r));
-  const firstRelic = rng.pick(avail) ?? "";
-  const secondRelic = rng.pick(avail.filter((r) => r !== firstRelic)) ?? "";
-  const shopRelics = [firstRelic, secondRelic];
+  let avail = ALL_RELIC_IDS.filter((r) => !owned.has(r));
+  const shopRelics: string[] = [];
+  for (let i = 0; i < 3; i++) {
+    const id = pickRelicId(avail, rng.next());
+    if (!id) break;
+    shopRelics.push(id);
+    avail = avail.filter((r) => r !== id);
+  }
+  while (shopRelics.length < 3) shopRelics.push("");
   set({ phase: "shop", shopCards, shopRelics });
 }
 
@@ -1435,6 +1440,13 @@ export function cardPrice(card: CardInstance): number {
   const base = card.rarity === "rare" ? 90 : card.rarity === "uncommon" ? 60 : 40;
   return card.upgraded ? base + 20 : base;
 }
+
+/** Shop price for a relic, scaled by tier. */
+export function relicPrice(relicId: string): number {
+  const tier = RELICS[relicId]?.tier ?? "common";
+  return tier === "rare" ? 190 : tier === "uncommon" ? 145 : 110;
+}
+
 
 export { HEROES, RELICS, CARDS, tracerImg };
 
