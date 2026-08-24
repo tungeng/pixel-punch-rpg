@@ -750,7 +750,26 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // start player turn
     c.turn += 1;
-    c.block = 0;
+    // Aegis Loop keeps half your Block instead of wiping it
+    c.block = relics.includes("aegis_loop") ? Math.floor(c.block / 2) : 0;
+    // ---- per-turn relic ticks ----
+    if (relics.includes("dragon_ember")) {
+      c.strength += 1;
+      pushFloat(c, "+1 STR", "buff", "player");
+    }
+    if (relics.includes("volt_capacitor")) {
+      const living = c.enemies.filter((e) => !e.isDead && !e.untargetable);
+      if (living.length > 0) {
+        const vRng = new Rng(hashSeed(`${s.seed}_volt_${c.turn}`));
+        const t = vRng.pick(living)!;
+        const vCharge = { v: c.ultCharge };
+        const dealt = applyEnemyDamage(c, t, 5, vCharge, relics.includes("power_cell"));
+        c.ultCharge = Math.min(100, vCharge.v);
+        pushFloat(c, `${dealt}`, "dmg", t.uid);
+        pushLog(c, "Volt Capacitor arcs out.");
+      }
+    }
+
     if (c.poison > 0) {
       c.hp -= c.poison;
       pushFloat(c, `-${c.poison}`, "dmg", "player");
