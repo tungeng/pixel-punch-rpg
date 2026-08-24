@@ -76,7 +76,10 @@ export interface Combat {
   hackDraw: boolean;
   /** Active Coalescence beams (Moira ultimate). */
   beams: { targetUid: string; damage: number; heal: number; turns: number }[];
+  /** Haste Module relic: first card each turn costs 1 less. */
+  firstCardDiscount: boolean;
 }
+
 
 export interface GameState {
   // meta (persisted)
