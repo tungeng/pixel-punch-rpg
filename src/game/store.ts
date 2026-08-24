@@ -1310,12 +1310,15 @@ function handleCombatWin(set: any, get: () => GameState) {
   // bank hp
   let hp = c.hp;
   let gold = s.gold;
-  // vampire_fang
-  if (s.relics.includes("vampire_fang")) hp = Math.min(s.maxHp, hp + 3);
+  const has = (id: string) => s.relics.includes(id);
+  // post-combat healing relics
+  if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 6);
+  if (has("blood_pact")) hp = Math.min(s.maxHp, hp + Math.ceil(s.maxHp * 0.08));
   // gold reward
   const baseGold = c.nodeType === "boss" ? 60 : c.nodeType === "elite" ? 35 : 18;
   let g = baseGold + new Rng(s.seed ^ (s.floorsCleared * 7)).int(0, 10);
-  if (s.relics.includes("lucky_coin")) g = Math.floor(g * 1.5);
+  if (has("lucky_coin")) g = Math.floor(g * 1.75);
+  if (has("salvage_claw")) g += 20;
   gold += g;
   const floorsCleared = s.floorsCleared + 1;
   // card reward
@@ -1323,26 +1326,41 @@ function handleCombatWin(set: any, get: () => GameState) {
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
   const choices: CardInstance[] = [];
   const remaining = [...pool];
-  for (let i = 0; i < 3 && remaining.length > 0; i++) {
+  const offers = has("codex_shard") ? 4 : 3;
+  for (let i = 0; i < offers && remaining.length > 0; i++) {
     const id = rng.pick(remaining);
     remaining.splice(remaining.indexOf(id), 1); // no duplicate offers
     choices.push(makeCard(id, rng.chance(0.12)));
   }
+
+  // ---- relic drops: bosses and elites always, normal fights sometimes ----
+  const ownedIds = new Set(s.relics);
+  const availRelics = ALL_RELIC_IDS.filter((r) => !ownedIds.has(r));
+  const dropChance =
+    c.nodeType === "boss" || c.nodeType === "elite" ? 1 : has("relic_scanner") ? 0.35 : 0.18;
+  const droppedRelic =
+    availRelics.length > 0 && rng.chance(dropChance)
+      ? (pickRelicId(availRelics, rng.next()) ?? null)
+      : null;
+  const relics = droppedRelic ? [...s.relics, droppedRelic] : s.relics;
+
   // boss -> next act or victory
   if (c.nodeType === "boss") {
     if (s.act < ACT_BOSSES.length - 1) {
       const nextAct = s.act + 1;
       const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
-      const nextMaxHp = maxHpFor(s.heroId, s.relics, nextAct, s.meta.upgrades);
+      const nextMaxHp = maxHpFor(s.heroId, relics, nextAct, s.meta.upgrades);
       set({
         hp: Math.min(nextMaxHp, hp + Math.floor(nextMaxHp * 0.35)),
         maxHp: nextMaxHp,
         gold,
+        relics,
         floorsCleared,
         act: nextAct,
         map: newMap,
         currentNodeId: null,
-        phase: "map",
+        phase: droppedRelic ? "treasure" : "map",
+        pendingRelic: droppedRelic,
         rewardChoices: choices,
         rewardGold: g,
         combat: null,
@@ -1362,15 +1380,18 @@ function handleCombatWin(set: any, get: () => GameState) {
 
   set({
     hp,
-    maxHp: maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades),
+    maxHp: maxHpFor(s.heroId, relics, s.act, s.meta.upgrades),
     gold,
+    relics,
     floorsCleared,
     phase: "reward",
+    pendingRelic: droppedRelic,
     rewardChoices: choices,
     rewardGold: g,
     combat: null,
   });
 }
+
 
 function handleDeath(set: any, get: () => GameState) {
   const s = get();
