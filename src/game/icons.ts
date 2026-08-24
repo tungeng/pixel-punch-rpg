@@ -66,6 +66,11 @@ import loosecannon from "../assets/icons/loosecannon.png";
 import scrapheap from "../assets/icons/scrapheap.png";
 import executionericon from "../assets/icons/executioner.png";
 import momentum from "../assets/icons/momentum.png";
+import voidskull from "../assets/icons/voidskull.png";
+import potion from "../assets/icons/potion.png";
+import clawslash from "../assets/icons/clawslash.png";
+import brokenshield from "../assets/icons/brokenshield.png";
+import timevortex from "../assets/icons/timevortex.png";
 
 /** Per-card pixel-art effect icon (replaces hero portraits on cards). */
 export const CARD_ICONS: Record<string, string> = {
@@ -121,6 +126,20 @@ export const CARD_ICONS: Record<string, string> = {
   junkrat_loose: loosecannon,
   junkrat_scrap: scrapheap,
   junkrat_riptire: riptire,
+  // Moira
+  moira_orb_dmg: poisonskull,
+  moira_orb_heal: potion,
+  moira_grasp: clawslash,
+  moira_fade: brokenshield,
+  moira_decay: voidskull,
+  moira_surge: syringe,
+  moira_bloom: fireburst,
+  moira_transfuse: medkit,
+  moira_miasma: plasma,
+  moira_bioticfield: healbeam,
+  moira_rot: poisonskull,
+  moira_leech: lastrites,
+  moira_coalescence: timevortex,
   // Doomfist
   doomfist_punch: gauntlet,
   doomfist_slam: groundslam,

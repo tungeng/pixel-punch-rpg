@@ -3,6 +3,7 @@ import mercyImg from "../assets/mercy.png";
 import genjiImg from "../assets/genji.png";
 import junkratImg from "../assets/junkrat.png";
 import doomfistImg from "../assets/doomfist.png";
+import moiraImg from "../assets/moira.png";
 import type { HeroDef } from "./types";
 
 export const HEROES: Record<string, HeroDef> = {
@@ -122,6 +123,34 @@ export const HEROES: Record<string, HeroDef> = {
       text: "Deal 24 damage to ALL enemies.",
     },
   },
+  moira: {
+    id: "moira",
+    name: "Moira",
+    role: "Biotic",
+    maxHp: 65,
+    color: "#a855f7",
+    asset: moiraImg,
+    passive: "Biotic Grasp: whenever your Poison damages an enemy, heal for half of that damage.",
+    startingDeck: [
+      "moira_orb_dmg", "moira_orb_dmg", "moira_grasp", "moira_grasp",
+      "moira_orb_heal", "moira_fade", "moira_decay", "moira_surge",
+      "moira_transfuse", "moira_bloom",
+    ],
+    cardPool: [
+      "moira_decay", "moira_surge", "moira_bloom", "moira_miasma",
+      "moira_bioticfield", "moira_rot", "moira_leech", "moira_transfuse",
+    ],
+    ultimate: {
+      id: "moira_coalescence",
+      name: "Coalescence",
+      type: "ultimate",
+      cost: 0,
+      rarity: "rare",
+      hero: "moira",
+      beam: { damage: 9, heal: 6, turns: 3 },
+      text: "Beam an enemy for 9 damage and heal 6 HP at the start of each of your next 3 turns.",
+    },
+  },
   doomfist: {
     id: "doomfist",
     name: "Doomfist",
@@ -155,4 +184,4 @@ export const HEROES: Record<string, HeroDef> = {
 };
 
 export const UNLOCKABLE_HEROES = ["junkrat", "doomfist"];
-export const STARTER_HEROES = ["tracer", "mercy", "genji"];
+export const STARTER_HEROES = ["tracer", "mercy", "genji", "moira"];
