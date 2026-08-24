@@ -769,6 +769,14 @@ export const useGame = create<GameState>((set, get) => ({
         pushLog(c, "Volt Capacitor arcs out.");
       }
     }
+    if (c.enemies.every((e) => e.isDead)) {
+      c.active = false;
+      handleCombatWin(set, get);
+      set({ combat: { ...c } });
+      return;
+    }
+
+
 
     if (c.poison > 0) {
       c.hp -= c.poison;
