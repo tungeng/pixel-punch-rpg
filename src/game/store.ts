@@ -122,6 +122,7 @@ export interface GameState {
   restHeal: () => void;
   restUpgrade: (cardUid: string) => void;
   takeTreasure: () => void;
+  confirmRelic: () => void;
   buyCard: (index: number) => void;
   buyRelic: (index: number) => void;
   buyRemove: (cardUid: string) => void;
@@ -843,7 +844,12 @@ export const useGame = create<GameState>((set, get) => ({
     }
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
     const relic = rng.pick(avail);
-    set({ relics: [...s.relics, relic], phase: "map" });
+    // hold on the treasure screen so the player sees what they got
+    set({ relics: [...s.relics, relic], pendingRelic: relic });
+  },
+
+  confirmRelic: () => {
+    set({ pendingRelic: null, phase: "map" });
     markNodeVisited(set, get);
   },
 

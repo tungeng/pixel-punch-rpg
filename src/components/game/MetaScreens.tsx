@@ -6,6 +6,7 @@ import { CardView } from "./CardView";
 import { PixelButton } from "./PixelButton";
 import { Bar } from "./Bar";
 import { motion } from "motion/react";
+import { RelicTray } from "./RelicTray";
 import type { ReactNode } from "react";
 
 export function RewardScreen() {
@@ -78,6 +79,37 @@ export function RestScreen() {
 
 export function TreasureScreen() {
   const take = useGame((s) => s.takeTreasure);
+  const pending = useGame((s) => s.pendingRelic);
+  const confirm = useGame((s) => s.confirmRelic);
+
+  if (pending) {
+    const relic = RELICS[pending];
+    return (
+      <Screen title="RELIC ACQUIRED" tone="#ffcc4d">
+        <motion.div
+          initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 14 }}
+          className="mb-4 flex flex-col items-center gap-3"
+        >
+          <div className="scale-[1.8]">
+            <RelicIcon id={pending} />
+          </div>
+          <div className="text-pixel mt-3 text-center text-[11px]" style={{ color: relic?.color }}>
+            {relic?.name}
+          </div>
+        </motion.div>
+        <div
+          className="mb-6 max-w-[280px] text-center text-[16px] leading-[18px] text-foreground/85"
+          style={{ fontFamily: "var(--font-pixel-body)" }}
+        >
+          {relic?.text}
+        </div>
+        <PixelButton onClick={confirm} color="primary">Continue</PixelButton>
+      </Screen>
+    );
+  }
+
   return (
     <Screen title="CHRONO CACHE" tone="#54a8ff">
       <motion.div
@@ -131,7 +163,7 @@ export function ShopScreen() {
       </div>
 
       <div className="text-pixel mt-5 text-center text-[8px] text-muted-foreground">RELICS — 150⬢</div>
-      <div className="mt-2 flex justify-center gap-4">
+      <div className="mt-2 flex flex-wrap items-start justify-center gap-3">
         {shopRelics.map((r, i) =>
           r ? (
             <motion.button
@@ -140,11 +172,15 @@ export function ShopScreen() {
               whileHover={{ y: -4 }}
               onClick={() => buyRelic(i)}
               disabled={gold < 150}
-              className="flex w-20 flex-col items-center gap-1 disabled:opacity-40"
+              className="flex w-32 flex-col items-center gap-1 bg-black/40 p-2 disabled:opacity-40"
+              style={{ border: `2px solid ${RELICS[r]?.color ?? "#07060c"}` }}
             >
               <RelicIcon id={r} />
-              <span className="text-center text-[12px] leading-[13px] text-foreground/80" style={{ fontFamily: "var(--font-pixel-body)" }}>
+              <span className="text-pixel text-center text-[8px] leading-[11px]" style={{ color: RELICS[r]?.color }}>
                 {RELICS[r]?.name}
+              </span>
+              <span className="text-center text-[12px] leading-[13px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
+                {RELICS[r]?.text}
               </span>
             </motion.button>
           ) : null,
@@ -257,7 +293,6 @@ export function RelicIcon({ id }: { id: string }) {
         border: "3px solid #07060c",
         boxShadow: `0 0 10px -1px ${relic.color}`,
       }}
-      title={relic.name}
     >
       {relic.icon}
     </div>
@@ -271,7 +306,6 @@ export function Hud() {
   const gold = useGame((s) => s.gold);
   const floors = useGame((s) => s.floorsCleared);
   const act = useGame((s) => s.act);
-  const relics = useGame((s) => s.relics);
   const deckCount = useGame((s) => s.deck.length);
   const abandon = useGame((s) => s.abandon);
   const hero = HEROES[heroId]!;
@@ -294,13 +328,7 @@ export function Hud() {
         <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={12} />
         <div className="mt-0.5 flex items-center justify-between text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
           <span>F{floors} · ACT {act + 1}/{ACT_COUNT} · 🂠{deckCount}</span>
-          <div className="flex items-center gap-1">
-            {relics.slice(0, 6).map((r) => (
-              <div key={r} className="origin-center scale-[0.55]" style={{ width: 24, height: 24 }}>
-                <RelicIcon id={r} />
-              </div>
-            ))}
-          </div>
+          <RelicTray size={18} align="right" />
         </div>
       </div>
       <button
