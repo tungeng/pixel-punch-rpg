@@ -425,7 +425,7 @@ export const useGame = create<GameState>((set, get) => ({
     // to how much relic power you're carrying, so a stacked run still bites.
     const floor = s.floorsCleared;
     const relicCount = s.relics.length;
-    const hpScale = 1 + floor * 0.17 + s.act * 0.36 + relicCount * 0.085;
+    const hpScale = 1 + floor * 0.185 + s.act * 0.4 + relicCount * 0.09;
     const strBonus =
       Math.floor(floor / 2) +
       Math.round(s.act * 2.5) +
