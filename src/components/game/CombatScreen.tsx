@@ -20,6 +20,7 @@ function intentParts(intent: {
   weak?: number;
   poison?: number;
   summonId?: string;
+  hack?: "energy" | "draw";
 }) {
   const out: { icon: string; text: string; color: string }[] = [];
   if (intent.type === "summon") out.push({ icon: "SUM", text: "+1", color: "#ff9f43" });
