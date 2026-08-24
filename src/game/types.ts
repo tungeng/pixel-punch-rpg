@@ -49,6 +49,16 @@ export interface CardDef {
   strengthOnKill?: number;
   /** Cost drops by 1 per N damage taken this combat (Doomfist). */
   costPerDamageTaken?: number;
+  /** Poison (damage-over-time) applied to the target (Moira). */
+  poison?: number;
+  /** Regeneration (heal-over-time) stacks applied to the player (Moira). */
+  regen?: number;
+  /** Your next Poison application applies this much extra (Moira). */
+  poisonBoost?: number;
+  /** Consume all Poison on the target: deal this much damage per stack (Moira). */
+  poisonDetonate?: number;
+  /** Sustained beam: damage an enemy and heal for several turns (Moira). */
+  beam?: { damage: number; heal: number; turns: number };
 
   // upgrade deltas applied when upgraded
   up?: Partial<
@@ -70,6 +80,10 @@ export interface CardDef {
       | "damagePerDiscard"
       | "strengthOnKill"
       | "randomDamage"
+      | "poison"
+      | "regen"
+      | "poisonBoost"
+      | "poisonDetonate"
     >
   >;
 }
@@ -86,7 +100,7 @@ export interface UltimateDef extends CardDef {
 export interface HeroDef {
   id: string;
   name: string;
-  role: "Damage" | "Tank" | "Support" | "Combo";
+  role: "Damage" | "Tank" | "Support" | "Combo" | "Biotic";
   maxHp: number;
   passive: string;
   startingDeck: string[];
@@ -107,9 +121,11 @@ export interface EnemyMove {
   weak?: number;
   poison?: number;
   summonId?: string;
+  /** Sombra: hack the player's next turn (energy or draw). */
+  hack?: "energy" | "draw";
 }
 
-export type BossMechanic = "wraith" | "venom" | "gravity" | "phase";
+export type BossMechanic = "wraith" | "venom" | "gravity" | "phase" | "stealth";
 
 /** Persistent enemy behaviours layered on top of the move rotation. */
 export type EnemyTrait =
@@ -146,6 +162,7 @@ export interface EnemyInstance {
   mechanicName?: string | undefined;
   untargetable: boolean;
   enraged: boolean;
+  poison: number;
   hp: number;
   maxHp: number;
   block: number;
