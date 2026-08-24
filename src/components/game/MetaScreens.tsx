@@ -192,7 +192,7 @@ export function ShopScreen() {
         )}
       </div>
 
-      <div className="text-pixel mt-5 text-center text-[8px] text-muted-foreground">RELICS — 150⬢</div>
+      <div className="text-pixel mt-5 text-center text-[8px] text-muted-foreground">RELICS</div>
       <div className="mt-2 flex flex-wrap items-start justify-center gap-3">
         {shopRelics.map((r, i) =>
           r ? (
@@ -201,7 +201,7 @@ export function ShopScreen() {
               whileTap={{ scale: 0.92 }}
               whileHover={{ y: -4 }}
               onClick={() => buyRelic(i)}
-              disabled={gold < 150}
+              disabled={gold < relicPrice(r)}
               className="flex w-32 flex-col items-center gap-1 bg-black/40 p-2 disabled:opacity-40"
               style={{ border: `2px solid ${RELICS[r]?.color ?? "#07060c"}` }}
             >
@@ -209,10 +209,17 @@ export function ShopScreen() {
               <span className="text-pixel text-center text-[8px] leading-[11px]" style={{ color: RELICS[r]?.color }}>
                 {RELICS[r]?.name}
               </span>
+              <span
+                className="text-pixel text-[6px]"
+                style={{ color: RELIC_TIER_COLOR[RELICS[r]?.tier ?? "common"] }}
+              >
+                {(RELICS[r]?.tier ?? "common").toUpperCase()} · {relicPrice(r)}⬢
+              </span>
               <span className="text-center text-[12px] leading-[13px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
                 {RELICS[r]?.text}
               </span>
             </motion.button>
+
           ) : null,
         )}
       </div>
