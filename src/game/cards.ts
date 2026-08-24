@@ -51,7 +51,7 @@ export const CARDS: Record<string, CardDef> = {
 
   // ---------------- JUNKRAT (chaos / area) ----------------
   junkrat_launcher: { id: "junkrat_launcher", name: "Frag Launcher", type: "attack", cost: 1, hero: "junkrat", rarity: "starter", damage: 10, text: "Deal 10 damage.", up: { damage: 13 } },
-  junkrat_trap: { id: "junkrat_trap", name: "Steel Trap", type: "skill", cost: 1, hero: "junkrat", rarity: "starter", vulnerable: 2, block: 5, text: "Apply 2 Vulnerable. Gain 5 Block.", up: { vulnerable: 3, block: 5 } },
+  junkrat_trap: { id: "junkrat_trap", name: "Steel Trap", type: "skill", cost: 1, hero: "junkrat", rarity: "starter", vulnerable: 3, block: 6, text: "Apply 3 Vulnerable. Gain 6 Block.", up: { vulnerable: 4, block: 8 } },
   junkrat_concussive: { id: "junkrat_concussive", name: "Concussion Mine", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 6, weak: 2, text: "Deal 6 damage. Apply 2 Weak.", up: { damage: 8, weak: 3 } },
   junkrat_mine: { id: "junkrat_mine", name: "Rip Tire", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 11, selfDamage: 2, text: "Deal 11 damage. Take 2 damage.", up: { damage: 14 } },
   junkrat_rpg: { id: "junkrat_rpg", name: "RPG", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 15, text: "Deal 15 damage.", up: { damage: 19 } },
@@ -60,7 +60,7 @@ export const CARDS: Record<string, CardDef> = {
   junkrat_rummage: { id: "junkrat_rummage", name: "Rummage", type: "skill", cost: 0, hero: "junkrat", rarity: "common", draw: 2, selfDamage: 3, text: "Draw 2 cards. Take 3 damage.", up: { draw: 3 } },
   junkrat_frag: { id: "junkrat_frag", name: "Frag Toss", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 4, damagePerDebuff: 3, text: "Deal 4 damage, +3 per Vulnerable or Weak stack on the target.", up: { damage: 6, damagePerDebuff: 4 } },
   junkrat_blast: { id: "junkrat_blast", name: "Total Mayhem", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 12, aoe: true, text: "Deal 12 damage to ALL enemies.", up: { damage: 14 } },
-  junkrat_loose: { id: "junkrat_loose", name: "Loose Cannon", type: "attack", cost: 1, hero: "junkrat", rarity: "uncommon", randomDamage: [4, 12], text: "Deal 4-12 damage at random.", up: { randomDamage: [7, 15] } },
+  junkrat_loose: { id: "junkrat_loose", name: "Loose Cannon", type: "attack", cost: 1, hero: "junkrat", rarity: "uncommon", randomDamage: [5, 13], text: "Deal 5-13 damage at random.", up: { randomDamage: [8, 16] } },
   junkrat_scrap: { id: "junkrat_scrap", name: "Scrap Heap", type: "attack", cost: 2, hero: "junkrat", rarity: "rare", damage: 3, damagePerDiscard: 1, shuffleDiscard: true, text: "Deal 3 damage, +1 per card in your discard pile. Then shuffle discard into your draw pile.", up: { damage: 6 } },
 
 
