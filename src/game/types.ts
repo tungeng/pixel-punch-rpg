@@ -83,6 +83,27 @@ export interface CardDef {
   poisonDouble?: boolean;
   /** Consume all Regen; deal this much damage per consumed stack to ALL enemies (Moira). */
   consumeRegenDamage?: number;
+  // ---- Reinhardt: Armor is a persistent resource that never expires ----
+  /** Gain this much Armor (Reinhardt). */
+  armor?: number;
+  /** +1 damage per N of your current Armor (Reinhardt). */
+  damagePerArmor?: number;
+  /** Gain Block equal to your current Armor (Reinhardt). */
+  blockFromArmor?: boolean;
+  /** Damage is doubled while you hold at least this much Armor (Reinhardt). */
+  doubleIfArmor?: number;
+  /** Damage ignores enemy Block (Reinhardt). */
+  ignoreBlock?: boolean;
+  /** Retaliate: enemies that hit you this turn take this much damage (Reinhardt). */
+  thorns?: number;
+  /** Convert all current Block into Armor 1:1 (Reinhardt). */
+  blockToArmor?: boolean;
+  /** Strip the target's Block and convert it into Armor (Reinhardt). */
+  stealBlockAsArmor?: boolean;
+  /** Gain this much Armor per card already played this turn (Reinhardt). */
+  armorPerCardPlayed?: number;
+  /** Deal damage equal to this multiple of your Armor without spending it (Reinhardt). */
+  armorBurst?: number;
 
 
   // upgrade deltas applied when upgraded
@@ -119,6 +140,12 @@ export interface CardDef {
       | "healPerPoisonBoard"
       | "blockPerPoisonedEnemy"
       | "consumeRegenDamage"
+      | "armor"
+      | "damagePerArmor"
+      | "doubleIfArmor"
+      | "thorns"
+      | "armorPerCardPlayed"
+      | "armorBurst"
 
     >
   >;

@@ -295,6 +295,8 @@ export function CombatScreen() {
 
           <div className="absolute -right-1 top-0 flex flex-col items-end gap-1">
             {combat.block > 0 && <Badge text={`🛡 ${combat.block}`} color="#54a8ff" />}
+            {combat.armor > 0 && <Badge text={`⛨ ${combat.armor} ARM`} color="#38bdf8" />}
+            {combat.thorns > 0 && <Badge text={`RETALIATE ${combat.thorns}`} color="#f87171" />}
             {combat.strength > 0 && <Badge text={`▲ ${combat.strength}`} color="#ff7a45" />}
             {combat.vulnerable > 0 && <Badge text={`VULN ${combat.vulnerable}`} color="#ffcc4d" />}
             {combat.weak > 0 && <Badge text={`WEAK ${combat.weak}`} color="#c47bff" />}

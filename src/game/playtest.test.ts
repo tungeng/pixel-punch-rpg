@@ -109,8 +109,25 @@ function simulateRun(hero: string, seed: string): RunResult {
               x.type !== "attack" &&
               ((x.poison ?? 0) > 0 || (x.poisonBoost ?? 0) > 0 || x.poisonSpread || x.poisonDouble),
           );
+          // defend when the telegraphed hit is dangerous
+          const incoming = c.enemies
+            .filter((e) => !e.isDead)
+            .reduce(
+              (n, e) =>
+                n +
+                (e.intent.type === "attack" || e.intent.type === "attack_block"
+                  ? (e.intent.damage ?? 0) * (e.intent.hits ?? 1)
+                  : 0),
+              0,
+            );
+          const threatened = incoming > (c.hp + c.block + c.armor) * 0.35;
+          const defense = threatened
+            ? playable.find(
+                (x) => x.type !== "attack" && ((x.block ?? 0) > 0 || (x.armor ?? 0) > 0 || x.blockFromArmor || x.blockToArmor),
+              )
+            : undefined;
           const card =
-            setup ?? playable.find((x) => x.type === "attack") ?? playable[0]!;
+            defense ?? setup ?? playable.find((x) => x.type === "attack") ?? playable[0]!;
           s.playCard(card.uid);
         } else {
           turns++;

@@ -1,3 +1,12 @@
+import rockethammer from "../assets/icons/rockethammer.png";
+import firestrike from "../assets/icons/firestrike.png";
+import barrierfield from "../assets/icons/barrierfield.png";
+import steelplating from "../assets/icons/steelplating.png";
+import earthshatter from "../assets/icons/earthshatter.png";
+import spikeshield from "../assets/icons/spikeshield.png";
+import crusaderforge from "../assets/icons/crusaderforge.png";
+import shieldcharge from "../assets/icons/shieldcharge.png";
+import shieldbash from "../assets/icons/shieldbash.png";
 import dash from "../assets/icons/dash.png";
 import dualpistols from "../assets/icons/dualpistols.png";
 import rewind from "../assets/icons/rewind.png";
@@ -142,6 +151,19 @@ export const CARD_ICONS: Record<string, string> = {
   moira_purge: explosion,
   moira_leech: healbeam,
   moira_coalescence: timevortex,
+  rein_hammer: rockethammer,
+  rein_plating: steelplating,
+  rein_barrier: barrierfield,
+  rein_firestrike: firestrike,
+  rein_charge: shieldcharge,
+  rein_bulwark: spikeshield,
+  rein_forge: crusaderforge,
+  rein_bash: shieldbash,
+  rein_smash: quake,
+  rein_endure: fortify,
+  rein_rally: reinforce,
+  rein_will: swordshield,
+  rein_earthshatter: earthshatter,
   // Doomfist
   doomfist_punch: gauntlet,
   doomfist_slam: groundslam,

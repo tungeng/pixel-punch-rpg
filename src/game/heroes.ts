@@ -4,6 +4,7 @@ import genjiImg from "../assets/genji.png";
 import junkratImg from "../assets/junkrat.png";
 import doomfistImg from "../assets/doomfist.png";
 import moiraImg from "../assets/moira.png";
+import reinhardtImg from "../assets/reinhardt.png";
 import type { HeroDef } from "./types";
 
 export const HEROES: Record<string, HeroDef> = {
@@ -152,6 +153,39 @@ export const HEROES: Record<string, HeroDef> = {
       text: "Beam an enemy for 9 damage and heal 6 HP at the start of each of your next 3 turns.",
     },
   },
+  reinhardt: {
+    id: "reinhardt",
+    name: "Reinhardt",
+    role: "Tank",
+    maxHp: 108,
+    color: "#38bdf8",
+    asset: reinhardtImg,
+    passive:
+      "Crusader Plating: Armor never expires between turns, and every 3 Block left over at end of turn is forged into 1 permanent Armor.",
+    startingDeck: [
+      "rein_hammer", "rein_hammer", "rein_hammer", "rein_plating",
+      "rein_plating", "rein_barrier", "rein_barrier", "rein_firestrike",
+      "rein_charge", "rein_forge",
+    ],
+    cardPool: [
+      "rein_bulwark", "rein_forge", "rein_bash", "rein_smash",
+      "rein_endure", "rein_rally", "rein_will", "rein_firestrike",
+      "rein_plating", "rein_hammer",
+    ],
+    ultimate: {
+      id: "rein_earthshatter",
+      name: "Earthshatter",
+      type: "ultimate",
+      cost: 0,
+      rarity: "rare",
+      hero: "reinhardt",
+      armorBurst: 2,
+      damage: 6,
+      vulnerable: 2,
+      aoe: true,
+      text: "Deal 6 damage plus twice your Armor to ALL enemies (Armor is kept). Apply 2 Vulnerable.",
+    },
+  },
   doomfist: {
     id: "doomfist",
     name: "Doomfist",
@@ -185,4 +219,4 @@ export const HEROES: Record<string, HeroDef> = {
 };
 
 export const UNLOCKABLE_HEROES = ["junkrat", "doomfist"];
-export const STARTER_HEROES = ["tracer", "mercy", "genji", "moira"];
+export const STARTER_HEROES = ["tracer", "mercy", "genji", "moira", "reinhardt"];

@@ -78,6 +78,10 @@ export interface Combat {
   beams: { targetUid: string; damage: number; heal: number; turns: number }[];
   /** Haste Module relic: first card each turn costs 1 less. */
   firstCardDiscount: boolean;
+  /** Reinhardt: persistent Armor — soaks damage after Block and never expires. */
+  armor: number;
+  /** Reinhardt: retaliation damage dealt back to attackers this turn. */
+  thorns: number;
 }
 
 
@@ -210,14 +214,21 @@ function rngForRun(seed: number, salt: number): Rng {
 }
 
 // ---- damage helpers (mutate combat + enemy) ----
-function applyEnemyDamage(c: Combat, enemy: EnemyInstance, base: number, charge: { v: number }, relicPower: boolean): number {
+function applyEnemyDamage(
+  c: Combat,
+  enemy: EnemyInstance,
+  base: number,
+  charge: { v: number },
+  relicPower: boolean,
+  ignoreBlock = false,
+): number {
   if (enemy.untargetable) return 0;
   let dmg = base + c.strength;
   if (c.weak > 0) dmg = Math.floor(dmg * 0.75);
   if (enemy.vulnerable > 0) dmg = Math.floor(dmg * 1.5);
   dmg = Math.max(0, dmg);
   let remaining = dmg;
-  if (enemy.block > 0) {
+  if (enemy.block > 0 && !ignoreBlock) {
     const absorbed = Math.min(enemy.block, remaining);
     enemy.block -= absorbed;
     remaining -= absorbed;
@@ -242,6 +253,12 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
     c.block -= absorbed;
     remaining -= absorbed;
   }
+  // Reinhardt: Armor soaks what Block could not, and carries between turns
+  if (remaining > 0 && c.armor > 0) {
+    const soaked = Math.min(c.armor, remaining);
+    c.armor -= soaked;
+    remaining -= soaked;
+  }
   c.hp -= remaining;
   c.damageTakenThisCombat += remaining;
   // thorn mail
@@ -260,7 +277,9 @@ export function cardDealsDamage(card: CardInstance): boolean {
     !!card.damagePerDebuff ||
     !!card.poisonDetonate ||
     !!card.damagePerPoison ||
-    !!card.consumeRegenDamage
+    !!card.consumeRegenDamage ||
+    !!card.damagePerArmor ||
+    !!card.armorBurst
   );
 }
 
@@ -285,6 +304,9 @@ export function scaledDamage(card: CardInstance, c: Combat, roll?: number): numb
   if (card.damagePerMissingHp) dmg += Math.floor((c.maxHp - c.hp) / card.damagePerMissingHp);
   if (card.damagePerDiscard) dmg += card.damagePerDiscard * c.discardPile.length;
   if (card.damagePerBlock) dmg += Math.floor(c.block / card.damagePerBlock);
+  if (card.damagePerArmor) dmg += Math.floor(c.armor / card.damagePerArmor);
+  if (card.armorBurst) dmg += c.armor * card.armorBurst;
+  if (card.doubleIfArmor && c.armor >= card.doubleIfArmor) dmg *= 2;
   return dmg;
 }
 
@@ -292,6 +314,7 @@ export function scaledDamage(card: CardInstance, c: Combat, roll?: number): numb
 export function scaledBlock(card: CardInstance, c: Combat): number {
   let b = card.block ?? 0;
   if (card.blockPerAttackPlayed) b += card.blockPerAttackPlayed * c.attacksPlayedThisTurn;
+  if (card.blockFromArmor) b += c.armor;
   if (card.blockPerPoisonedEnemy)
     b += card.blockPerPoisonedEnemy * c.enemies.filter((e) => !e.isDead && e.poison > 0).length;
   return b;
@@ -320,6 +343,13 @@ export function cardSynergyActive(card: CardInstance, c: Combat): boolean {
   if (card.blockPerPoisonedEnemy && anyPoisoned) return true;
   if (card.poisonDouble && anyPoisoned) return true;
   if (card.consumeRegenDamage && c.regen > 0) return true;
+  if (card.damagePerArmor && c.armor >= card.damagePerArmor) return true;
+  if (card.armorBurst && c.armor > 0) return true;
+  if (card.doubleIfArmor && c.armor >= card.doubleIfArmor) return true;
+  if (card.blockFromArmor && c.armor > 0) return true;
+  if (card.blockToArmor && c.block > 0) return true;
+  if (card.armorPerCardPlayed && c.cardsPlayedThisTurn > 0) return true;
+  if (card.stealBlockAsArmor && c.enemies.some((e) => !e.isDead && e.block > 0)) return true;
   return false;
 }
 
@@ -493,6 +523,8 @@ export const useGame = create<GameState>((set, get) => ({
       overclock: null,
       regen: 0,
       poisonBoost: 0,
+      armor: 0,
+      thorns: 0,
       hackedType: null,
       hackEnergy: false,
       hackDraw: false,
@@ -700,6 +732,12 @@ export const useGame = create<GameState>((set, get) => ({
             pushFloat(c, "4", "dmg", e.uid);
             if (e.hp <= 0) { e.hp = 0; e.isDead = true; }
           }
+          // Reinhardt: Barbed Bulwark retaliates against attackers
+          if (c.thorns > 0 && taken >= 0) {
+            e.hp -= c.thorns;
+            pushFloat(c, `${c.thorns}`, "dmg", e.uid);
+            if (e.hp <= 0) { e.hp = 0; e.isDead = true; }
+          }
           if (relics.includes("static_shell") && taken > 0) {
             c.block += 3;
             pushFloat(c, "+3", "block", "player");
@@ -783,8 +821,16 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // start player turn
     c.turn += 1;
+    // Reinhardt: Crusader Plating forges leftover Block into permanent Armor
+    if (s.heroId === "reinhardt" && c.block >= 3) {
+      const forged = Math.floor(c.block / 3);
+      c.armor += forged;
+      pushFloat(c, `+${forged} ARM`, "block", "player");
+      pushLog(c, `Crusader Plating forges ${forged} Armor from leftover Block.`);
+    }
     // Aegis Loop keeps half your Block instead of wiping it
     c.block = relics.includes("aegis_loop") ? Math.floor(c.block / 2) : 0;
+    c.thorns = 0;
     // ---- per-turn relic ticks ----
     if (relics.includes("dragon_ember")) {
       c.strength += 1;
@@ -1000,10 +1046,12 @@ export const useGame = create<GameState>((set, get) => ({
     const cost = relicPrice(relicId);
     if (s.gold < cost) return;
     const relics = [...s.relics, relicId];
+    const newMax = maxHpFor(s.heroId, relics, s.act, s.meta.upgrades);
     set({
       gold: s.gold - cost,
       relics,
-      maxHp: maxHpFor(s.heroId, relics, s.act, s.meta.upgrades),
+      hp: Math.min(s.hp, newMax),
+      maxHp: newMax,
       shopRelics: s.shopRelics.map((r, i) => (i === index ? "" : r)),
     });
 
@@ -1209,6 +1257,42 @@ function resolveCard(
       pushFloat(c, `-${selfDmg}`, "dmg", "player");
     }
   }
+  // ---- Reinhardt: Armor economy ----
+  if (card.armorPerCardPlayed) {
+    const gain = card.armorPerCardPlayed * (c.cardsPlayedThisTurn - 1);
+    if (gain > 0) {
+      c.armor += gain;
+      pushFloat(c, `+${gain} ARM`, "block", "player");
+    }
+  }
+  if (card.armor) {
+    c.armor += card.armor;
+    pushFloat(c, `+${card.armor} ARM`, "block", "player");
+  }
+  if (card.blockToArmor && c.block > 0) {
+    const moved = c.block;
+    c.block = 0;
+    c.armor += moved;
+    pushFloat(c, `+${moved} ARM`, "block", "player");
+    pushLog(c, `${card.name} reforges ${moved} Block into Armor.`);
+  }
+  if (card.thorns) {
+    c.thorns += card.thorns;
+    pushFloat(c, `RETALIATE ${c.thorns}`, "buff", "player");
+  }
+  if (card.stealBlockAsArmor) {
+    const target =
+      c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
+      c.enemies.find((e) => !e.isDead && !e.untargetable);
+    if (target && target.block > 0) {
+      const taken = target.block;
+      target.block = 0;
+      c.armor += taken;
+      pushFloat(c, `+${taken} ARM`, "block", "player");
+      pushLog(c, `${card.name} tears ${taken} Block off ${target.name} and bolts it on.`);
+    }
+  }
+
   // deal damage
   if (scaled > 0) {
     let hits = card.hits ?? 1;
@@ -1231,7 +1315,7 @@ function resolveCard(
         (card.damagePerPoison ? card.damagePerPoison * t.poison : 0);
       for (let h = 0; h < hits; h++) {
         if (t.isDead) break;
-        const dealt = applyEnemyDamage(c, t, totalBase + debuffBonus, charge, powerCell);
+        const dealt = applyEnemyDamage(c, t, totalBase + debuffBonus, charge, powerCell, card.ignoreBlock);
         pushFloat(c, `${dealt}`, "dmg", t.uid);
         // Doomfist: executions feed permanent Strength
         if (t.isDead && card.strengthOnKill) {
@@ -1483,9 +1567,10 @@ function handleCombatWin(set: any, get: () => GameState) {
     return;
   }
 
+  const postMax = maxHpFor(s.heroId, relics, s.act, s.meta.upgrades);
   set({
-    hp,
-    maxHp: maxHpFor(s.heroId, relics, s.act, s.meta.upgrades),
+    hp: Math.min(hp, postMax),
+    maxHp: postMax,
     gold,
     relics,
     floorsCleared,
