@@ -445,6 +445,7 @@ export const useGame = create<GameState>((set, get) => ({
       set({ combat: { ...c, targetingCardUid: uid } });
       return;
     }
+    pushRewind(c);
     resolveCard(set, get, card, targetUid ?? livingEnemies[0]?.uid ?? null);
   },
 
@@ -454,6 +455,7 @@ export const useGame = create<GameState>((set, get) => ({
     if (!c || !c.targetingCardUid) return;
     const card = c.hand.find((x) => x.uid === c.targetingCardUid);
     if (!card) return;
+    pushRewind(c);
     resolveCard(set, get, card, enemyUid);
   },
 
@@ -461,6 +463,24 @@ export const useGame = create<GameState>((set, get) => ({
     const c = get().combat;
     if (c) set({ combat: { ...c, targetingCardUid: null } });
   },
+
+  rewind: () => {
+    const c = get().combat;
+    if (!c || !c.active) return;
+    if (c.rewindsLeft <= 0 || c.rewindStack.length === 0) return;
+    const stack = [...c.rewindStack];
+    const prev = stack.pop()!;
+    const restored: Combat = {
+      ...prev,
+      rewindStack: stack,
+      rewindsLeft: c.rewindsLeft - 1,
+      targetingCardUid: null,
+      floats: [],
+      log: [...c.log, "CHRONO REWIND — the last play never happened."],
+    };
+    set({ combat: restored });
+  },
+
 
   endTurn: () => {
     const s = get();
