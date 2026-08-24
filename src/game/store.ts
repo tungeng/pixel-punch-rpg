@@ -961,10 +961,16 @@ export const useGame = create<GameState>((set, get) => ({
     const relicId = s.shopRelics[index];
     if (!relicId) return;
     if (s.relics.includes(relicId)) return;
-    const cost = 150;
+    const cost = relicPrice(relicId);
     if (s.gold < cost) return;
     const relics = [...s.relics, relicId];
-    set({ gold: s.gold - cost, relics, shopRelics: s.shopRelics.map((r, i) => (i === index ? "" : r)) });
+    set({
+      gold: s.gold - cost,
+      relics,
+      maxHp: maxHpFor(s.heroId, relics, s.act, s.meta.upgrades),
+      shopRelics: s.shopRelics.map((r, i) => (i === index ? "" : r)),
+    });
+
   },
 
   buyRemove: (cardUid) => {
