@@ -67,11 +67,11 @@ export const CARDS: Record<string, CardDef> = {
   // ---------------- MOIRA (biotic / damage-over-time) ----------------
   moira_orb_dmg: { id: "moira_orb_dmg", name: "Biotic Orb (Damage)", type: "attack", cost: 1, hero: "moira", rarity: "starter", damage: 4, poison: 4, text: "Deal 4 damage. Apply 4 Poison.", up: { damage: 6, poison: 5 } },
   moira_orb_heal: { id: "moira_orb_heal", name: "Biotic Orb (Healing)", type: "skill", cost: 1, hero: "moira", rarity: "starter", regen: 4, text: "Gain 4 Regen (heals each turn, decaying).", up: { regen: 6 } },
-  moira_grasp: { id: "moira_grasp", name: "Biotic Grasp", type: "attack", cost: 1, hero: "moira", rarity: "starter", damage: 6, poison: 2, text: "Deal 6 damage. Apply 2 Poison.", up: { damage: 8, poison: 3 } },
+  moira_grasp: { id: "moira_grasp", name: "Biotic Grasp", type: "attack", cost: 1, hero: "moira", rarity: "starter", damage: 5, poison: 2, text: "Deal 5 damage. Apply 2 Poison.", up: { damage: 7, poison: 3 } },
   moira_fade: { id: "moira_fade", name: "Fade", type: "skill", cost: 1, hero: "moira", rarity: "starter", block: 6, draw: 1, text: "Gain 6 Block. Draw 1 card.", up: { block: 9 } },
   moira_decay: { id: "moira_decay", name: "Decay", type: "skill", cost: 0, hero: "moira", rarity: "common", poison: 3, text: "Apply 3 Poison.", up: { poison: 5 } },
   moira_surge: { id: "moira_surge", name: "Biotic Surge", type: "skill", cost: 1, hero: "moira", rarity: "common", poisonBoost: 3, text: "Your next Poison application applies 3 more.", up: { poisonBoost: 5 } },
-  moira_bloom: { id: "moira_bloom", name: "Necrotic Bloom", type: "attack", cost: 1, hero: "moira", rarity: "uncommon", poisonDetonate: 3, text: "Consume all Poison on the target: deal 3 damage per stack.", up: { poisonDetonate: 5 } },
+  moira_bloom: { id: "moira_bloom", name: "Necrotic Bloom", type: "attack", cost: 1, hero: "moira", rarity: "uncommon", poisonDetonate: 2, text: "Consume all Poison on the target: deal 2 damage per stack.", up: { poisonDetonate: 4 } },
   moira_transfuse: { id: "moira_transfuse", name: "Transfusion", type: "attack", cost: 1, hero: "moira", rarity: "common", damage: 5, heal: 3, text: "Deal 5 damage. Heal 3.", up: { damage: 7, heal: 5 } },
   moira_miasma: { id: "moira_miasma", name: "Miasma", type: "skill", cost: 2, hero: "moira", rarity: "uncommon", poison: 4, aoe: true, text: "Apply 4 Poison to ALL enemies.", up: { poison: 6 } },
   moira_bioticfield: { id: "moira_bioticfield", name: "Biotic Field", type: "skill", cost: 1, hero: "moira", rarity: "common", regen: 3, block: 4, text: "Gain 3 Regen and 4 Block.", up: { regen: 5, block: 6 } },
