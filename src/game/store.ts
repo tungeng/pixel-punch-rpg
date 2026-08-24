@@ -884,14 +884,15 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const card = makeCard(cardId);
     const deck = [...s.deck, card];
-    set({ deck, phase: "map" });
+    set({ deck, phase: "map", pendingRelic: null });
     markNodeVisited(set, get);
   },
 
   skipReward: () => {
-    set({ phase: "map" });
+    set({ phase: "map", pendingRelic: null });
     markNodeVisited(set, get);
   },
+
 
   restHeal: () => {
     const s = get();
