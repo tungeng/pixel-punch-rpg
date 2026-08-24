@@ -9,13 +9,13 @@ import { Heart, Zap, Star, Lock } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CHRONOBREAK — Pixel Deck Roguelike" },
+      { title: "OVERTUNG — Pixel Deck Roguelike" },
       {
         name: "description",
         content:
           "A pixel-art Overwatch deck-roguelike. Bend time, break the breach. Slay-the-Spire-style card combat across a fractured timeline.",
       },
-      { property: "og:title", content: "CHRONOBREAK" },
+      { property: "og:title", content: "OVERTUNG" },
       {
         property: "og:description",
         content: "A pixel-art Overwatch deck-roguelike. Bend time. Break the breach.",
@@ -48,7 +48,7 @@ function Index() {
     if (meta.credits < unlockCost) return;
     const next = { ...meta, credits: meta.credits - unlockCost, unlockedHeroes: [...meta.unlockedHeroes, id] };
     try {
-      window.localStorage.setItem("chronobreak_meta_v1", JSON.stringify(next));
+      window.localStorage.setItem("overtung_meta_v1", JSON.stringify(next));
     } catch { /* ignore */ }
     useGame.setState({ meta: next });
   }
@@ -62,11 +62,11 @@ function Index() {
           className="text-pixel title-flicker text-center text-[26px] leading-tight text-primary"
           style={{ textShadow: "3px 3px 0 oklch(0.1 0.02 265), 6px 6px 0 oklch(0.5 0.18 35)" }}
         >
-          CHRONO
+          OVER
           <br />
-          BREAK
+          TUNG
         </motion.h1>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-pixel breathe-glow mt-2 text-center text-[8px] text-accent">PIXEL DECK ROGUELIKE</motion.div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-pixel breathe-glow mt-2 text-center text-[8px] text-accent">TUNG. TUNG. TUNG. — PIXEL DECK ROGUELIKE</motion.div>
 
         <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.5 }} className="mt-5 text-center text-[15px] leading-[18px] text-foreground/85" style={{ fontFamily: "var(--font-pixel-body)" }}>
           A chrono-fracture tore open over King's Row. Null Sector poured through,

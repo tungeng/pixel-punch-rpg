@@ -17,13 +17,13 @@ import {
 export const Route = createFileRoute("/run")({
   head: () => ({
     meta: [
-      { title: "Run in progress — CHRONOBREAK" },
+      { title: "Run in progress — OVERTUNG" },
       {
         name: "description",
         content:
           "Fight through the chrono-fracture: turn-based pixel card combat, branching breach nav, relics and elites.",
       },
-      { property: "og:title", content: "CHRONOBREAK — Run in progress" },
+      { property: "og:title", content: "OVERTUNG — Run in progress" },
       {
         property: "og:description",
         content: "Turn-based pixel card combat across a shattered timeline.",

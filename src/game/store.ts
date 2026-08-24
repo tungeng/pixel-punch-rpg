@@ -121,7 +121,8 @@ export interface GameState {
   pruneFloats: () => void;
 }
 
-const META_KEY = "chronobreak_meta_v1";
+const META_KEY = "overtung_meta_v1";
+const LEGACY_META_KEY = "chronobreak_meta_v1";
 
 function defaultMeta() {
   return { unlockedHeroes: ["tracer", "mercy", "genji"], credits: 0, bestFloor: 0, totalRuns: 0 };
@@ -132,7 +133,8 @@ let floatId = 1;
 function loadMetaFromStorage() {
   if (typeof window === "undefined") return defaultMeta();
   try {
-    const raw = window.localStorage.getItem(META_KEY);
+    const raw =
+      window.localStorage.getItem(META_KEY) ?? window.localStorage.getItem(LEGACY_META_KEY);
     if (!raw) return defaultMeta();
     const m = { ...defaultMeta(), ...JSON.parse(raw) };
     if (!Array.isArray(m.unlockedHeroes)) m.unlockedHeroes = ["tracer", "mercy", "genji"];
