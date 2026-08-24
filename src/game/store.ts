@@ -917,7 +917,8 @@ export const useGame = create<GameState>((set, get) => ({
       return;
     }
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
-    if (!rng.chance(upgradeCacheRelicChance(s.meta.upgrades))) {
+    // caches are relic-first now; the scanner upgrade only widens the odds
+    if (!rng.chance(Math.max(0.9, upgradeCacheRelicChance(s.meta.upgrades)))) {
       // scanner missed: cache yields a card reward instead
       const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
       const remaining = [...pool];
@@ -930,10 +931,11 @@ export const useGame = create<GameState>((set, get) => ({
       set({ phase: "reward", rewardChoices: choices, rewardGold: 0 });
       return;
     }
-    const relic = rng.pick(avail);
+    const relic = pickRelicId(avail, rng.next()) ?? rng.pick(avail);
     // hold on the treasure screen so the player sees what they got
     set({ relics: [...s.relics, relic], pendingRelic: relic });
   },
+
 
   confirmRelic: () => {
     set({ pendingRelic: null, phase: "map" });
