@@ -834,6 +834,10 @@ export const useGame = create<GameState>((set, get) => ({
     const maxEnergy = maxEnergyFor(s.heroId, relics);
     c.maxEnergy = maxEnergy;
     c.energy = c.hackEnergy ? Math.max(1, maxEnergy - 1) : maxEnergy;
+    if (relics.includes("reactor_surge") && c.turn % 2 === 0) {
+      c.energy += 2;
+      pushFloat(c, "+2 EN", "buff", "player");
+    }
     if (c.hackEnergy) pushLog(c, "Hacked — you lose 1 Energy this turn.");
     c.cardsPlayedThisTurn = 0;
     c.attacksPlayedThisTurn = 0;
@@ -848,9 +852,16 @@ export const useGame = create<GameState>((set, get) => ({
     drawCards(c, drawN);
     // passive heals
     if (s.heroId === "mercy") c.hp = Math.min(c.maxHp, c.hp + 1);
-    if (relics.includes("regen_drone")) c.hp = Math.min(c.maxHp, c.hp + 1);
+    if (relics.includes("regen_drone")) {
+      const healed = Math.min(c.maxHp - c.hp, 2);
+      if (healed > 0) {
+        c.hp += healed;
+        pushFloat(c, `+${healed}`, "heal", "player");
+      }
+    }
     set({ combat: { ...c } });
   },
+
 
   useUltimate: (targetUid) => {
     const s = get();
