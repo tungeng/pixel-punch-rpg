@@ -143,18 +143,22 @@ export function CardView({
           <div className="scanlines pointer-events-none absolute inset-0 opacity-40" />
         </div>
 
-        {/* name banner */}
+        {/* name banner — auto-shrinks so long names are never truncated */}
         <div
-          className="text-pixel truncate px-1 py-[3px] text-center text-black"
+          className="text-pixel px-[2px] py-[3px] text-center text-black"
           style={{
             background: t.accent,
-            fontSize: big ? 7.5 : 6.5,
+            fontSize: nameSize,
+            lineHeight: 1.15,
+            letterSpacing: 0,
             margin: "0 3px",
+            overflowWrap: "break-word",
           }}
         >
           {card.name}
           {card.upgraded ? "+" : ""}
         </div>
+
 
         {/* rules text */}
         <div
