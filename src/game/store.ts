@@ -183,22 +183,27 @@ function maxEnergyFor(heroId: string, relics: string[]): number {
   let e = 3;
   if (heroId === "tracer") e += 1;
   if (relics.includes("energy_core")) e += 1;
-  return e;
+  if (relics.includes("titan_plating")) e -= 1;
+  return Math.max(1, e);
 }
 
 function drawCountFor(heroId: string, relics: string[]): number {
   let d = 5;
   if (heroId === "genji") d += 1;
   if (relics.includes("draw_charm")) d += 1;
+  if (relics.includes("combat_visor")) d += 2;
   return d;
 }
 
 function maxHpFor(heroId: string, relics: string[], act = 0, upgrades?: Record<string, number>): number {
   let h = getHero(heroId).maxHp;
-  if (relics.includes("gold_heart")) h += 25;
+  if (relics.includes("gold_heart")) h += 30;
+  if (relics.includes("titan_plating")) h += 55;
+  if (relics.includes("combat_visor")) h -= 15;
   h += upgradeBonusMaxHp(upgrades);
-  return h + act * 12;
+  return Math.max(20, h + act * 12);
 }
+
 
 function rngForRun(seed: number, salt: number): Rng {
   return new Rng((seed ^ (salt * 0x9e3779b9)) >>> 0);
