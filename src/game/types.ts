@@ -73,6 +73,16 @@ export interface CardDef {
   damagePerDebuff?: number;
   /** Extra healing when below half HP (Mercy). */
   bonusHealIfLowHp?: number;
+  /** +N damage per Poison stack already on the target (Moira). */
+  damagePerPoison?: number;
+  /** Heal N per Poison stack across all living enemies (Moira). */
+  healPerPoisonBoard?: number;
+  /** Extra Block per poisoned enemy on the board (Moira). */
+  blockPerPoisonedEnemy?: number;
+  /** Double the Poison already on the target (Moira). */
+  poisonDouble?: boolean;
+  /** Consume all Regen; deal this much damage per consumed stack to ALL enemies (Moira). */
+  consumeRegenDamage?: number;
 
 
   // upgrade deltas applied when upgraded
@@ -105,6 +115,10 @@ export interface CardDef {
       | "bonusHealIfLowHp"
       | "randomHits"
       | "selfDamage"
+      | "damagePerPoison"
+      | "healPerPoisonBoard"
+      | "blockPerPoisonedEnemy"
+      | "consumeRegenDamage"
 
     >
   >;

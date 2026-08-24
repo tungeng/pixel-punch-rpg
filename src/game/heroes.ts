@@ -127,18 +127,19 @@ export const HEROES: Record<string, HeroDef> = {
     id: "moira",
     name: "Moira",
     role: "Biotic",
-    maxHp: 65,
+    maxHp: 72,
     color: "#a855f7",
     asset: moiraImg,
-    passive: "Biotic Grasp: whenever your Poison damages an enemy, heal for 35% of that damage.",
+    passive: "Biotic Grasp: whenever your Poison damages an enemy, heal for 50% of that damage.",
     startingDeck: [
       "moira_orb_dmg", "moira_orb_dmg", "moira_grasp", "moira_grasp",
-      "moira_orb_heal", "moira_fade", "moira_decay", "moira_surge",
+      "moira_orb_heal", "moira_fade", "moira_fade", "moira_decay",
       "moira_contagion", "moira_bloom",
     ],
     cardPool: [
       "moira_decay", "moira_surge", "moira_bloom", "moira_miasma",
       "moira_bioticfield", "moira_rot", "moira_leech", "moira_contagion",
+      "moira_purge",
     ],
     ultimate: {
       id: "moira_coalescence",

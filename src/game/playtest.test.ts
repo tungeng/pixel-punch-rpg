@@ -102,9 +102,15 @@ function simulateRun(hero: string, seed: string): RunResult {
           (card) => card.cost <= c.energy && card.type !== c.hackedType,
         );
         if (playable.length > 0) {
-          // greedy: attacks first, then everything else
+          // greedy: set up damage-over-time / debuffs first (so conditional
+          // attacks like Biotic Grasp actually pay off), then attacks.
+          const setup = playable.find(
+            (x) =>
+              x.type !== "attack" &&
+              ((x.poison ?? 0) > 0 || (x.poisonBoost ?? 0) > 0 || x.poisonSpread || x.poisonDouble),
+          );
           const card =
-            playable.find((x) => x.type === "attack") ?? playable[0]!;
+            setup ?? playable.find((x) => x.type === "attack") ?? playable[0]!;
           s.playCard(card.uid);
         } else {
           turns++;

@@ -258,7 +258,9 @@ export function cardDealsDamage(card: CardInstance): boolean {
     !!card.damagePerMissingHp ||
     !!card.damagePerBlock ||
     !!card.damagePerDebuff ||
-    !!card.poisonDetonate
+    !!card.poisonDetonate ||
+    !!card.damagePerPoison ||
+    !!card.consumeRegenDamage
   );
 }
 
@@ -290,6 +292,8 @@ export function scaledDamage(card: CardInstance, c: Combat, roll?: number): numb
 export function scaledBlock(card: CardInstance, c: Combat): number {
   let b = card.block ?? 0;
   if (card.blockPerAttackPlayed) b += card.blockPerAttackPlayed * c.attacksPlayedThisTurn;
+  if (card.blockPerPoisonedEnemy)
+    b += card.blockPerPoisonedEnemy * c.enemies.filter((e) => !e.isDead && e.poison > 0).length;
   return b;
 }
 
@@ -310,6 +314,12 @@ export function cardSynergyActive(card: CardInstance, c: Combat): boolean {
   if (card.poisonDetonate && c.enemies.some((e) => !e.isDead && e.poison > 0)) return true;
   if (card.poisonSpread && c.enemies.some((e) => !e.isDead && e.poison > 0)) return true;
   if (card.poison && c.poisonBoost > 0) return true;
+  const anyPoisoned = c.enemies.some((e) => !e.isDead && e.poison > 0);
+  if (card.damagePerPoison && anyPoisoned) return true;
+  if (card.healPerPoisonBoard && anyPoisoned) return true;
+  if (card.blockPerPoisonedEnemy && anyPoisoned) return true;
+  if (card.poisonDouble && anyPoisoned) return true;
+  if (card.consumeRegenDamage && c.regen > 0) return true;
   return false;
 }
 
@@ -648,7 +658,7 @@ export const useGame = create<GameState>((set, get) => ({
       pushLog(c, `Poison deals ${dotHeal} damage.`);
       // Moira's Biotic Grasp: her damage-over-time feeds her back
       if (s.heroId === "moira") {
-        const healed = Math.min(c.maxHp - c.hp, Math.ceil(dotHeal * 0.35));
+        const healed = Math.min(c.maxHp - c.hp, Math.ceil(dotHeal * 0.5));
         if (healed > 0) {
           c.hp += healed;
           pushFloat(c, `+${healed}`, "heal", "player");
@@ -1216,7 +1226,9 @@ function resolveCard(
     for (const t of targets) {
       if (!t) continue;
       // Junkrat: blasts hit harder on softened targets
-      const debuffBonus = card.damagePerDebuff ? card.damagePerDebuff * (t.vulnerable + t.weak) : 0;
+      const debuffBonus =
+        (card.damagePerDebuff ? card.damagePerDebuff * (t.vulnerable + t.weak) : 0) +
+        (card.damagePerPoison ? card.damagePerPoison * t.poison : 0);
       for (let h = 0; h < hits; h++) {
         if (t.isDead) break;
         const dealt = applyEnemyDamage(c, t, totalBase + debuffBonus, charge, powerCell);
@@ -1290,6 +1302,38 @@ function resolveCard(
       }
       pushLog(c, `${card.name} spreads ${highest} Poison across the board.`);
     }
+  }
+
+  // Moira: double the infection on one target
+  if (card.poisonDouble) {
+    const target =
+      c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
+      c.enemies.find((e) => !e.isDead && !e.untargetable);
+    if (target && target.poison > 0) {
+      const gain = target.poison;
+      target.poison += gain;
+      pushFloat(c, `+${gain} PSN`, "debuff", target.uid);
+      pushLog(c, `${card.name} doubles the toxin on ${target.name}.`);
+    }
+  }
+  // Moira: siphon the board's infection into health
+  if (card.healPerPoisonBoard) {
+    const stacks = c.enemies.filter((e) => !e.isDead).reduce((n, e) => n + e.poison, 0);
+    const healed = Math.min(c.maxHp - c.hp, stacks * card.healPerPoisonBoard);
+    if (healed > 0) {
+      c.hp += healed;
+      pushFloat(c, `+${healed}`, "heal", "player");
+    }
+  }
+  // Moira: burn all Regen into an AoE necrotic blast
+  if (card.consumeRegenDamage && c.regen > 0) {
+    const burst = c.regen * card.consumeRegenDamage;
+    c.regen = 0;
+    for (const t of c.enemies.filter((e) => !e.isDead && !e.untargetable)) {
+      const dealt = applyEnemyDamage(c, t, burst, charge, powerCell);
+      pushFloat(c, `${dealt}`, "dmg", t.uid);
+    }
+    pushLog(c, `${card.name} burns all Regen for ${burst} to every enemy.`);
   }
 
   // Moira: Coalescence sustained beam

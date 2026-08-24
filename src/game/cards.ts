@@ -66,18 +66,19 @@ export const CARDS: Record<string, CardDef> = {
 
 
   // ---------------- MOIRA (biotic / damage-over-time) ----------------
-  moira_orb_dmg: { id: "moira_orb_dmg", name: "Biotic Orb (Damage)", type: "attack", cost: 1, hero: "moira", rarity: "starter", damage: 4, poison: 4, text: "Deal 4 damage. Apply 4 Poison.", up: { damage: 6, poison: 5 } },
+  moira_orb_dmg: { id: "moira_orb_dmg", name: "Biotic Orb (Damage)", type: "attack", cost: 1, hero: "moira", rarity: "starter", damage: 5, poison: 6, text: "Deal 5 damage. Apply 6 Poison.", up: { damage: 7, poison: 8 } },
   moira_orb_heal: { id: "moira_orb_heal", name: "Biotic Orb (Healing)", type: "skill", cost: 1, hero: "moira", rarity: "starter", regen: 4, text: "Gain 4 Regen (heals each turn, decaying).", up: { regen: 6 } },
-  moira_grasp: { id: "moira_grasp", name: "Biotic Grasp", type: "attack", cost: 1, hero: "moira", rarity: "starter", damage: 5, poison: 2, text: "Deal 5 damage. Apply 2 Poison.", up: { damage: 7, poison: 3 } },
-  moira_fade: { id: "moira_fade", name: "Fade", type: "skill", cost: 1, hero: "moira", rarity: "starter", block: 6, regen: 2, text: "Gain 6 Block and 2 Regen.", up: { block: 9, regen: 3 } },
+  moira_grasp: { id: "moira_grasp", name: "Biotic Grasp", type: "attack", cost: 1, hero: "moira", rarity: "starter", damage: 4, damagePerPoison: 3, text: "Deal 4 damage, +3 per Poison on the target.", up: { damage: 6, damagePerPoison: 4 } },
+  moira_fade: { id: "moira_fade", name: "Fade", type: "skill", cost: 1, hero: "moira", rarity: "starter", block: 5, blockPerPoisonedEnemy: 4, text: "Gain 5 Block, +4 per poisoned enemy.", up: { block: 8, blockPerPoisonedEnemy: 5 } },
   moira_decay: { id: "moira_decay", name: "Decay", type: "skill", cost: 0, hero: "moira", rarity: "common", poison: 3, text: "Apply 3 Poison.", up: { poison: 5 } },
   moira_surge: { id: "moira_surge", name: "Biotic Surge", type: "skill", cost: 1, hero: "moira", rarity: "common", poisonBoost: 3, text: "Your next Poison application applies 3 more.", up: { poisonBoost: 5 } },
-  moira_bloom: { id: "moira_bloom", name: "Necrotic Bloom", type: "attack", cost: 1, hero: "moira", rarity: "uncommon", poisonDetonate: 2, text: "Consume all Poison on the target: deal 2 damage per stack.", up: { poisonDetonate: 4 } },
-  moira_contagion: { id: "moira_contagion", name: "Contagion", type: "skill", cost: 1, hero: "moira", rarity: "uncommon", poisonSpread: true, block: 3, text: "Gain 3 Block. Spread the highest Poison on the board to every enemy.", up: { block: 6 } },
+  moira_bloom: { id: "moira_bloom", name: "Necrotic Bloom", type: "attack", cost: 1, hero: "moira", rarity: "uncommon", poisonDetonate: 4, text: "Consume all Poison on the target: deal 4 damage per stack.", up: { poisonDetonate: 6 } },
+  moira_contagion: { id: "moira_contagion", name: "Contagion", type: "skill", cost: 1, hero: "moira", rarity: "uncommon", poisonSpread: true, text: "Spread the highest Poison on the board to every enemy.", up: { cost: 0 } },
   moira_miasma: { id: "moira_miasma", name: "Miasma", type: "skill", cost: 2, hero: "moira", rarity: "uncommon", poison: 4, aoe: true, text: "Apply 4 Poison to ALL enemies.", up: { poison: 6 } },
-  moira_bioticfield: { id: "moira_bioticfield", name: "Biotic Field", type: "skill", cost: 1, hero: "moira", rarity: "common", regen: 3, block: 4, text: "Gain 3 Regen and 4 Block.", up: { regen: 5, block: 6 } },
-  moira_rot: { id: "moira_rot", name: "Creeping Rot", type: "attack", cost: 2, hero: "moira", rarity: "uncommon", damage: 6, poison: 6, text: "Deal 6 damage. Apply 6 Poison.", up: { damage: 9, poison: 8 } },
-  moira_leech: { id: "moira_leech", name: "Leech Grasp", type: "attack", cost: 1, hero: "moira", rarity: "uncommon", damage: 4, poison: 2, regen: 2, text: "Deal 4 damage. Apply 2 Poison. Gain 2 Regen.", up: { damage: 6, poison: 3 } },
+  moira_bioticfield: { id: "moira_bioticfield", name: "Biotic Field", type: "skill", cost: 1, hero: "moira", rarity: "common", heal: 5, draw: 1, text: "Heal 5. Draw 1.", up: { heal: 8 } },
+  moira_rot: { id: "moira_rot", name: "Virulence", type: "skill", cost: 1, hero: "moira", rarity: "uncommon", poisonDouble: true, text: "Double the Poison on the target.", up: { cost: 0 } },
+  moira_leech: { id: "moira_leech", name: "Siphon Life", type: "attack", cost: 1, hero: "moira", rarity: "uncommon", damage: 5, healPerPoisonBoard: 1, text: "Deal 5 damage. Heal 1 per Poison stack on the board.", up: { damage: 8, healPerPoisonBoard: 2 } },
+  moira_purge: { id: "moira_purge", name: "Necrotic Purge", type: "attack", cost: 2, hero: "moira", rarity: "rare", consumeRegenDamage: 3, text: "Consume all Regen: deal 3 damage per stack to ALL enemies.", up: { consumeRegenDamage: 5 } },
 
   // ---------------- DOOMFIST (bruiser / tank) ----------------
   doomfist_punch: { id: "doomfist_punch", name: "Rocket Punch", type: "attack", cost: 1, hero: "doomfist", rarity: "starter", damage: 10, text: "Deal 10 damage.", up: { damage: 13 } },
