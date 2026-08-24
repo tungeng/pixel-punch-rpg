@@ -158,23 +158,28 @@ export function CardView({
 
         {/* rules text */}
         <div
-          className="flex-1 overflow-hidden px-1 pt-1 text-center leading-[13px]"
+          className="flex flex-1 flex-col items-center justify-center px-[3px] py-1 text-center"
           style={{
             fontFamily: "var(--font-pixel-body)",
-            fontSize: big ? 15 : 11,
+            fontSize: bodySize,
+            lineHeight: `${bodyLine}px`,
             color: "#dfe3f2",
+            overflowWrap: "break-word",
+            hyphens: "auto",
+            minHeight: 0,
           }}
         >
-          {card.text}
+          <span>{card.text}</span>
           {scalingCard && dynamicDamage !== null && (
-            <div
+            <span
               className="text-pixel mt-[2px]"
               style={{ fontSize: big ? 7 : 6, color: "#ffcc4d" }}
             >
               NOW {dynamicDamage}
-            </div>
+            </span>
           )}
         </div>
+
 
 
         {/* footer */}
