@@ -1451,7 +1451,9 @@ function resolveCard(
       if (card.weak) t.weak += card.weak;
     }
   }
-  c.ultCharge = Math.min(100, charge.v);
+  // Ultimates never feed their own meter — otherwise faster-charge relics let you
+  // chain ults forever off the ult's own damage.
+  c.ultCharge = isUlt ? 0 : Math.min(100, charge.v);
   c.targetingCardUid = null;
 
   // move to discard/exhaust
