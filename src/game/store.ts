@@ -658,7 +658,7 @@ export const useGame = create<GameState>((set, get) => ({
       pushLog(c, `Poison deals ${dotHeal} damage.`);
       // Moira's Biotic Grasp: her damage-over-time feeds her back
       if (s.heroId === "moira") {
-        const healed = Math.min(c.maxHp - c.hp, Math.ceil(dotHeal * 0.35));
+        const healed = Math.min(c.maxHp - c.hp, Math.ceil(dotHeal * 0.5));
         if (healed > 0) {
           c.hp += healed;
           pushFloat(c, `+${healed}`, "heal", "player");
