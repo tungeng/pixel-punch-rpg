@@ -233,3 +233,39 @@
 @utility vignette {
   box-shadow: inset 0 0 90px 20px rgba(0,0,0,0.75);
 }
+
+/* --- title screen motion --- */
+@keyframes title-flicker {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  47% { opacity: 1; }
+  48% { opacity: 0.55; filter: brightness(1.6); }
+  49% { opacity: 1; }
+  72% { opacity: 0.7; filter: brightness(1.4); }
+  73% { opacity: 1; }
+}
+.title-flicker { animation: title-flicker 6s steps(1) infinite; }
+
+@keyframes breathe-glow {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(255,180,60,0)); }
+  50% { filter: drop-shadow(0 0 8px rgba(255,180,60,0.75)); }
+}
+.breathe-glow { animation: breathe-glow 2.4s ease-in-out infinite; }
+
+@keyframes cta-throb {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+.cta-throb { animation: cta-throb 1.8s ease-in-out infinite; }
+
+@keyframes marquee-sheen {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 40%, rgba(255,255,255,0.28) 50%, transparent 60%);
+  animation: marquee-sheen 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
