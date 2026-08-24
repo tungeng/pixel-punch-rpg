@@ -59,6 +59,21 @@ export interface CardDef {
   poisonDetonate?: number;
   /** Sustained beam: damage an enemy and heal for several turns (Moira). */
   beam?: { damage: number; heal: number; turns: number };
+  /** Spread the highest Poison stack on the board to every enemy (Moira). */
+  poisonSpread?: boolean;
+  /** +1 damage per N of your current Block (Doomfist). */
+  damagePerBlock?: number;
+  /** Gain this much Block per Attack played this turn (Doomfist). */
+  blockPerAttackPlayed?: number;
+  /** Number of hits equals 1 + Attacks played this turn (Genji). */
+  hitsPerAttack?: boolean;
+  /** Random number of hits [min, max] (Junkrat). */
+  randomHits?: [number, number];
+  /** +N damage per Vulnerable/Weak stack on the target (Junkrat). */
+  damagePerDebuff?: number;
+  /** Extra healing when below half HP (Mercy). */
+  bonusHealIfLowHp?: number;
+
 
   // upgrade deltas applied when upgraded
   up?: Partial<
@@ -84,6 +99,13 @@ export interface CardDef {
       | "regen"
       | "poisonBoost"
       | "poisonDetonate"
+      | "damagePerBlock"
+      | "blockPerAttackPlayed"
+      | "damagePerDebuff"
+      | "bonusHealIfLowHp"
+      | "randomHits"
+      | "selfDamage"
+
     >
   >;
 }
