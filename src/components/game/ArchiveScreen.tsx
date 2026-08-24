@@ -8,7 +8,7 @@ export function ArchiveScreen({ onClose }: { onClose: () => void }) {
   const buyUpgrade = useGame((s) => s.buyUpgrade);
 
   return (
-    <div className="scanlines fixed inset-0 z-50 overflow-y-auto bg-background/98 px-4 py-6">
+    <div className="scanlines fixed inset-0 z-50 overflow-y-auto bg-background px-4 py-6">
       <div className="mx-auto flex max-w-md flex-col">
         <div className="flex items-center justify-between border-b border-primary/30 pb-3">
           <h2 className="text-pixel text-[13px] text-accent">ARCHIVE</h2>
