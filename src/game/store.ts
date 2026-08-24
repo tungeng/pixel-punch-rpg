@@ -11,7 +11,7 @@ import { Rng, hashSeed, randomSeed } from "./rng";
 import { makeCard, CARDS, NEUTRAL_POOL } from "./cards";
 import { HEROES, UNLOCKABLE_HEROES, STARTER_HEROES } from "./heroes";
 import { ENEMIES, BOSSES, ACT_BOSSES, enemyPoolFor, elitePoolFor } from "./enemies";
-import { RELICS, ALL_RELIC_IDS } from "./relics";
+import { RELICS, ALL_RELIC_IDS, pickRelicId } from "./relics";
 import { generateMap } from "./mapgen";
 import tracerImg from "../assets/tracer.png";
 import kingsrowImg from "../assets/bg_kingsrow.jpg";
@@ -76,7 +76,10 @@ export interface Combat {
   hackDraw: boolean;
   /** Active Coalescence beams (Moira ultimate). */
   beams: { targetUid: string; damage: number; heal: number; turns: number }[];
+  /** Haste Module relic: first card each turn costs 1 less. */
+  firstCardDiscount: boolean;
 }
+
 
 export interface GameState {
   // meta (persisted)
@@ -180,22 +183,27 @@ function maxEnergyFor(heroId: string, relics: string[]): number {
   let e = 3;
   if (heroId === "tracer") e += 1;
   if (relics.includes("energy_core")) e += 1;
-  return e;
+  if (relics.includes("titan_plating")) e -= 1;
+  return Math.max(1, e);
 }
 
 function drawCountFor(heroId: string, relics: string[]): number {
   let d = 5;
   if (heroId === "genji") d += 1;
   if (relics.includes("draw_charm")) d += 1;
+  if (relics.includes("combat_visor")) d += 2;
   return d;
 }
 
 function maxHpFor(heroId: string, relics: string[], act = 0, upgrades?: Record<string, number>): number {
   let h = getHero(heroId).maxHp;
-  if (relics.includes("gold_heart")) h += 25;
+  if (relics.includes("gold_heart")) h += 30;
+  if (relics.includes("titan_plating")) h += 55;
+  if (relics.includes("combat_visor")) h -= 15;
   h += upgradeBonusMaxHp(upgrades);
-  return h + act * 12;
+  return Math.max(20, h + act * 12);
 }
+
 
 function rngForRun(seed: number, salt: number): Rng {
   return new Rng((seed ^ (salt * 0x9e3779b9)) >>> 0);
@@ -219,7 +227,7 @@ function applyEnemyDamage(c: Combat, enemy: EnemyInstance, base: number, charge:
     enemy.hp = 0;
     enemy.isDead = true;
   }
-  charge.v += relicPower ? dmg * 1.5 : dmg;
+  charge.v += relicPower ? dmg * 1.6 : dmg;
   return dmg;
 }
 
@@ -259,8 +267,11 @@ export function effectiveCost(card: CardInstance, c: Combat): number {
   if (card.costPerDamageTaken) {
     cost -= Math.floor(c.damageTakenThisCombat / card.costPerDamageTaken);
   }
+  // Haste Module relic
+  if (c.firstCardDiscount && c.cardsPlayedThisTurn === 0) cost -= 1;
   return Math.max(0, cost);
 }
+
 
 /** Damage this card would deal right now, before enemy modifiers. */
 export function scaledDamage(card: CardInstance, c: Combat, roll?: number): number {
@@ -393,19 +404,25 @@ export const useGame = create<GameState>((set, get) => ({
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
       }
     }
-    // Difficulty curve: the breach hardens the deeper you fall.
+    // Difficulty curve: the breach hardens the deeper you fall — and it adapts
+    // to how much relic power you're carrying, so a stacked run still bites.
     const floor = s.floorsCleared;
-    const hpScale = 1 + floor * 0.055 + s.act * 0.16;
+    const relicCount = s.relics.length;
+    const hpScale = 1 + floor * 0.145 + s.act * 0.32 + relicCount * 0.075;
     const strBonus =
-      Math.floor(floor / 5) +
-      Math.floor(s.act / 2) +
-      (nodeType === "elite" ? 2 + Math.floor(s.act / 2) : 0);
+      Math.floor(floor / 2) +
+      Math.round(s.act * 2.5) +
+      Math.floor(relicCount / 2) +
+      (nodeType === "elite" ? 4 + s.act : 0);
+
+
     for (const e of enemies) {
       const scaled = Math.round(e.maxHp * hpScale);
       e.hp = scaled;
       e.maxHp = scaled;
       e.strength = strBonus;
     }
+
 
     // junkrat passive: enemies start with 1 vulnerable
     if (s.heroId === "junkrat") {
@@ -453,6 +470,7 @@ export const useGame = create<GameState>((set, get) => ({
       hackEnergy: false,
       hackDraw: false,
       beams: [],
+      firstCardDiscount: s.relics.includes("haste_module"),
     };
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
@@ -462,12 +480,24 @@ export const useGame = create<GameState>((set, get) => ({
         combat.log.push(`${e.name}'s ${e.traitName ?? "aura"} weakens you.`);
       }
     }
-    // barrier_start relic
-    if (s.relics.includes("barrier_start")) combat.block = 10;
-    // berserker relic
-    if (s.relics.includes("berserker")) combat.strength = 1;
+    // ---- relic openers ----
+    const R = (id: string) => s.relics.includes(id);
+    if (R("barrier_start")) combat.block += 12;
+    if (R("chrono_engine")) {
+      combat.block += 20;
+      drawCards(combat, 1);
+    }
+    if (R("berserker")) combat.strength += 2;
+    if (R("execution_chip")) combat.strength += 3;
+    if (R("ult_battery")) combat.ultCharge = Math.max(combat.ultCharge, 30);
+    if (R("war_banner")) for (const e of combat.enemies) e.vulnerable = Math.max(e.vulnerable, 2);
+    if (R("hex_emitter")) for (const e of combat.enemies) e.weak = Math.max(e.weak, 2);
+    if (combat.block > 0 || combat.strength > 0) {
+      combat.log.push("Relics hum to life.");
+    }
     set({ combat, phase: "combat" });
   },
+
 
   playCard: (uid, targetUid) => {
     const s = get();
@@ -639,10 +669,15 @@ export const useGame = create<GameState>((set, get) => ({
             }
           }
           if (relics.includes("thorn_mail") && taken > 0) {
-            e.hp -= 2;
-            pushFloat(c, "2", "dmg", e.uid);
+            e.hp -= 4;
+            pushFloat(c, "4", "dmg", e.uid);
             if (e.hp <= 0) { e.hp = 0; e.isDead = true; }
           }
+          if (relics.includes("static_shell") && taken > 0) {
+            c.block += 3;
+            pushFloat(c, "+3", "block", "player");
+          }
+
         }
         pushFloat(c, `${intent.damage ?? 0}`, "dmg", "player");
       }
@@ -721,7 +756,34 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // start player turn
     c.turn += 1;
-    c.block = 0;
+    // Aegis Loop keeps half your Block instead of wiping it
+    c.block = relics.includes("aegis_loop") ? Math.floor(c.block / 2) : 0;
+    // ---- per-turn relic ticks ----
+    if (relics.includes("dragon_ember")) {
+      c.strength += 1;
+      pushFloat(c, "+1 STR", "buff", "player");
+    }
+    if (relics.includes("volt_capacitor")) {
+      const living = c.enemies.filter((e) => !e.isDead && !e.untargetable);
+      if (living.length > 0) {
+        const vRng = new Rng(hashSeed(`${s.seed}_volt_${c.turn}`));
+        const t = vRng.pick(living)!;
+        const vCharge = { v: c.ultCharge };
+        const dealt = applyEnemyDamage(c, t, 5, vCharge, relics.includes("power_cell"));
+        c.ultCharge = Math.min(100, vCharge.v);
+        pushFloat(c, `${dealt}`, "dmg", t.uid);
+        pushLog(c, "Volt Capacitor arcs out.");
+      }
+    }
+    if (c.enemies.every((e) => e.isDead)) {
+      c.active = false;
+      handleCombatWin(set, get);
+      set({ combat: { ...c } });
+      return;
+    }
+
+
+
     if (c.poison > 0) {
       c.hp -= c.poison;
       pushFloat(c, `-${c.poison}`, "dmg", "player");
@@ -778,6 +840,10 @@ export const useGame = create<GameState>((set, get) => ({
     const maxEnergy = maxEnergyFor(s.heroId, relics);
     c.maxEnergy = maxEnergy;
     c.energy = c.hackEnergy ? Math.max(1, maxEnergy - 1) : maxEnergy;
+    if (relics.includes("reactor_surge") && c.turn % 2 === 0) {
+      c.energy += 2;
+      pushFloat(c, "+2 EN", "buff", "player");
+    }
     if (c.hackEnergy) pushLog(c, "Hacked — you lose 1 Energy this turn.");
     c.cardsPlayedThisTurn = 0;
     c.attacksPlayedThisTurn = 0;
@@ -792,9 +858,16 @@ export const useGame = create<GameState>((set, get) => ({
     drawCards(c, drawN);
     // passive heals
     if (s.heroId === "mercy") c.hp = Math.min(c.maxHp, c.hp + 1);
-    if (relics.includes("regen_drone")) c.hp = Math.min(c.maxHp, c.hp + 1);
+    if (relics.includes("regen_drone")) {
+      const healed = Math.min(c.maxHp - c.hp, 2);
+      if (healed > 0) {
+        c.hp += healed;
+        pushFloat(c, `+${healed}`, "heal", "player");
+      }
+    }
     set({ combat: { ...c } });
   },
+
 
   useUltimate: (targetUid) => {
     const s = get();
@@ -817,14 +890,15 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const card = makeCard(cardId);
     const deck = [...s.deck, card];
-    set({ deck, phase: "map" });
+    set({ deck, phase: "map", pendingRelic: null });
     markNodeVisited(set, get);
   },
 
   skipReward: () => {
-    set({ phase: "map" });
+    set({ phase: "map", pendingRelic: null });
     markNodeVisited(set, get);
   },
+
 
   restHeal: () => {
     const s = get();
@@ -850,7 +924,8 @@ export const useGame = create<GameState>((set, get) => ({
       return;
     }
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
-    if (!rng.chance(upgradeCacheRelicChance(s.meta.upgrades))) {
+    // caches are relic-first now; the scanner upgrade only widens the odds
+    if (!rng.chance(Math.max(0.9, upgradeCacheRelicChance(s.meta.upgrades)))) {
       // scanner missed: cache yields a card reward instead
       const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
       const remaining = [...pool];
@@ -863,15 +938,19 @@ export const useGame = create<GameState>((set, get) => ({
       set({ phase: "reward", rewardChoices: choices, rewardGold: 0 });
       return;
     }
-    const relic = rng.pick(avail);
+    const relic = pickRelicId(avail, rng.next()) ?? rng.pick(avail);
     // hold on the treasure screen so the player sees what they got
     set({ relics: [...s.relics, relic], pendingRelic: relic });
   },
 
+
   confirmRelic: () => {
-    set({ pendingRelic: null, phase: "map" });
+    const s = get();
+    const maxHp = maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades);
+    set({ pendingRelic: null, phase: "map", maxHp, hp: Math.min(s.hp, maxHp) });
     markNodeVisited(set, get);
   },
+
 
   buyCard: (index) => {
     const s = get();
@@ -891,10 +970,16 @@ export const useGame = create<GameState>((set, get) => ({
     const relicId = s.shopRelics[index];
     if (!relicId) return;
     if (s.relics.includes(relicId)) return;
-    const cost = 150;
+    const cost = relicPrice(relicId);
     if (s.gold < cost) return;
     const relics = [...s.relics, relicId];
-    set({ gold: s.gold - cost, relics, shopRelics: s.shopRelics.map((r, i) => (i === index ? "" : r)) });
+    set({
+      gold: s.gold - cost,
+      relics,
+      maxHp: maxHpFor(s.heroId, relics, s.act, s.meta.upgrades),
+      shopRelics: s.shopRelics.map((r, i) => (i === index ? "" : r)),
+    });
+
   },
 
   buyRemove: (cardUid) => {
@@ -1198,9 +1283,18 @@ function resolveCard(
 
   // move to discard/exhaust
   if (!isUlt) {
-    if (card.exhaust) c.exhaustPile.push(card);
-    else c.discardPile.push(card);
+    if (card.exhaust) {
+      c.exhaustPile.push(card);
+      if (relics.includes("phoenix_core")) {
+        const healed = Math.min(c.maxHp - c.hp, 3);
+        if (healed > 0) {
+          c.hp += healed;
+          pushFloat(c, `+${healed}`, "heal", "player");
+        }
+      }
+    } else c.discardPile.push(card);
   }
+
   pushLog(c, `Played ${card.name}`);
 
   // check combat win
@@ -1232,12 +1326,15 @@ function handleCombatWin(set: any, get: () => GameState) {
   // bank hp
   let hp = c.hp;
   let gold = s.gold;
-  // vampire_fang
-  if (s.relics.includes("vampire_fang")) hp = Math.min(s.maxHp, hp + 3);
+  const has = (id: string) => s.relics.includes(id);
+  // post-combat healing relics
+  if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 6);
+  if (has("blood_pact")) hp = Math.min(s.maxHp, hp + Math.ceil(s.maxHp * 0.08));
   // gold reward
   const baseGold = c.nodeType === "boss" ? 60 : c.nodeType === "elite" ? 35 : 18;
   let g = baseGold + new Rng(s.seed ^ (s.floorsCleared * 7)).int(0, 10);
-  if (s.relics.includes("lucky_coin")) g = Math.floor(g * 1.5);
+  if (has("lucky_coin")) g = Math.floor(g * 1.75);
+  if (has("salvage_claw")) g += 20;
   gold += g;
   const floorsCleared = s.floorsCleared + 1;
   // card reward
@@ -1245,26 +1342,41 @@ function handleCombatWin(set: any, get: () => GameState) {
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
   const choices: CardInstance[] = [];
   const remaining = [...pool];
-  for (let i = 0; i < 3 && remaining.length > 0; i++) {
+  const offers = has("codex_shard") ? 4 : 3;
+  for (let i = 0; i < offers && remaining.length > 0; i++) {
     const id = rng.pick(remaining);
     remaining.splice(remaining.indexOf(id), 1); // no duplicate offers
     choices.push(makeCard(id, rng.chance(0.12)));
   }
+
+  // ---- relic drops: bosses and elites always, normal fights sometimes ----
+  const ownedIds = new Set(s.relics);
+  const availRelics = ALL_RELIC_IDS.filter((r) => !ownedIds.has(r));
+  const dropChance =
+    c.nodeType === "boss" || c.nodeType === "elite" ? 1 : has("relic_scanner") ? 0.35 : 0.18;
+  const droppedRelic =
+    availRelics.length > 0 && rng.chance(dropChance)
+      ? (pickRelicId(availRelics, rng.next()) ?? null)
+      : null;
+  const relics = droppedRelic ? [...s.relics, droppedRelic] : s.relics;
+
   // boss -> next act or victory
   if (c.nodeType === "boss") {
     if (s.act < ACT_BOSSES.length - 1) {
       const nextAct = s.act + 1;
       const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
-      const nextMaxHp = maxHpFor(s.heroId, s.relics, nextAct, s.meta.upgrades);
+      const nextMaxHp = maxHpFor(s.heroId, relics, nextAct, s.meta.upgrades);
       set({
         hp: Math.min(nextMaxHp, hp + Math.floor(nextMaxHp * 0.35)),
         maxHp: nextMaxHp,
         gold,
+        relics,
         floorsCleared,
         act: nextAct,
         map: newMap,
         currentNodeId: null,
-        phase: "map",
+        phase: droppedRelic ? "treasure" : "map",
+        pendingRelic: droppedRelic,
         rewardChoices: choices,
         rewardGold: g,
         combat: null,
@@ -1284,15 +1396,18 @@ function handleCombatWin(set: any, get: () => GameState) {
 
   set({
     hp,
-    maxHp: maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades),
+    maxHp: maxHpFor(s.heroId, relics, s.act, s.meta.upgrades),
     gold,
+    relics,
     floorsCleared,
     phase: "reward",
+    pendingRelic: droppedRelic,
     rewardChoices: choices,
     rewardGold: g,
     combat: null,
   });
 }
+
 
 function handleDeath(set: any, get: () => GameState) {
   const s = get();
@@ -1324,10 +1439,15 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
     shopCards.push(makeCard(id, rng.chance(0.25)));
   }
   const owned = new Set(s.relics);
-  const avail = ALL_RELIC_IDS.filter((r) => !owned.has(r));
-  const firstRelic = rng.pick(avail) ?? "";
-  const secondRelic = rng.pick(avail.filter((r) => r !== firstRelic)) ?? "";
-  const shopRelics = [firstRelic, secondRelic];
+  let avail = ALL_RELIC_IDS.filter((r) => !owned.has(r));
+  const shopRelics: string[] = [];
+  for (let i = 0; i < 3; i++) {
+    const id = pickRelicId(avail, rng.next());
+    if (!id) break;
+    shopRelics.push(id);
+    avail = avail.filter((r) => r !== id);
+  }
+  while (shopRelics.length < 3) shopRelics.push("");
   set({ phase: "shop", shopCards, shopRelics });
 }
 
@@ -1335,6 +1455,13 @@ export function cardPrice(card: CardInstance): number {
   const base = card.rarity === "rare" ? 90 : card.rarity === "uncommon" ? 60 : 40;
   return card.upgraded ? base + 20 : base;
 }
+
+/** Shop price for a relic, scaled by tier. */
+export function relicPrice(relicId: string): number {
+  const tier = RELICS[relicId]?.tier ?? "common";
+  return tier === "rare" ? 190 : tier === "uncommon" ? 145 : 110;
+}
+
 
 export { HEROES, RELICS, CARDS, tracerImg };
 

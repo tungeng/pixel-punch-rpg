@@ -9,12 +9,13 @@ const ROWS = 8;
 
 // Weighted node pool for a normal (non-boss) column.
 const POOL: NodeType[] = [
-  "combat", "combat", "combat", "combat",
+  "combat", "combat", "combat",
   "elite", "elite",
   "rest",
   "shop",
-  "treasure",
+  "treasure", "treasure",
 ];
+
 
 export function generateMap(rng: Rng): MapNode[] {
   const nodes: MapNode[] = [];

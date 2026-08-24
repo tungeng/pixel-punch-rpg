@@ -1,7 +1,7 @@
 import { ACT_COUNT } from "@/game/enemies";
-import { useGame, cardPrice } from "@/game/store";
+import { useGame, cardPrice, relicPrice } from "@/game/store";
 import { HEROES } from "@/game/heroes";
-import { RELICS } from "@/game/relics";
+import { RELICS, RELIC_TIER_COLOR } from "@/game/relics";
 import { CardView } from "./CardView";
 import { PixelButton } from "./PixelButton";
 import { Bar } from "./Bar";
@@ -14,8 +14,10 @@ export function RewardScreen() {
   const gold = useGame((s) => s.rewardGold);
   const pick = useGame((s) => s.pickRewardCard);
   const skip = useGame((s) => s.skipReward);
+  const dropped = useGame((s) => s.pendingRelic);
+  const relic = dropped ? RELICS[dropped] : null;
   return (
-    <Screen title="TIMELINE SECURED" tone="#54d98c">
+    <Screen title="TIMELINE SECURED" tone="#54d98c" scroll>
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -24,6 +26,33 @@ export function RewardScreen() {
       >
         +{gold} ⬢
       </motion.div>
+
+      {relic && (
+        <motion.div
+          initial={{ scale: 0.4, rotate: -14, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 240, damping: 13 }}
+          className="mb-4 flex w-full max-w-[320px] items-center gap-3 bg-black/50 p-2"
+          style={{ border: `3px solid ${relic.color}`, boxShadow: `0 0 24px -6px ${relic.color}` }}
+        >
+          <div className="breathe-glow shrink-0">
+            <RelicIcon id={relic.id} />
+          </div>
+          <div className="min-w-0">
+            <div className="text-pixel text-[7px] text-primary">RELIC SALVAGED</div>
+            <div className="text-pixel text-[9px] leading-[12px]" style={{ color: relic.color }}>
+              {relic.name}
+            </div>
+            <div
+              className="text-[14px] leading-[15px] text-foreground/85"
+              style={{ fontFamily: "var(--font-pixel-body)" }}
+            >
+              {relic.text}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <div className="mb-3 text-center text-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
         Salvage one card from the wreckage.
       </div>
@@ -39,12 +68,13 @@ export function RewardScreen() {
           </motion.div>
         ))}
       </div>
-      <div className="mt-6 flex justify-center">
+      <div className="mt-6 flex justify-center pb-4">
         <PixelButton onClick={skip} color="ghost">Skip</PixelButton>
       </div>
     </Screen>
   );
 }
+
 
 export function RestScreen() {
   const hp = useGame((s) => s.hp);
@@ -162,7 +192,7 @@ export function ShopScreen() {
         )}
       </div>
 
-      <div className="text-pixel mt-5 text-center text-[8px] text-muted-foreground">RELICS — 150⬢</div>
+      <div className="text-pixel mt-5 text-center text-[8px] text-muted-foreground">RELICS</div>
       <div className="mt-2 flex flex-wrap items-start justify-center gap-3">
         {shopRelics.map((r, i) =>
           r ? (
@@ -171,7 +201,7 @@ export function ShopScreen() {
               whileTap={{ scale: 0.92 }}
               whileHover={{ y: -4 }}
               onClick={() => buyRelic(i)}
-              disabled={gold < 150}
+              disabled={gold < relicPrice(r)}
               className="flex w-32 flex-col items-center gap-1 bg-black/40 p-2 disabled:opacity-40"
               style={{ border: `2px solid ${RELICS[r]?.color ?? "#07060c"}` }}
             >
@@ -179,10 +209,17 @@ export function ShopScreen() {
               <span className="text-pixel text-center text-[8px] leading-[11px]" style={{ color: RELICS[r]?.color }}>
                 {RELICS[r]?.name}
               </span>
+              <span
+                className="text-pixel text-[6px]"
+                style={{ color: RELIC_TIER_COLOR[RELICS[r]?.tier ?? "common"] }}
+              >
+                {(RELICS[r]?.tier ?? "common").toUpperCase()} · {relicPrice(r)}⬢
+              </span>
               <span className="text-center text-[12px] leading-[13px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
                 {RELICS[r]?.text}
               </span>
             </motion.button>
+
           ) : null,
         )}
       </div>
