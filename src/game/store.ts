@@ -456,6 +456,7 @@ export const useGame = create<GameState>((set, get) => ({
       hackEnergy: false,
       hackDraw: false,
       beams: [],
+      firstCardDiscount: s.relics.includes("haste_module"),
     };
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
@@ -465,12 +466,24 @@ export const useGame = create<GameState>((set, get) => ({
         combat.log.push(`${e.name}'s ${e.traitName ?? "aura"} weakens you.`);
       }
     }
-    // barrier_start relic
-    if (s.relics.includes("barrier_start")) combat.block = 10;
-    // berserker relic
-    if (s.relics.includes("berserker")) combat.strength = 1;
+    // ---- relic openers ----
+    const R = (id: string) => s.relics.includes(id);
+    if (R("barrier_start")) combat.block += 12;
+    if (R("chrono_engine")) {
+      combat.block += 20;
+      drawCards(combat, 1);
+    }
+    if (R("berserker")) combat.strength += 2;
+    if (R("execution_chip")) combat.strength += 3;
+    if (R("ult_battery")) combat.ultCharge = Math.max(combat.ultCharge, 30);
+    if (R("war_banner")) for (const e of combat.enemies) e.vulnerable = Math.max(e.vulnerable, 2);
+    if (R("hex_emitter")) for (const e of combat.enemies) e.weak = Math.max(e.weak, 2);
+    if (combat.block > 0 || combat.strength > 0) {
+      combat.log.push("Relics hum to life.");
+    }
     set({ combat, phase: "combat" });
   },
+
 
   playCard: (uid, targetUid) => {
     const s = get();
