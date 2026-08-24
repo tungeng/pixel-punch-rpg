@@ -6,6 +6,7 @@ import { Bar } from "./Bar";
 import { PixelButton } from "./PixelButton";
 import { useEffect, useRef, useState } from "react";
 import type { CardInstance } from "@/game/types";
+import { RelicTray } from "./RelicTray";
 
 
 
@@ -160,6 +161,11 @@ export function CombatScreen() {
       <div className="pointer-events-none absolute inset-0 bg-black/55" />
       <div className="scanlines pointer-events-none absolute inset-0" />
       <div className="vignette pointer-events-none absolute inset-0" />
+
+      {/* persistent relic tray — tap an icon to read what it does */}
+      <div className="absolute left-2 top-2 z-40 w-40">
+        <RelicTray size={20} />
+      </div>
 
       {/* arena — enemies centered in the remaining space */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">

@@ -306,7 +306,6 @@ export function Hud() {
   const gold = useGame((s) => s.gold);
   const floors = useGame((s) => s.floorsCleared);
   const act = useGame((s) => s.act);
-  const relics = useGame((s) => s.relics);
   const deckCount = useGame((s) => s.deck.length);
   const abandon = useGame((s) => s.abandon);
   const hero = HEROES[heroId]!;
