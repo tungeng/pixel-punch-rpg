@@ -87,8 +87,8 @@ function Index() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45 + all.indexOf(id) * 0.07, type: "spring", stiffness: 260, damping: 18 }}
-                whileHover={isLocked ? undefined : { y: -4, scale: 1.06 }}
                 whileTap={{ scale: 0.95 }}
+                {...(isLocked ? {} : { whileHover: { y: -4, scale: 1.06 } })}
                 onClick={() => !isLocked && setSelected(id)}
                 className={`group relative flex flex-col items-center gap-0.5 p-1 transition-colors ${
                   isLocked
