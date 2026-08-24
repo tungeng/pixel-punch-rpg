@@ -227,7 +227,7 @@ function applyEnemyDamage(c: Combat, enemy: EnemyInstance, base: number, charge:
     enemy.hp = 0;
     enemy.isDead = true;
   }
-  charge.v += relicPower ? dmg * 1.5 : dmg;
+  charge.v += relicPower ? dmg * 1.6 : dmg;
   return dmg;
 }
 
