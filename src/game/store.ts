@@ -663,10 +663,15 @@ export const useGame = create<GameState>((set, get) => ({
             }
           }
           if (relics.includes("thorn_mail") && taken > 0) {
-            e.hp -= 2;
-            pushFloat(c, "2", "dmg", e.uid);
+            e.hp -= 4;
+            pushFloat(c, "4", "dmg", e.uid);
             if (e.hp <= 0) { e.hp = 0; e.isDead = true; }
           }
+          if (relics.includes("static_shell") && taken > 0) {
+            c.block += 3;
+            pushFloat(c, "+3", "block", "player");
+          }
+
         }
         pushFloat(c, `${intent.damage ?? 0}`, "dmg", "player");
       }
