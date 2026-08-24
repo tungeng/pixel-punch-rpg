@@ -11,7 +11,7 @@ import { Rng, hashSeed, randomSeed } from "./rng";
 import { makeCard, CARDS, NEUTRAL_POOL } from "./cards";
 import { HEROES, UNLOCKABLE_HEROES, STARTER_HEROES } from "./heroes";
 import { ENEMIES, BOSSES, ACT_BOSSES, enemyPoolFor, elitePoolFor } from "./enemies";
-import { RELICS, ALL_RELIC_IDS } from "./relics";
+import { RELICS, ALL_RELIC_IDS, pickRelicId } from "./relics";
 import { generateMap } from "./mapgen";
 import tracerImg from "../assets/tracer.png";
 import kingsrowImg from "../assets/bg_kingsrow.jpg";
