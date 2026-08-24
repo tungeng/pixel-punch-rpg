@@ -1,7 +1,7 @@
 /**
  * Headless playtest harness.
  *
- * Simulates hundreds of full CHRONOBREAK runs against the real Zustand store
+ * Simulates hundreds of full OVERTUNG runs against the real Zustand store
  * with a simple greedy AI, and asserts hard invariants (no NaN, no negative
  * energy, deck conservation, no soft-locks) plus surfaces balance stats.
  *
@@ -147,7 +147,7 @@ function simulateRun(hero: string, seed: string): RunResult {
   );
 }
 
-describe("CHRONOBREAK playtest simulation", () => {
+describe("OVERTUNG playtest simulation", () => {
   it("completes 200 full runs without crashing or soft-locking", () => {
     const results: RunResult[] = [];
     for (let i = 0; i < 200; i++) {
