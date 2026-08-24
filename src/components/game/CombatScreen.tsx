@@ -545,15 +545,16 @@ function EnemyView({
         <div className="text-pixel absolute -top-1 text-[10px] text-destructive">✖</div>
       )}
 
-      <div className="mt-1 w-24">
+      <div className="mt-1 w-28">
         <Bar
           value={enemy.hp}
           max={enemy.maxHp}
           color="linear-gradient(90deg,#ff3b3b,#ff7a45)"
-          height={14}
+          height={20}
           label={`${enemy.hp}/${enemy.maxHp}`}
         />
       </div>
+
 
       <div className="mt-0.5 flex flex-wrap justify-center gap-0.5">
         {enemy.block > 0 && <Badge text={`🛡${enemy.block}`} color="#54a8ff" />}
