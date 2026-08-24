@@ -183,6 +183,15 @@ function rngForRun(seed: number, salt: number): Rng {
   return new Rng((seed ^ (salt * 0x9e3779b9)) >>> 0);
 }
 
+/** Snapshot the current combat state so CHRONO REWIND can undo the next play. */
+function pushRewind(c: Combat) {
+  if (c.rewindsLeft <= 0) return;
+  const { rewindStack, floats: _f, ...rest } = c;
+  const snap = structuredClone({ ...rest, floats: [] as Float[] }) as Omit<Combat, "rewindStack">;
+  rewindStack.push({ ...snap, rewindStack: [] });
+  if (rewindStack.length > 8) rewindStack.shift();
+}
+
 // ---- damage helpers (mutate combat + enemy) ----
 function applyEnemyDamage(c: Combat, enemy: EnemyInstance, base: number, charge: { v: number }, relicPower: boolean): number {
   if (enemy.untargetable) return 0;
