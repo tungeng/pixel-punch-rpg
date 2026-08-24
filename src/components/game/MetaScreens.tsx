@@ -14,8 +14,10 @@ export function RewardScreen() {
   const gold = useGame((s) => s.rewardGold);
   const pick = useGame((s) => s.pickRewardCard);
   const skip = useGame((s) => s.skipReward);
+  const dropped = useGame((s) => s.pendingRelic);
+  const relic = dropped ? RELICS[dropped] : null;
   return (
-    <Screen title="TIMELINE SECURED" tone="#54d98c">
+    <Screen title="TIMELINE SECURED" tone="#54d98c" scroll>
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -24,6 +26,33 @@ export function RewardScreen() {
       >
         +{gold} ⬢
       </motion.div>
+
+      {relic && (
+        <motion.div
+          initial={{ scale: 0.4, rotate: -14, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 240, damping: 13 }}
+          className="mb-4 flex w-full max-w-[320px] items-center gap-3 bg-black/50 p-2"
+          style={{ border: `3px solid ${relic.color}`, boxShadow: `0 0 24px -6px ${relic.color}` }}
+        >
+          <div className="breathe-glow shrink-0">
+            <RelicIcon id={relic.id} />
+          </div>
+          <div className="min-w-0">
+            <div className="text-pixel text-[7px] text-primary">RELIC SALVAGED</div>
+            <div className="text-pixel text-[9px] leading-[12px]" style={{ color: relic.color }}>
+              {relic.name}
+            </div>
+            <div
+              className="text-[14px] leading-[15px] text-foreground/85"
+              style={{ fontFamily: "var(--font-pixel-body)" }}
+            >
+              {relic.text}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <div className="mb-3 text-center text-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
         Salvage one card from the wreckage.
       </div>
@@ -39,12 +68,13 @@ export function RewardScreen() {
           </motion.div>
         ))}
       </div>
-      <div className="mt-6 flex justify-center">
+      <div className="mt-6 flex justify-center pb-4">
         <PixelButton onClick={skip} color="ghost">Skip</PixelButton>
       </div>
     </Screen>
   );
 }
+
 
 export function RestScreen() {
   const hp = useGame((s) => s.hp);
