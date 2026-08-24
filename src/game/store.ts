@@ -108,6 +108,7 @@ export interface GameState {
   playCard: (uid: string, targetUid?: string) => void;
   selectTarget: (enemyUid: string) => void;
   cancelTarget: () => void;
+  rewind: () => void;
   endTurn: () => void;
   useUltimate: (targetUid?: string) => void;
   pickRewardCard: (cardId: string) => void;
