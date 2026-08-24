@@ -111,8 +111,9 @@ export function CombatScreen() {
   const hand = combat.hand;
   const mid = (hand.length - 1) / 2;
   // fit the fan inside the portrait viewport without hiding card text
-  const CARD_W = 92;
-  const AVAIL = 400;
+  const CARD_W = 96;
+  const AVAIL = 396;
+
   const overlap =
     hand.length > 1 ? Math.max(0, (hand.length * CARD_W - AVAIL) / (hand.length - 1)) : 0;
 
