@@ -67,6 +67,20 @@ export function CardView({
         ? 10
         : 11;
   const bodyLine = Math.round(bodySize * 1.05);
+  // name banner also shrinks with length so nothing gets ellipsised
+  const nameLen = card.name.length + (card.upgraded ? 1 : 0);
+  const nameSize = big
+    ? nameLen > 16
+      ? 6
+      : nameLen > 12
+        ? 6.8
+        : 7.5
+    : nameLen > 16
+      ? 5
+      : nameLen > 12
+        ? 5.6
+        : 6.5;
+
 
 
   // live values so scaling cards show what they'd actually do right now
