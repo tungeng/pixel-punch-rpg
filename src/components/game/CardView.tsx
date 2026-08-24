@@ -48,10 +48,26 @@ export function CardView({
   const fam = cardFamily(card);
   const t = FAMILY[fam];
   const big = size !== "hand";
-  const w = big ? 132 : 92;
-  const h = big ? 186 : 138;
+  const w = big ? 132 : 96;
+  const h = big ? 196 : 150;
   const icon = CARD_ICONS[card.id] ?? FALLBACK_ICON;
   const rar = RARITY[card.rarity] ?? RARITY["common"]!;
+
+  // auto-shrink rules text so long card text never clips
+  const len = (card.text ?? "").length;
+  const bodySize = big
+    ? len > 110
+      ? 12
+      : len > 80
+        ? 13.5
+        : 15
+    : len > 110
+      ? 9
+      : len > 80
+        ? 10
+        : 11;
+  const bodyLine = Math.round(bodySize * 1.05);
+
 
   // live values so scaling cards show what they'd actually do right now
   const combat = useGame((s) => s.combat);
