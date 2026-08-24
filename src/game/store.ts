@@ -9,7 +9,7 @@ import type {
 } from "./types";
 import { Rng, hashSeed, randomSeed } from "./rng";
 import { makeCard, CARDS, NEUTRAL_POOL } from "./cards";
-import { HEROES, UNLOCKABLE_HEROES } from "./heroes";
+import { HEROES, UNLOCKABLE_HEROES, STARTER_HEROES } from "./heroes";
 import { ENEMIES, BOSSES, ACT_BOSSES, enemyPoolFor, elitePoolFor } from "./enemies";
 import { RELICS, ALL_RELIC_IDS } from "./relics";
 import { generateMap } from "./mapgen";
@@ -64,6 +64,17 @@ export interface Combat {
   ultUsedThisCombat: boolean;
   damageTakenThisCombat: number;
   overclock: { blockPerEnergy: number; damagePerEnergy: number } | null;
+  /** Heal-over-time stacks on the player (Moira). */
+  regen: number;
+  /** Bonus added to the next Poison application (Moira). */
+  poisonBoost: number;
+  /** Card type disabled this turn by Sombra's hack. */
+  hackedType: "attack" | "skill" | null;
+  /** Sombra hacks queued for the upcoming player turn. */
+  hackEnergy: boolean;
+  hackDraw: boolean;
+  /** Active Coalescence beams (Moira ultimate). */
+  beams: { targetUid: string; damage: number; heal: number; turns: number }[];
 }
 
 export interface GameState {
@@ -125,7 +136,7 @@ const META_KEY = "overtung_meta_v1";
 const LEGACY_META_KEY = "chronobreak_meta_v1";
 
 function defaultMeta() {
-  return { unlockedHeroes: ["tracer", "mercy", "genji"], credits: 0, bestFloor: 0, totalRuns: 0 };
+  return { unlockedHeroes: [...STARTER_HEROES], credits: 0, bestFloor: 0, totalRuns: 0 };
 }
 
 let floatId = 1;
@@ -137,7 +148,9 @@ function loadMetaFromStorage() {
       window.localStorage.getItem(META_KEY) ?? window.localStorage.getItem(LEGACY_META_KEY);
     if (!raw) return defaultMeta();
     const m = { ...defaultMeta(), ...JSON.parse(raw) };
-    if (!Array.isArray(m.unlockedHeroes)) m.unlockedHeroes = ["tracer", "mercy", "genji"];
+    if (!Array.isArray(m.unlockedHeroes)) m.unlockedHeroes = [...STARTER_HEROES];
+    // starters are always available (new starter heroes reach old saves too)
+    m.unlockedHeroes = Array.from(new Set([...STARTER_HEROES, ...m.unlockedHeroes]));
     return m;
   } catch {
     return defaultMeta();
@@ -227,7 +240,8 @@ export function cardDealsDamage(card: CardInstance): boolean {
     !!card.randomDamage ||
     !!card.damagePerDiscard ||
     !!card.damagePerCardPlayed ||
-    !!card.damagePerMissingHp
+    !!card.damagePerMissingHp ||
+    !!card.poisonDetonate
   );
 }
 
@@ -260,6 +274,8 @@ export function cardSynergyActive(card: CardInstance, c: Combat): boolean {
   if (card.damagePerDiscard && c.discardPile.length > 0) return true;
   if (card.damagePerMissingHp && c.hp < c.maxHp) return true;
   if (card.costPerDamageTaken && c.damageTakenThisCombat >= card.costPerDamageTaken) return true;
+  if (card.poisonDetonate && c.enemies.some((e) => !e.isDead && e.poison > 0)) return true;
+  if (card.poison && c.poisonBoost > 0) return true;
   return false;
 }
 
@@ -423,6 +439,12 @@ export const useGame = create<GameState>((set, get) => ({
       ultUsedThisCombat: false,
       damageTakenThisCombat: 0,
       overclock: null,
+      regen: 0,
+      poisonBoost: 0,
+      hackedType: null,
+      hackEnergy: false,
+      hackDraw: false,
+      beams: [],
     };
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
@@ -446,6 +468,12 @@ export const useGame = create<GameState>((set, get) => ({
     const idx = c.hand.findIndex((x) => x.uid === uid);
     if (idx < 0) return;
     const card = c.hand[idx]!;
+    if (c.hackedType && card.type === c.hackedType) {
+      pushFloat(c, "HACKED", "debuff", "player");
+      pushLog(c, `Sombra's hack blocks your ${c.hackedType} cards this turn.`);
+      set({ combat: { ...c } });
+      return;
+    }
     if (effectiveCost(card, c) > c.energy) return;
     const livingEnemies = c.enemies.filter((e) => !e.isDead && !e.untargetable);
     const needsTarget = cardDealsDamage(card) && !card.aoe && livingEnemies.length > 1;
@@ -474,6 +502,7 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const c = s.combat;
     if (!c || !c.active) return;
+    c.hackedType = null;
     // Tracer: Overclock cashes unspent energy into Block + chip damage
     const charge = { v: c.ultCharge };
     const relics = s.relics;
@@ -524,6 +553,20 @@ export const useGame = create<GameState>((set, get) => ({
         scrambleHand(c);
         pushLog(c, "Gravitic Flux warps a card in your hand.");
       }
+      if (e.mechanic === "stealth") {
+        if (c.turn % 3 === 0) {
+          e.untargetable = true;
+          e.block += 8;
+          pushFloat(c, "STEALTH", "buff", e.uid);
+          pushLog(c, "Sombra vanishes into STEALTH PROTOCOL — attacks can't find her.");
+        } else if (e.untargetable) {
+          e.untargetable = false;
+          const hackRng = new Rng(hashSeed(`${s.seed}_hack_${c.turn}`));
+          c.hackedType = hackRng.int(0, 1) === 0 ? "attack" : "skill";
+          pushFloat(c, "HACKED", "debuff", "player");
+          pushLog(c, `Sombra reappears and hacks your ${c.hackedType} cards.`);
+        }
+      }
       if (e.mechanic === "phase" && !e.enraged && e.hp <= e.maxHp * 0.5) {
         e.enraged = true;
         e.strength += 5;
@@ -531,6 +574,43 @@ export const useGame = create<GameState>((set, get) => ({
         pushFloat(c, "COALESCENCE", "buff", e.uid);
         pushLog(c, "Moira drops her barrier and burns biotic energy.");
       }
+    }
+    // ---- damage-over-time on enemies (Moira) ----
+    let dotHeal = 0;
+    for (const e of c.enemies) {
+      if (e.isDead || e.poison <= 0) continue;
+      const tick = e.poison;
+      e.hp -= tick;
+      pushFloat(c, `-${tick}`, "dmg", e.uid);
+      dotHeal += tick;
+      if (e.hp <= 0) {
+        e.hp = 0;
+        e.isDead = true;
+      }
+      e.poison -= 1;
+    }
+    if (dotHeal > 0) {
+      pushLog(c, `Poison deals ${dotHeal} damage.`);
+      // Moira's Biotic Grasp: her damage-over-time feeds her back
+      if (s.heroId === "moira") {
+        const healed = Math.min(c.maxHp - c.hp, Math.ceil(dotHeal * 0.4));
+        if (healed > 0) {
+          c.hp += healed;
+          pushFloat(c, `+${healed}`, "heal", "player");
+        }
+      }
+    }
+    if (c.enemies.every((e) => e.isDead)) {
+      c.active = false;
+      handleCombatWin(set, get);
+      set({ combat: { ...c } });
+      return;
+    }
+    // hack moves queue penalties for the upcoming player turn
+    for (const e of c.enemies) {
+      if (e.isDead) continue;
+      if (e.intent.hack === "energy") c.hackEnergy = true;
+      if (e.intent.hack === "draw") c.hackDraw = true;
     }
     const summonRng = new Rng(hashSeed(`${get().seed}_summon_${c.turn}`));
     for (const e of c.enemies) {
@@ -649,13 +729,58 @@ export const useGame = create<GameState>((set, get) => ({
     }
     if (c.vulnerable > 0) c.vulnerable -= 1;
     if (c.weak > 0) c.weak -= 1;
+    // Moira: heal-over-time ticks and decays like poison
+    if (c.regen > 0) {
+      const healed = Math.min(c.maxHp - c.hp, c.regen);
+      if (healed > 0) {
+        c.hp += healed;
+        pushFloat(c, `+${healed}`, "heal", "player");
+      }
+      pushLog(c, `Regeneration restores ${healed} HP.`);
+      c.regen -= 1;
+    }
+    // Moira: Coalescence beams keep burning and healing
+    if (c.beams.length > 0) {
+      const beamCharge = { v: c.ultCharge };
+      for (const beam of c.beams) {
+        const target =
+          c.enemies.find((e) => e.uid === beam.targetUid && !e.isDead && !e.untargetable) ??
+          c.enemies.find((e) => !e.isDead && !e.untargetable);
+        if (target) {
+          const dealt = applyEnemyDamage(c, target, beam.damage, beamCharge, relics.includes("power_cell"));
+          pushFloat(c, `${dealt}`, "dmg", target.uid);
+        }
+        const healed = Math.min(c.maxHp - c.hp, beam.heal);
+        if (healed > 0) {
+          c.hp += healed;
+          pushFloat(c, `+${healed}`, "heal", "player");
+        }
+        beam.turns -= 1;
+      }
+      c.ultCharge = Math.min(100, beamCharge.v);
+      c.beams = c.beams.filter((b) => b.turns > 0);
+      pushLog(c, "Coalescence burns on.");
+      if (c.enemies.every((e) => e.isDead)) {
+        c.active = false;
+        handleCombatWin(set, get);
+        set({ combat: { ...c } });
+        return;
+      }
+    }
     const maxEnergy = maxEnergyFor(s.heroId, relics);
     c.maxEnergy = maxEnergy;
-    c.energy = maxEnergy;
+    c.energy = c.hackEnergy ? Math.max(1, maxEnergy - 1) : maxEnergy;
+    if (c.hackEnergy) pushLog(c, "Hacked — you lose 1 Energy this turn.");
     c.cardsPlayedThisTurn = 0;
     c.attacksPlayedThisTurn = 0;
     // draw
-    const drawN = drawCountFor(s.heroId, relics);
+    let drawN = drawCountFor(s.heroId, relics);
+    if (c.hackDraw) {
+      drawN = Math.max(2, drawN - 2);
+      pushLog(c, "Hacked — you draw fewer cards this turn.");
+    }
+    c.hackEnergy = false;
+    c.hackDraw = false;
     drawCards(c, drawN);
     // passive heals
     if (s.heroId === "mercy") c.hp = Math.min(c.maxHp, c.hp + 1);
@@ -671,7 +796,7 @@ export const useGame = create<GameState>((set, get) => ({
     const ult = { ...hero.ultimate, uid: `ult_${c.turn}`, upgraded: false } as CardInstance;
     c.ultCharge = 0;
     const living = c.enemies.filter((e) => !e.isDead);
-    const needsTarget = (ult.damage ?? 0) > 0 && !ult.aoe && living.length > 1;
+    const needsTarget = ((ult.damage ?? 0) > 0 || !!ult.beam) && !ult.aoe && living.length > 1;
     if (needsTarget && !targetUid) {
       // store a flag for targeting ult via targetingCardUid? simpler: just target first
       resolveCard(set, get, ult, living[0]?.uid ?? null, true);
@@ -798,6 +923,7 @@ function spawnEnemy(def: EnemyDef, rng: Rng, uidBase: string): EnemyInstance {
     mechanicName: def.mechanicName,
     untargetable: false,
     enraged: false,
+    poison: 0,
     hp,
     maxHp: hp,
     block: 0,
@@ -955,6 +1081,61 @@ function resolveCard(
     pushLog(c, "Scrap Heap recycles the discard pile.");
   }
 
+  // Moira: regen + poison empowerment
+  if (card.regen) {
+    c.regen += card.regen;
+    pushFloat(c, `+${card.regen} REG`, "heal", "player");
+  }
+  if (card.poisonBoost) {
+    c.poisonBoost += card.poisonBoost;
+    pushFloat(c, `+${card.poisonBoost} PSN`, "buff", "player");
+  }
+  // Moira: apply poison (boosted by Biotic Surge)
+  if (card.poison) {
+    const stacks = card.poison + c.poisonBoost;
+    const targets: EnemyInstance[] = card.aoe
+      ? c.enemies.filter((e) => !e.isDead && !e.untargetable)
+      : [
+          c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
+            c.enemies.find((e) => !e.isDead && !e.untargetable)!,
+        ].filter(Boolean);
+    for (const t of targets) {
+      if (!t) continue;
+      t.poison += stacks;
+      pushFloat(c, `+${stacks} PSN`, "debuff", t.uid);
+    }
+    if (targets.length > 0) c.poisonBoost = 0;
+  }
+  // Moira: consume poison stacks for burst damage
+  if (card.poisonDetonate) {
+    const target =
+      c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
+      c.enemies.find((e) => !e.isDead && !e.untargetable);
+    if (target && target.poison > 0) {
+      const burst = target.poison * card.poisonDetonate;
+      target.poison = 0;
+      const dealt = applyEnemyDamage(c, target, burst, charge, powerCell);
+      pushFloat(c, `${dealt}`, "dmg", target.uid);
+      pushLog(c, `${card.name} detonates the toxin for ${dealt}.`);
+    }
+  }
+  // Moira: Coalescence sustained beam
+  if (card.beam) {
+    const target =
+      c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
+      c.enemies.find((e) => !e.isDead && !e.untargetable);
+    if (target) {
+      c.beams.push({ targetUid: target.uid, damage: card.beam.damage, heal: card.beam.heal, turns: card.beam.turns });
+      const dealt = applyEnemyDamage(c, target, card.beam.damage, charge, powerCell);
+      pushFloat(c, `${dealt}`, "dmg", target.uid);
+      const healed = Math.min(c.maxHp - c.hp, card.beam.heal);
+      if (healed > 0) {
+        c.hp += healed;
+        pushFloat(c, `+${healed}`, "heal", "player");
+      }
+      pushLog(c, "COALESCENCE — the beam locks on.");
+    }
+  }
   // apply debuffs to target
   if (card.vulnerable || card.weak) {
     const targets: EnemyInstance[] = card.aoe

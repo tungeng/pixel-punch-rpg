@@ -15,7 +15,7 @@ import nullImg from "../assets/boss_nullsector.png";
 import reaperImg from "../assets/boss_reaper.png";
 import widowImg from "../assets/boss_widowmaker.png";
 import sigmaImg from "../assets/boss_sigma.png";
-import moiraImg from "../assets/boss_moira.png";
+import sombraImg from "../assets/boss_sombra.png";
 import type { EnemyDef } from "./types";
 
 export const ENEMIES: Record<string, EnemyDef> = {
@@ -373,19 +373,21 @@ export const BOSSES: Record<string, EnemyDef> = {
       { type: "attack", text: "Gravitic Flux 24", damage: 24 },
     ],
   },
-  moira: {
-    id: "moira",
-    name: "Moira",
-    asset: moiraImg,
-    hp: [240, 240],
+  sombra: {
+    id: "sombra",
+    name: "Sombra",
+    asset: sombraImg,
+    hp: [230, 230],
     isBoss: true,
-    mechanic: "phase",
-    mechanicName: "BIOTIC DESCENT",
+    mechanic: "stealth",
+    mechanicName: "STEALTH PROTOCOL",
     moves: [
-      { type: "attack_block", text: "Biotic Grasp 12+14", damage: 12, block: 14 },
-      { type: "debuff", text: "Decay 3 Weak", weak: 3 },
-      { type: "attack", text: "Coalescence x2 12", damage: 12, hits: 2 },
-      { type: "attack", text: "Necrotic Burst 26", damage: 26 },
+      { type: "attack", text: "Machine Pistol x3 8", damage: 8, hits: 3 },
+      { type: "debuff", text: "Hack: Energy", weak: 1, hack: "energy" },
+      { type: "attack", text: "Opportunist 24", damage: 24 },
+      { type: "debuff", text: "Hack: Systems", vulnerable: 2, hack: "draw" },
+      { type: "attack_block", text: "Translocator 13+16", damage: 13, block: 16 },
+      { type: "attack", text: "EMP Burst 28", damage: 28 },
     ],
   },
   nullsector: {
@@ -403,6 +405,6 @@ export const BOSSES: Record<string, EnemyDef> = {
   },
 };
 
-export const ACT_BOSSES = ["reaper", "widowmaker", "sigma", "moira"];
+export const ACT_BOSSES = ["reaper", "widowmaker", "sigma", "sombra"];
 export const ACT_COUNT = ACT_BOSSES.length;
 
