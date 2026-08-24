@@ -9,7 +9,7 @@ export function nextUid(prefix = "c"): string {
 export const CARDS: Record<string, CardDef> = {
   // ---------------- TRACER (fast burst) ----------------
   tracer_blink: { id: "tracer_blink", name: "Blink", type: "attack", cost: 1, hero: "tracer", rarity: "starter", damage: 6, draw: 1, text: "Deal 6 damage. Draw 1 card.", up: { damage: 9 } },
-  tracer_pistols: { id: "tracer_pistols", name: "Pulse Pistols", type: "attack", cost: 1, hero: "tracer", rarity: "starter", damage: 4, hits: 2, text: "Deal 4 damage twice.", up: { damage: 6 } },
+  tracer_pistols: { id: "tracer_pistols", name: "Pulse Pistols", type: "attack", cost: 1, hero: "tracer", rarity: "starter", damage: 5, hits: 2, text: "Deal 5 damage twice.", up: { damage: 6 } },
   tracer_recall: { id: "tracer_recall", name: "Recall", type: "skill", cost: 1, hero: "tracer", rarity: "starter", block: 4, heal: 2, text: "Gain 4 Block. Heal 2.", up: { block: 6, heal: 4 } },
   tracer_strafe: { id: "tracer_strafe", name: "Strafe", type: "attack", cost: 0, hero: "tracer", rarity: "common", damage: 3, draw: 1, text: "Deal 3 damage. Draw 1 card.", up: { damage: 5 } },
   tracer_charged: { id: "tracer_charged", name: "Charged Shot", type: "attack", cost: 2, hero: "tracer", rarity: "uncommon", damage: 10, vulnerable: 1, text: "Deal 10 damage. Apply 1 Vulnerable.", up: { damage: 14, vulnerable: 2 } },
@@ -50,15 +50,15 @@ export const CARDS: Record<string, CardDef> = {
 
 
   // ---------------- JUNKRAT (chaos / area) ----------------
-  junkrat_launcher: { id: "junkrat_launcher", name: "Frag Launcher", type: "attack", cost: 1, hero: "junkrat", rarity: "starter", damage: 7, text: "Deal 7 damage.", up: { damage: 10 } },
-  junkrat_trap: { id: "junkrat_trap", name: "Steel Trap", type: "skill", cost: 1, hero: "junkrat", rarity: "starter", vulnerable: 2, block: 3, text: "Apply 2 Vulnerable. Gain 3 Block.", up: { vulnerable: 3, block: 5 } },
+  junkrat_launcher: { id: "junkrat_launcher", name: "Frag Launcher", type: "attack", cost: 1, hero: "junkrat", rarity: "starter", damage: 8, text: "Deal 8 damage.", up: { damage: 10 } },
+  junkrat_trap: { id: "junkrat_trap", name: "Steel Trap", type: "skill", cost: 1, hero: "junkrat", rarity: "starter", vulnerable: 2, block: 5, text: "Apply 2 Vulnerable. Gain 5 Block.", up: { vulnerable: 3, block: 5 } },
   junkrat_concussive: { id: "junkrat_concussive", name: "Concussion Mine", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 5, weak: 2, text: "Deal 5 damage. Apply 2 Weak.", up: { damage: 7, weak: 3 } },
   junkrat_mine: { id: "junkrat_mine", name: "Rip Tire", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 9, selfDamage: 2, text: "Deal 9 damage. Take 2 damage.", up: { damage: 12 } },
   junkrat_rpg: { id: "junkrat_rpg", name: "RPG", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 13, text: "Deal 13 damage.", up: { damage: 17 } },
-  junkrat_scatter: { id: "junkrat_scatter", name: "Scatter Shot", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 4, hits: 2, text: "Deal 4 damage twice.", up: { damage: 6 } },
-  junkrat_armor: { id: "junkrat_armor", name: "Junk Armor", type: "skill", cost: 0, hero: "junkrat", rarity: "common", block: 3, text: "Gain 3 Block.", up: { block: 6 } },
+  junkrat_scatter: { id: "junkrat_scatter", name: "Scatter Shot", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 5, hits: 2, text: "Deal 5 damage twice.", up: { damage: 6 } },
+  junkrat_armor: { id: "junkrat_armor", name: "Junk Armor", type: "skill", cost: 0, hero: "junkrat", rarity: "common", block: 5, text: "Gain 5 Block.", up: { block: 8 } },
   junkrat_frag: { id: "junkrat_frag", name: "Frag Toss", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 5, vulnerable: 1, text: "Deal 5 damage. Apply 1 Vulnerable.", up: { damage: 7 } },
-  junkrat_blast: { id: "junkrat_blast", name: "Total Mayhem", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 8, aoe: true, text: "Deal 8 damage to ALL enemies.", up: { damage: 11 } },
+  junkrat_blast: { id: "junkrat_blast", name: "Total Mayhem", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 10, aoe: true, text: "Deal 10 damage to ALL enemies.", up: { damage: 11 } },
   junkrat_loose: { id: "junkrat_loose", name: "Loose Cannon", type: "attack", cost: 1, hero: "junkrat", rarity: "uncommon", randomDamage: [2, 10], text: "Deal 2-10 damage at random.", up: { randomDamage: [5, 13] } },
   junkrat_scrap: { id: "junkrat_scrap", name: "Scrap Heap", type: "attack", cost: 2, hero: "junkrat", rarity: "rare", damage: 3, damagePerDiscard: 1, shuffleDiscard: true, text: "Deal 3 damage, +1 per card in your discard pile. Then shuffle discard into your draw pile.", up: { damage: 6 } },
 
