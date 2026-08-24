@@ -181,7 +181,9 @@ export interface RelicDef {
   text: string;
   icon: string;
   color: string;
+  tier?: "common" | "uncommon" | "rare";
 }
+
 
 export interface MapNode {
   id: number;
