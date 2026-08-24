@@ -54,6 +54,9 @@ export function CombatScreen() {
   const endTurn = useGame((s) => s.endTurn);
   const useUlt = useGame((s) => s.useUltimate);
   const pruneFloats = useGame((s) => s.pruneFloats);
+  const rewind = useGame((s) => s.rewind);
+  const [rewindFx, setRewindFx] = useState(false);
+
 
   const [shake, setShake] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
