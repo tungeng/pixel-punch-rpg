@@ -69,7 +69,7 @@ export const HEROES: Record<string, HeroDef> = {
     id: "genji",
     name: "Genji",
     role: "Combo",
-    maxHp: 66,
+    maxHp: 62,
     color: "#22c55e",
     asset: genjiImg,
     passive: "Cyber Agility: draw +1 card at the start of each turn.",

@@ -41,7 +41,7 @@ export const CARDS: Record<string, CardDef> = {
   genji_deflect: { id: "genji_deflect", name: "Deflect", type: "skill", cost: 1, hero: "genji", rarity: "starter", block: 6, text: "Gain 6 Block.", up: { block: 9 } },
   genji_fang: { id: "genji_fang", name: "Dragon Fang", type: "attack", cost: 1, hero: "genji", rarity: "common", damage: 5, draw: 1, text: "Deal 5 damage. Draw 1 card.", up: { damage: 8 } },
   genji_agility: { id: "genji_agility", name: "Cyber Agility", type: "skill", cost: 0, hero: "genji", rarity: "common", block: 4, comboCards: 2, comboEnergy: 1, text: "Gain 4 Block. If you played 2+ cards this turn, gain 1 Energy.", up: { block: 6 } },
-  genji_spirit: { id: "genji_spirit", name: "Spirit Dragon", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 4, hitsPerAttack: true, text: "Deal 4 damage, once more for each Attack already played this turn.", up: { damage: 6 } },
+  genji_spirit: { id: "genji_spirit", name: "Spirit Dragon", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 3, hitsPerAttack: true, text: "Deal 3 damage, once more for each Attack already played this turn.", up: { damage: 5 } },
   genji_riposte: { id: "genji_riposte", name: "Riposte", type: "skill", cost: 1, hero: "genji", rarity: "common", block: 6, comboCards: 2, comboDraw: 1, text: "Gain 6 Block. If you played 2+ cards this turn, draw 1 card.", up: { block: 9 } },
   genji_dash: { id: "genji_dash", name: "Dash", type: "attack", cost: 0, hero: "genji", rarity: "common", damage: 3, bonusIfAttack: 3, text: "Deal 3 damage. +3 if you played an Attack this turn.", up: { damage: 5, bonusIfAttack: 5 } },
   genji_storm: { id: "genji_storm", name: "Storm of Blades", type: "attack", cost: 2, hero: "genji", rarity: "rare", damage: 3, hits: 3, text: "Deal 3 damage 3 times.", up: { damage: 5 } },
@@ -50,13 +50,13 @@ export const CARDS: Record<string, CardDef> = {
 
 
   // ---------------- JUNKRAT (chaos / area) ----------------
-  junkrat_launcher: { id: "junkrat_launcher", name: "Frag Launcher", type: "attack", cost: 1, hero: "junkrat", rarity: "starter", damage: 9, text: "Deal 9 damage.", up: { damage: 12 } },
+  junkrat_launcher: { id: "junkrat_launcher", name: "Frag Launcher", type: "attack", cost: 1, hero: "junkrat", rarity: "starter", damage: 10, text: "Deal 10 damage.", up: { damage: 13 } },
   junkrat_trap: { id: "junkrat_trap", name: "Steel Trap", type: "skill", cost: 1, hero: "junkrat", rarity: "starter", vulnerable: 2, block: 5, text: "Apply 2 Vulnerable. Gain 5 Block.", up: { vulnerable: 3, block: 5 } },
   junkrat_concussive: { id: "junkrat_concussive", name: "Concussion Mine", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 6, weak: 2, text: "Deal 6 damage. Apply 2 Weak.", up: { damage: 8, weak: 3 } },
   junkrat_mine: { id: "junkrat_mine", name: "Rip Tire", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 11, selfDamage: 2, text: "Deal 11 damage. Take 2 damage.", up: { damage: 14 } },
   junkrat_rpg: { id: "junkrat_rpg", name: "RPG", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 15, text: "Deal 15 damage.", up: { damage: 19 } },
-  junkrat_scatter: { id: "junkrat_scatter", name: "Scatter Shot", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 5, randomHits: [1, 3], text: "Deal 5 damage 1-3 times at random.", up: { damage: 6, randomHits: [2, 3] } },
-  junkrat_armor: { id: "junkrat_armor", name: "Junk Armor", type: "skill", cost: 0, hero: "junkrat", rarity: "common", block: 7, selfDamage: 3, text: "Gain 7 Block. Take 3 damage.", up: { block: 10 } },
+  junkrat_scatter: { id: "junkrat_scatter", name: "Scatter Shot", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 5, randomHits: [2, 3], text: "Deal 5 damage 2-3 times at random.", up: { damage: 7, randomHits: [2, 4] } },
+  junkrat_armor: { id: "junkrat_armor", name: "Junk Armor", type: "skill", cost: 0, hero: "junkrat", rarity: "common", block: 8, selfDamage: 3, text: "Gain 8 Block. Take 3 damage.", up: { block: 10 } },
   junkrat_rummage: { id: "junkrat_rummage", name: "Rummage", type: "skill", cost: 0, hero: "junkrat", rarity: "common", draw: 2, selfDamage: 3, text: "Draw 2 cards. Take 3 damage.", up: { draw: 3 } },
   junkrat_frag: { id: "junkrat_frag", name: "Frag Toss", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 4, damagePerDebuff: 3, text: "Deal 4 damage, +3 per Vulnerable or Weak stack on the target.", up: { damage: 6, damagePerDebuff: 4 } },
   junkrat_blast: { id: "junkrat_blast", name: "Total Mayhem", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 12, aoe: true, text: "Deal 12 damage to ALL enemies.", up: { damage: 14 } },
@@ -80,12 +80,12 @@ export const CARDS: Record<string, CardDef> = {
   moira_leech: { id: "moira_leech", name: "Leech Grasp", type: "attack", cost: 1, hero: "moira", rarity: "uncommon", damage: 4, poison: 2, regen: 2, text: "Deal 4 damage. Apply 2 Poison. Gain 2 Regen.", up: { damage: 6, poison: 3 } },
 
   // ---------------- DOOMFIST (bruiser / tank) ----------------
-  doomfist_punch: { id: "doomfist_punch", name: "Rocket Punch", type: "attack", cost: 1, hero: "doomfist", rarity: "starter", damage: 9, text: "Deal 9 damage.", up: { damage: 12 } },
+  doomfist_punch: { id: "doomfist_punch", name: "Rocket Punch", type: "attack", cost: 1, hero: "doomfist", rarity: "starter", damage: 10, text: "Deal 10 damage.", up: { damage: 13 } },
   doomfist_slam: { id: "doomfist_slam", name: "Seismic Slam", type: "attack", cost: 1, hero: "doomfist", rarity: "starter", damage: 6, block: 5, text: "Deal 6 damage. Gain 5 Block.", up: { damage: 8, block: 8 } },
   doomfist_shield: { id: "doomfist_shield", name: "Power Block", type: "skill", cost: 1, hero: "doomfist", rarity: "starter", block: 8, text: "Gain 8 Block.", up: { block: 11 } },
   doomfist_uppercut: { id: "doomfist_uppercut", name: "Rising Uppercut", type: "attack", cost: 2, hero: "doomfist", rarity: "uncommon", damage: 14, text: "Deal 14 damage.", up: { damage: 18 } },
   doomfist_bestdefense: { id: "doomfist_bestdefense", name: "Best Defense", type: "skill", cost: 1, hero: "doomfist", rarity: "common", strength: 1, block: 3, blockPerAttackPlayed: 3, text: "Gain 1 Strength and 3 Block, +3 per Attack played this turn.", up: { strength: 2, blockPerAttackPlayed: 4 } },
-  doomfist_grapple: { id: "doomfist_grapple", name: "Iron Grip", type: "skill", cost: 0, hero: "doomfist", rarity: "common", block: 3, draw: 1, text: "Gain 3 Block. Draw 1 card.", up: { block: 5 } },
+  doomfist_grapple: { id: "doomfist_grapple", name: "Iron Grip", type: "skill", cost: 0, hero: "doomfist", rarity: "common", block: 4, draw: 1, text: "Gain 4 Block. Draw 1 card.", up: { block: 6 } },
   doomfist_charge: { id: "doomfist_charge", name: "Meteor Strike", type: "attack", cost: 1, hero: "doomfist", rarity: "common", damage: 9, vulnerable: 1, text: "Deal 9 damage. Apply 1 Vulnerable.", up: { damage: 12, vulnerable: 2 } },
   doomfist_bruise: { id: "doomfist_bruise", name: "Bruise", type: "attack", cost: 0, hero: "doomfist", rarity: "common", damage: 3, damagePerBlock: 8, text: "Deal 3 damage, +1 for every 8 Block you have.", up: { damage: 5, damagePerBlock: 6 } },
   doomfist_fortify: { id: "doomfist_fortify", name: "Fortify", type: "skill", cost: 1, hero: "doomfist", rarity: "common", block: 5, draw: 1, text: "Gain 5 Block. Draw 1 card.", up: { block: 7 } },
