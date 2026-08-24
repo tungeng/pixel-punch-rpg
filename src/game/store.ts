@@ -256,6 +256,8 @@ export function cardDealsDamage(card: CardInstance): boolean {
     !!card.damagePerDiscard ||
     !!card.damagePerCardPlayed ||
     !!card.damagePerMissingHp ||
+    !!card.damagePerBlock ||
+    !!card.damagePerDebuff ||
     !!card.poisonDetonate
   );
 }
@@ -280,7 +282,15 @@ export function scaledDamage(card: CardInstance, c: Combat, roll?: number): numb
   if (card.damagePerCardPlayed) dmg += card.damagePerCardPlayed * c.cardsPlayedThisTurn;
   if (card.damagePerMissingHp) dmg += Math.floor((c.maxHp - c.hp) / card.damagePerMissingHp);
   if (card.damagePerDiscard) dmg += card.damagePerDiscard * c.discardPile.length;
+  if (card.damagePerBlock) dmg += Math.floor(c.block / card.damagePerBlock);
   return dmg;
+}
+
+/** Block this card would grant right now. */
+export function scaledBlock(card: CardInstance, c: Combat): number {
+  let b = card.block ?? 0;
+  if (card.blockPerAttackPlayed) b += card.blockPerAttackPlayed * c.attacksPlayedThisTurn;
+  return b;
 }
 
 /** Visual-only: is this card's conditional bonus currently "charged up"? */
@@ -291,11 +301,18 @@ export function cardSynergyActive(card: CardInstance, c: Combat): boolean {
   if (card.damagePerCardPlayed && c.cardsPlayedThisTurn > 0) return true;
   if (card.damagePerDiscard && c.discardPile.length > 0) return true;
   if (card.damagePerMissingHp && c.hp < c.maxHp) return true;
+  if (card.damagePerBlock && c.block >= card.damagePerBlock) return true;
+  if (card.blockPerAttackPlayed && c.attacksPlayedThisTurn > 0) return true;
+  if (card.hitsPerAttack && c.attacksPlayedThisTurn > 0) return true;
+  if (card.bonusHealIfLowHp && c.hp * 2 <= c.maxHp) return true;
+  if (card.damagePerDebuff && c.enemies.some((e) => !e.isDead && e.vulnerable + e.weak > 0)) return true;
   if (card.costPerDamageTaken && c.damageTakenThisCombat >= card.costPerDamageTaken) return true;
   if (card.poisonDetonate && c.enemies.some((e) => !e.isDead && e.poison > 0)) return true;
+  if (card.poisonSpread && c.enemies.some((e) => !e.isDead && e.poison > 0)) return true;
   if (card.poison && c.poisonBoost > 0) return true;
   return false;
 }
+
 
 
 function pushLog(c: Combat, text: string) {
@@ -408,7 +425,7 @@ export const useGame = create<GameState>((set, get) => ({
     // to how much relic power you're carrying, so a stacked run still bites.
     const floor = s.floorsCleared;
     const relicCount = s.relics.length;
-    const hpScale = 1 + floor * 0.145 + s.act * 0.32 + relicCount * 0.075;
+    const hpScale = 1 + floor * 0.185 + s.act * 0.4 + relicCount * 0.09;
     const strBonus =
       Math.floor(floor / 2) +
       Math.round(s.act * 2.5) +
@@ -426,7 +443,7 @@ export const useGame = create<GameState>((set, get) => ({
 
     // junkrat passive: enemies start with 1 vulnerable
     if (s.heroId === "junkrat") {
-      for (const e of enemies) e.vulnerable = 2;
+      for (const e of enemies) e.vulnerable = 3;
     }
     const maxEnergy = maxEnergyFor(s.heroId, s.relics);
     const drawN = drawCountFor(s.heroId, s.relics);
@@ -631,7 +648,7 @@ export const useGame = create<GameState>((set, get) => ({
       pushLog(c, `Poison deals ${dotHeal} damage.`);
       // Moira's Biotic Grasp: her damage-over-time feeds her back
       if (s.heroId === "moira") {
-        const healed = Math.min(c.maxHp - c.hp, Math.ceil(dotHeal * 0.4));
+        const healed = Math.min(c.maxHp - c.hp, Math.ceil(dotHeal * 0.35));
         if (healed > 0) {
           c.hp += healed;
           pushFloat(c, `+${healed}`, "heal", "player");
@@ -1106,11 +1123,14 @@ function resolveCard(
   const powerCell = relics.includes("power_cell");
   const charge = { v: c.ultCharge };
   // damage / combo scaling read the board BEFORE this card counts itself
-  const rollRng = card.randomDamage
-    ? new Rng(hashSeed(`${s.seed}_${card.uid}_${c.turn}_${c.cardsPlayedThisTurn}`))
-    : null;
+  const rollRng =
+    card.randomDamage || card.randomHits
+      ? new Rng(hashSeed(`${s.seed}_${card.uid}_${c.turn}_${c.cardsPlayedThisTurn}`))
+      : null;
   const roll = card.randomDamage && rollRng ? rollRng.int(card.randomDamage[0], card.randomDamage[1]) : undefined;
+  const hitRoll = card.randomHits && rollRng ? rollRng.int(card.randomHits[0], card.randomHits[1]) : undefined;
   const scaled = scaledDamage(card, c, roll);
+
   const comboMet = card.comboCards !== undefined && c.cardsPlayedThisTurn >= card.comboCards;
 
   if (!isUlt) {
@@ -1124,8 +1144,8 @@ function resolveCard(
 
   // doomfist passive
   if (s.heroId === "doomfist" && isAttack && !isUlt) {
-    c.block += 3;
-    pushFloat(c, "+3", "block", "player");
+    c.block += 4;
+    pushFloat(c, "+4", "block", "player");
   }
 
   // strength gain
@@ -1133,22 +1153,26 @@ function resolveCard(
     c.strength += card.strength;
     pushFloat(c, `+${card.strength} STR`, "buff", "player");
   }
-  // block
-  if (card.block) {
-    c.block += card.block;
-    pushFloat(c, `+${card.block}`, "block", "player");
+  // block (may scale with Attacks played this turn — Doomfist)
+  const blockGain = scaledBlock(card, c);
+  if (blockGain > 0) {
+    c.block += blockGain;
+    pushFloat(c, `+${blockGain}`, "block", "player");
   }
-  // heal (overheal converts the wasted portion into Block)
+  // heal (overheal converts the wasted portion into Block; Mercy heals harder when low)
   if (card.heal) {
-    const healed = Math.min(card.heal, c.maxHp - c.hp);
+    const lowHp = c.hp * 2 <= c.maxHp;
+    const amount = card.heal + (card.bonusHealIfLowHp && lowHp ? card.bonusHealIfLowHp : 0);
+    const healed = Math.min(amount, c.maxHp - c.hp);
     c.hp += healed;
     if (healed > 0) pushFloat(c, `+${healed}`, "heal", "player");
-    const wasted = card.heal - healed;
+    const wasted = amount - healed;
     if (card.overheal && wasted > 0) {
       c.block += wasted;
       pushFloat(c, `+${wasted}`, "block", "player");
     }
   }
+
   // energy gain
   if (card.energyGain) c.energy += card.energyGain;
   // draw
@@ -1177,7 +1201,9 @@ function resolveCard(
   }
   // deal damage
   if (scaled > 0) {
-    const hits = card.hits ?? 1;
+    let hits = card.hits ?? 1;
+    if (card.hitsPerAttack) hits = 1 + Math.max(0, c.attacksPlayedThisTurn - (isAttack ? 1 : 0));
+    if (hitRoll !== undefined) hits = hitRoll;
     let bonus = 0;
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
     const totalBase = scaled + bonus;
@@ -1189,9 +1215,11 @@ function resolveCard(
         ].filter(Boolean);
     for (const t of targets) {
       if (!t) continue;
+      // Junkrat: blasts hit harder on softened targets
+      const debuffBonus = card.damagePerDebuff ? card.damagePerDebuff * (t.vulnerable + t.weak) : 0;
       for (let h = 0; h < hits; h++) {
         if (t.isDead) break;
-        const dealt = applyEnemyDamage(c, t, totalBase, charge, powerCell);
+        const dealt = applyEnemyDamage(c, t, totalBase + debuffBonus, charge, powerCell);
         pushFloat(c, `${dealt}`, "dmg", t.uid);
         // Doomfist: executions feed permanent Strength
         if (t.isDead && card.strengthOnKill) {
@@ -1202,6 +1230,7 @@ function resolveCard(
       }
     }
   }
+
   // Junkrat: recycle the discard pile back into the deck
   if (card.shuffleDiscard && c.discardPile.length > 0) {
     c.drawPile = shuffleInPlace([...c.drawPile, ...c.discardPile]);
@@ -1247,6 +1276,22 @@ function resolveCard(
       pushLog(c, `${card.name} detonates the toxin for ${dealt}.`);
     }
   }
+  // Moira: spread the worst infection to the whole board
+  if (card.poisonSpread) {
+    const living = c.enemies.filter((e) => !e.isDead && !e.untargetable);
+    const highest = living.reduce((m, e) => Math.max(m, e.poison), 0);
+    if (highest > 0) {
+      for (const t of living) {
+        if (t.poison < highest) {
+          const gain = highest - t.poison;
+          t.poison = highest;
+          pushFloat(c, `+${gain} PSN`, "debuff", t.uid);
+        }
+      }
+      pushLog(c, `${card.name} spreads ${highest} Poison across the board.`);
+    }
+  }
+
   // Moira: Coalescence sustained beam
   if (card.beam) {
     const target =

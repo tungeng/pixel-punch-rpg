@@ -4,6 +4,7 @@ import {
   useGame,
   effectiveCost,
   scaledDamage,
+  scaledBlock,
   cardDealsDamage,
   cardSynergyActive,
 } from "@/game/store";
@@ -93,8 +94,14 @@ export function CardView({
       ? scaledDamage(card, live)
       : null;
   const scalingCard =
-    !!card.damagePerCardPlayed || !!card.damagePerMissingHp || !!card.damagePerDiscard;
+    !!card.damagePerCardPlayed ||
+    !!card.damagePerMissingHp ||
+    !!card.damagePerDiscard ||
+    !!card.damagePerBlock;
 
+
+
+  const dynamicBlock = live && card.blockPerAttackPlayed ? scaledBlock(card, live) : null;
 
   const synergy = !!live && !dimmed && cardSynergyActive(card, live);
 
@@ -194,6 +201,14 @@ export function CardView({
               style={{ fontSize: big ? 7 : 6, color: "#ffcc4d" }}
             >
               NOW {dynamicDamage}
+            </span>
+          )}
+          {dynamicBlock !== null && (
+            <span
+              className="text-pixel mt-[2px]"
+              style={{ fontSize: big ? 7 : 6, color: "#7dd3fc" }}
+            >
+              NOW {dynamicBlock} BLOCK
             </span>
           )}
         </div>
