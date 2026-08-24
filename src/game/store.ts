@@ -249,6 +249,18 @@ export function scaledDamage(card: CardInstance, c: Combat, roll?: number): numb
   return dmg;
 }
 
+/** Visual-only: is this card's conditional bonus currently "charged up"? */
+export function cardSynergyActive(card: CardInstance, c: Combat): boolean {
+  if (card.freeIfAttack && c.attacksPlayedThisTurn > 0) return true;
+  if (card.bonusIfAttack && c.attacksPlayedThisTurn > 0) return true;
+  if (card.comboCards !== undefined && c.cardsPlayedThisTurn >= card.comboCards) return true;
+  if (card.damagePerCardPlayed && c.cardsPlayedThisTurn > 0) return true;
+  if (card.damagePerDiscard && c.discardPile.length > 0) return true;
+  if (card.damagePerMissingHp && c.hp < c.maxHp) return true;
+  if (card.costPerDamageTaken && c.damageTakenThisCombat >= card.costPerDamageTaken) return true;
+  return false;
+}
+
 
 function pushLog(c: Combat, text: string) {
   c.log.push(text);
