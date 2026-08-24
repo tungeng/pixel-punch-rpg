@@ -75,7 +75,7 @@ function Index() {
         </motion.p>
 
         <div className="text-pixel mt-6 mb-2 text-[8px] text-muted-foreground">SELECT YOUR HERO</div>
-        <div className="grid w-full grid-cols-5 gap-1.5">
+        <div className="grid w-full grid-cols-3 gap-1.5">
           {all.map((id) => {
             const hero = HEROES[id]!;
             const isLocked = locked(id);
