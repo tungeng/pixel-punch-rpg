@@ -939,9 +939,12 @@ export const useGame = create<GameState>((set, get) => ({
 
 
   confirmRelic: () => {
-    set({ pendingRelic: null, phase: "map" });
+    const s = get();
+    const maxHp = maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades);
+    set({ pendingRelic: null, phase: "map", maxHp, hp: Math.min(s.hp, maxHp) });
     markNodeVisited(set, get);
   },
+
 
   buyCard: (index) => {
     const s = get();
