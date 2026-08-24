@@ -381,43 +381,49 @@ export function CombatScreen() {
         </PixelButton>
       </div>
 
-      {/* hand — fanned */}
-      <div className="relative z-10 flex shrink-0 items-end justify-center px-2 pb-6 pt-3">
-        <AnimatePresence mode="popLayout">
-          {hand.map((card, i) => {
-            const dimmed =
-              effectiveCost(card, combat) > combat.energy ||
-              combat.hackedType === card.type;
-            const offset = i - mid;
-            return (
-              <motion.div
-                key={card.uid}
-                className="shrink-0"
-                layout
-                initial={{ y: 90, opacity: 0, rotate: 0 }}
-                animate={{
-                  y: Math.abs(offset) * 3 - 12,
-                  opacity: 1,
-                  rotate: offset * 3,
-                }}
-                exit={{ y: -140, opacity: 0, scale: 0.7 }}
-                transition={{ type: "spring", stiffness: 320, damping: 26 }}
-                style={{
-                  marginLeft: i === 0 ? 0 : -overlap,
-                  zIndex: 10 + i,
-                  transformOrigin: "bottom center",
-                }}
-              >
-                <CardView
-                  card={card}
-                  dimmed={dimmed || flying?.uid === card.uid}
-                  onClick={() => onPlayCard(card)}
-                />
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+      {/* hand — fanned, scaled to fit so no card text is covered */}
+      <div className="relative z-10 flex shrink-0 items-end justify-center overflow-visible px-2 pb-6 pt-3">
+        <div
+          className="flex items-end justify-center"
+          style={{ transform: `scale(${handScale})`, transformOrigin: "bottom center" }}
+        >
+          <AnimatePresence mode="popLayout">
+            {hand.map((card, i) => {
+              const dimmed =
+                effectiveCost(card, combat) > combat.energy ||
+                combat.hackedType === card.type;
+              const offset = i - mid;
+              return (
+                <motion.div
+                  key={card.uid}
+                  className="shrink-0"
+                  layout
+                  initial={{ y: 90, opacity: 0, rotate: 0 }}
+                  animate={{
+                    y: Math.abs(offset) * 3 - 12,
+                    opacity: 1,
+                    rotate: offset * 2,
+                  }}
+                  exit={{ y: -140, opacity: 0, scale: 0.7 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                  style={{
+                    marginLeft: i === 0 ? 0 : -overlap,
+                    zIndex: 10 + i,
+                    transformOrigin: "bottom center",
+                  }}
+                >
+                  <CardView
+                    card={card}
+                    dimmed={dimmed || flying?.uid === card.uid}
+                    onClick={() => onPlayCard(card)}
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
       </div>
+
 
       {/* card in flight — flies from hand up to the arena before resolving */}
       <AnimatePresence>
