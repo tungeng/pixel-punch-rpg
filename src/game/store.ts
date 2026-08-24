@@ -64,6 +64,10 @@ export interface Combat {
   ultUsedThisCombat: boolean;
   damageTakenThisCombat: number;
   overclock: { blockPerEnergy: number; damagePerEnergy: number } | null;
+  /** CHRONO REWIND — undo charges left this combat */
+  rewindsLeft: number;
+  /** snapshots of this turn's states, newest last (cleared each turn) */
+  rewindStack: Combat[];
 }
 
 export interface GameState {
