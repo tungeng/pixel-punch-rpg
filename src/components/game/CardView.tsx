@@ -48,8 +48,8 @@ export function CardView({
   const fam = cardFamily(card);
   const t = FAMILY[fam];
   const big = size !== "hand";
-  const w = big ? 132 : 96;
-  const h = big ? 196 : 150;
+  const w = big ? 136 : 100;
+  const h = big ? 200 : 158;
   const icon = CARD_ICONS[card.id] ?? FALLBACK_ICON;
   const rar = RARITY[card.rarity] ?? RARITY["common"]!;
 
@@ -142,7 +142,7 @@ export function CardView({
         <div
           className="relative overflow-hidden"
           style={{
-            height: big ? 74 : 52,
+            height: big ? 72 : 46,
             margin: 3,
             border: "2px solid #07060c",
             background: `radial-gradient(circle at 50% 55%, ${t.accent}44, #0b0a14 72%)`,
@@ -152,7 +152,7 @@ export function CardView({
             src={icon}
             alt=""
             className="pixelated absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain"
-            style={{ height: big ? 62 : 44, imageRendering: "pixelated" }}
+            style={{ height: big ? 60 : 40, imageRendering: "pixelated" }}
           />
           <div className="scanlines pointer-events-none absolute inset-0 opacity-40" />
         </div>
