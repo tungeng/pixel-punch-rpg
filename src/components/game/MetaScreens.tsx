@@ -1,7 +1,7 @@
 import { ACT_COUNT } from "@/game/enemies";
-import { useGame, cardPrice } from "@/game/store";
+import { useGame, cardPrice, relicPrice } from "@/game/store";
 import { HEROES } from "@/game/heroes";
-import { RELICS } from "@/game/relics";
+import { RELICS, RELIC_TIER_COLOR } from "@/game/relics";
 import { CardView } from "./CardView";
 import { PixelButton } from "./PixelButton";
 import { Bar } from "./Bar";
