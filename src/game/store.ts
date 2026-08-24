@@ -496,6 +496,8 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const c = s.combat;
     if (!c || !c.active) return;
+    // rewinds only reach back within the current turn
+    c.rewindStack = [];
     // Tracer: Overclock cashes unspent energy into Block + chip damage
     const charge = { v: c.ultCharge };
     const relics = s.relics;
