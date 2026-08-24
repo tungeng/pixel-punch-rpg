@@ -5,6 +5,7 @@ import { HEROES, STARTER_HEROES, UNLOCKABLE_HEROES } from "@/game/heroes";
 import { PixelButton } from "@/components/game/PixelButton";
 import { motion } from "motion/react";
 import { Heart, Zap, Star, Lock } from "lucide-react";
+import { ArchiveScreen } from "@/components/game/ArchiveScreen";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,6 +33,7 @@ function Index() {
   const startRun = useGame((s) => s.startRun);
   const [selected, setSelected] = useState<string>("tracer");
   const [seed, setSeed] = useState("");
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const unlockCost = 150;
 
   const all = [...STARTER_HEROES, ...UNLOCKABLE_HEROES];
@@ -165,6 +167,12 @@ function Index() {
           <span>Best: F{meta.bestFloor}</span>
           <span>Runs: {meta.totalRuns}</span>
         </div>
+        <div className="mt-3 w-full">
+          <PixelButton onClick={() => setArchiveOpen(true)} color="secondary" className="w-full">
+            ▤ ARCHIVE
+          </PixelButton>
+        </div>
+        {archiveOpen && <ArchiveScreen onClose={() => setArchiveOpen(false)} />}
       </div>
     </div>
   );
