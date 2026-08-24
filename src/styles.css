@@ -301,3 +301,105 @@
 .aoe-sweep {
   animation: aoe-sweep 0.5s ease-out forwards;
 }
+
+/* ---------- Desktop arcade cabinet shell (md+ only; mobile untouched) ---------- */
+.cabinet-stage {
+  position: relative;
+  min-height: 100vh;
+  background: var(--background);
+}
+
+@keyframes cab-ambient {
+  0%, 100% { opacity: 0.75; transform: translate3d(0, 0, 0) scale(1); }
+  50% { opacity: 1; transform: translate3d(0, -1.5%, 0) scale(1.04); }
+}
+
+@media (min-width: 900px) {
+  .cabinet-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px;
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 0%, color-mix(in oklab, var(--primary) 16%, transparent), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 12% 100%, color-mix(in oklab, var(--accent) 18%, transparent), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 88% 90%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 70%),
+      var(--background);
+  }
+
+  /* animated ambient wash + pixel grid behind the cabinet */
+  .cabinet-stage::before {
+    content: "";
+    position: fixed;
+    inset: -10%;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 40% 30% at 30% 30%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 70%),
+      radial-gradient(ellipse 35% 28% at 72% 62%, color-mix(in oklab, var(--primary) 20%, transparent), transparent 70%);
+    filter: blur(30px);
+    animation: cab-ambient 16s ease-in-out infinite;
+  }
+  .cabinet-stage::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--primary) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--primary) 7%, transparent) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 35%, black 100%);
+  }
+
+  .cabinet-frame {
+    position: relative;
+    z-index: 1;
+    width: 480px;
+    height: min(920px, calc(100vh - 56px));
+    border: 4px solid color-mix(in oklab, var(--primary) 55%, var(--border));
+    background: var(--background);
+    box-shadow:
+      0 0 0 2px color-mix(in oklab, var(--background) 80%, black),
+      0 0 0 10px color-mix(in oklab, var(--card) 90%, black),
+      0 0 0 12px color-mix(in oklab, var(--primary) 35%, transparent),
+      0 30px 90px -20px color-mix(in oklab, var(--primary) 45%, transparent),
+      0 0 140px -30px color-mix(in oklab, var(--accent) 60%, transparent);
+    overflow: hidden;
+  }
+
+  .cabinet-frame > * {
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  /* marquee/kick-plate glow bands */
+  .cabinet-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    background:
+      linear-gradient(to bottom, color-mix(in oklab, var(--primary) 22%, transparent), transparent 12%),
+      linear-gradient(to top, color-mix(in oklab, var(--accent) 20%, transparent), transparent 10%);
+    mix-blend-mode: screen;
+    opacity: 0.55;
+  }
+
+  .cabinet-side {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    display: block;
+    color: color-mix(in oklab, var(--primary) 70%, transparent);
+    text-shadow: 0 0 18px color-mix(in oklab, var(--primary) 60%, transparent);
+    letter-spacing: 0.4em;
+    writing-mode: vertical-rl;
+    user-select: none;
+  }
+  .cabinet-side-l { left: max(24px, calc(50vw - 500px)); }
+  .cabinet-side-r { right: max(24px, calc(50vw - 500px)); transform: translateY(-50%) rotate(180deg); }
+}
