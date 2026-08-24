@@ -60,6 +60,8 @@ export function CombatScreen() {
   const [banner, setBanner] = useState<string | null>(null);
   const [flying, setFlying] = useState<CardInstance | null>(null);
   const [lunge, setLunge] = useState(0);
+  const [sweep, setSweep] = useState(0);
+  const [aimUid, setAimUid] = useState<string | null>(null);
   const [blockFlash, setBlockFlash] = useState(0);
   const [healFlash, setHealFlash] = useState(0);
   const prevHp = useRef<number | null>(null);
@@ -116,6 +118,7 @@ export function CombatScreen() {
     if (flying) return;
     setFlying(card);
     if (cardDealsDamage(card)) setLunge((n) => n + 1);
+    if (card.aoe && cardDealsDamage(card)) setSweep((n) => n + 1);
     const t = setTimeout(() => {
       setFlying(null);
       resolve();
@@ -135,6 +138,7 @@ export function CombatScreen() {
   };
 
   const onSelectTarget = (enemyUid: string) => {
+    setAimUid(enemyUid);
     const card = combat.hand.find((c) => c.uid === combat.targetingCardUid);
     if (!card) return selectTarget(enemyUid);
     return launch(card, () => selectTarget(enemyUid));
@@ -157,10 +161,43 @@ export function CombatScreen() {
 
       {/* arena — enemies centered in the remaining space */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <div className="flex flex-1 items-center justify-center gap-3 px-3 pt-3">
-          {combat.enemies.map((e) => (
-            <EnemyView key={e.uid} enemyUid={e.uid} targeting={targeting} onSelect={onSelectTarget} />
-          ))}
+        <div className="relative flex flex-1 items-center justify-center gap-1 px-3 pt-3">
+          {combat.enemies.map((e, i) => {
+            // stagger enemies across front/back depth slots instead of one flat row
+            const n = combat.enemies.length;
+            const depth = n === 1 ? 0 : i % 2 === 0 ? 0 : 1;
+            return (
+              <EnemyView
+                key={e.uid}
+                enemyUid={e.uid}
+                targeting={targeting}
+                aiming={aimUid === e.uid}
+                depth={depth}
+                onSelect={onSelectTarget}
+              />
+            );
+          })}
+
+          {/* AoE sweep — a shockwave that crosses every depth slot */}
+          <AnimatePresence>
+            {sweep > 0 && (
+              <motion.div
+                key={`sweep-${sweep}`}
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 0.55, delay: 0.2 }}
+                className="pointer-events-none absolute inset-0 z-20 overflow-hidden"
+              >
+                <div
+                  className="aoe-sweep absolute inset-y-0 -left-1/2 w-1/2"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, transparent, #ffcc4d55, #ffffffcc, #ff7a4555, transparent)",
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* log */}
@@ -425,10 +462,14 @@ export function CombatScreen() {
 function EnemyView({
   enemyUid,
   targeting,
+  aiming,
+  depth,
   onSelect,
 }: {
   enemyUid: string;
   targeting: boolean;
+  aiming?: boolean;
+  depth: number;
   onSelect: (uid: string) => void;
 }) {
   const enemy = useGame((s) => s.combat?.enemies.find((e) => e.uid === enemyUid));
@@ -458,11 +499,33 @@ function EnemyView({
       animate={
         enemy.isDead
           ? { opacity: 0, scale: 0.3, rotate: 25, y: 20 }
-          : { opacity: 1, scale: targeting ? 1.05 : 1 }
+          : {
+              opacity: 1,
+              scale: (depth === 1 ? 0.8 : 1) * (targeting ? 1.05 : 1),
+              y: depth === 1 ? -26 : 0,
+            }
       }
       transition={{ duration: 0.35 }}
+      style={{ zIndex: depth === 1 ? 1 : 2, filter: depth === 1 ? "brightness(0.82)" : "none" }}
       className={`relative flex flex-col items-center ${targeting ? "cursor-crosshair" : ""}`}
     >
+      {/* aiming reticle on the enemy being targeted */}
+      <AnimatePresence>
+        {targeting && !enemy.isDead && !enemy.untargetable && (
+          <motion.div
+            key="reticle"
+            initial={{ opacity: 0, scale: 1.4 }}
+            animate={{ opacity: aiming ? 1 : 0.55, scale: aiming ? 1 : 1.12 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            className="pointer-events-none absolute left-1/2 top-6 h-24 w-24 -translate-x-1/2 rounded-full"
+            style={{
+              border: `3px ${aiming ? "solid" : "dashed"} ${aiming ? "#ff3b3b" : "#ffcc4d"}`,
+              boxShadow: aiming ? "0 0 18px 2px #ff3b3b" : "0 0 10px 0 #ffcc4d",
+            }}
+          />
+        )}
+      </AnimatePresence>
       {!enemy.isDead && (
         <motion.div
           key={enemy.intent.text}
