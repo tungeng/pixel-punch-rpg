@@ -130,7 +130,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 65,
     color: "#a855f7",
     asset: moiraImg,
-    passive: "Biotic Grasp: whenever your Poison damages an enemy, heal for half of that damage.",
+    passive: "Biotic Grasp: whenever your Poison damages an enemy, heal for 40% of that damage.",
     startingDeck: [
       "moira_orb_dmg", "moira_orb_dmg", "moira_grasp", "moira_grasp",
       "moira_orb_heal", "moira_fade", "moira_decay", "moira_surge",
