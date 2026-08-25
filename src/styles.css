@@ -350,9 +350,9 @@
     box-shadow:
       0 0 0 2px color-mix(in oklab, var(--background) 80%, black),
       0 0 0 10px color-mix(in oklab, var(--card) 90%, black),
-      0 0 0 12px color-mix(in oklab, var(--primary) 35%, transparent),
-      0 30px 90px -20px color-mix(in oklab, var(--primary) 45%, transparent),
-      0 0 140px -30px color-mix(in oklab, var(--accent) 60%, transparent);
+      0 0 0 12px var(--stable),
+      0 0 0 16px oklch(0.1 0.02 285),
+      0 0 0 18px color-mix(in oklab, var(--corrupt) 70%, transparent);
     overflow: hidden;
   }
 
