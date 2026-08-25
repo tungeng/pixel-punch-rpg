@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import type { CardInstance } from "@/game/types";
 import { RelicTray } from "./RelicTray";
 import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
+import { UltimateAnnounce } from "./UltimateAnnounce";
 
 /**
  * Picks which of the hero's three signature attack animations to play:
@@ -68,6 +69,7 @@ export function CombatScreen() {
   const cancelTarget = useGame((s) => s.cancelTarget);
   const endTurn = useGame((s) => s.endTurn);
   const useUlt = useGame((s) => s.useUltimate);
+  const [ultAnnounce, setUltAnnounce] = useState(false);
   const pruneFloats = useGame((s) => s.pruneFloats);
 
 
@@ -395,8 +397,11 @@ export function CombatScreen() {
           transition={{ repeat: combat.ultCharge >= 100 ? Infinity : 0, duration: 1 }}
         >
           <PixelButton
-            onClick={() => useUlt()}
-            disabled={combat.ultCharge < 100}
+            onClick={() => {
+              if (ultAnnounce) return;
+              setUltAnnounce(true);
+            }}
+            disabled={combat.ultCharge < 100 || ultAnnounce}
             color="danger"
             className="px-3 py-2"
           >
