@@ -9,6 +9,16 @@ import type { CardInstance } from "@/game/types";
 import { RelicTray } from "./RelicTray";
 import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
 
+/**
+ * Picks which of the hero's three signature attack animations to play:
+ * 0 = basic strike, 1 = multi-hit / combo flourish, 2 = heavy or AoE finisher.
+ */
+function vfxVariantFor(card: CardInstance): number {
+  if (card.aoe || card.type === "ultimate" || (card.damage ?? 0) >= 12) return 2;
+  if ((card.hits ?? 1) > 1 || card.hitsPerAttack || card.randomHits) return 1;
+  return 0;
+}
+
 
 
 
