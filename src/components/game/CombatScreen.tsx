@@ -671,7 +671,8 @@ function EnemyView({
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
+
 
 
       {targeting && !enemy.isDead && (
