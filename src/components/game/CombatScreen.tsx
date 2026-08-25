@@ -515,30 +515,46 @@ function EnemyView({
 }) {
   const enemy = useGame((s) => s.combat?.enemies.find((e) => e.uid === enemyUid));
   const floats = useGame((s) => s.combat?.floats ?? []);
-  const [hit, setHit] = useState(false);
+  /** hit pulse: seq re-triggers the animation, ratio = damage / max HP */
+  const [hitFx, setHitFx] = useState<{ seq: number; ratio: number } | null>(null);
+  const [hitstop, setHitstop] = useState(false);
   const prev = useRef<number | null>(null);
+  const maxHp = enemy?.maxHp ?? 1;
 
   const hp = enemy?.hp ?? null;
   useEffect(() => {
     if (hp == null) return;
     if (prev.current != null && hp < prev.current) {
-      setHit(true);
-      const t = setTimeout(() => setHit(false), 320);
+      const ratio = Math.min(1, (prev.current - hp) / Math.max(1, maxHp));
+      const lethal = hp <= 0;
+      setHitFx((f) => ({ seq: (f?.seq ?? 0) + 1, ratio }));
+      if (lethal) setHitstop(true);
+      const t = setTimeout(() => setHitFx(null), 340);
+      const t2 = lethal ? setTimeout(() => setHitstop(false), 90) : undefined;
       prev.current = hp;
-      return () => clearTimeout(t);
+      return () => {
+        clearTimeout(t);
+        if (t2) clearTimeout(t2);
+      };
     }
     prev.current = hp;
     return;
-  }, [hp]);
+  }, [hp, maxHp]);
 
   if (!enemy) return null;
+
+  const hit = !!hitFx;
+  const ratio = hitFx?.ratio ?? 0;
+  const heavy = ratio > 0.2;
+  // knockback + shake amplitude scale with how big the hit was
+  const kick = 4 + ratio * 26;
 
   return (
     <motion.button
       layout
       onClick={targeting && !enemy.untargetable ? () => onSelect(enemyUid) : undefined}
       animate={
-        enemy.isDead
+        enemy.isDead && !hitstop
           ? { opacity: 0, scale: 0.3, rotate: 25, y: 20 }
           : {
               opacity: 1,
@@ -546,7 +562,8 @@ function EnemyView({
               y: depth === 1 ? -26 : 0,
             }
       }
-      transition={{ duration: 0.35 }}
+      transition={hitstop ? { duration: 0 } : { duration: 0.35 }}
+
       style={{ zIndex: depth === 1 ? 1 : 2, filter: depth === 1 ? "brightness(0.82)" : "none" }}
       className={`relative flex flex-col items-center ${targeting ? "cursor-crosshair" : ""}`}
     >
