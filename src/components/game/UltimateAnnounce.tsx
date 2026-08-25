@@ -90,16 +90,17 @@ export function UltimateAnnounce({
           transition={{ delay: 0.14, duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
         >
           <div
-            className="font-pixel text-[22px] uppercase leading-tight text-white"
+            className="text-[22px] uppercase leading-tight text-white"
             style={{
+              fontFamily: "var(--font-pixel)",
               textShadow: `0 0 6px ${c}, 0 0 20px ${c}, 0 4px 0 #000, 4px 0 0 #000`,
             }}
           >
             {hero.ultimate.name}
           </div>
           <div
-            className="mt-2 font-pixel text-[9px] uppercase tracking-[0.4em]"
-            style={{ color: c }}
+            className="mt-2 text-[9px] uppercase tracking-[0.4em]"
+            style={{ color: c, fontFamily: "var(--font-pixel)" }}
           >
             Ultimate
           </div>
