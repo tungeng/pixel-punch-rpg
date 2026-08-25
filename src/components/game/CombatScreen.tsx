@@ -9,6 +9,16 @@ import type { CardInstance } from "@/game/types";
 import { RelicTray } from "./RelicTray";
 import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
 
+/**
+ * Picks which of the hero's three signature attack animations to play:
+ * 0 = basic strike, 1 = multi-hit / combo flourish, 2 = heavy or AoE finisher.
+ */
+function vfxVariantFor(card: CardInstance): number {
+  if (card.aoe || card.type === "ultimate" || (card.damage ?? 0) >= 12) return 2;
+  if ((card.hits ?? 1) > 1 || card.hitsPerAttack || card.randomHits) return 1;
+  return 0;
+}
+
 
 
 
@@ -67,6 +77,7 @@ export function CombatScreen() {
   const [lunge, setLunge] = useState(0);
   const [sweep, setSweep] = useState(0);
   const [vfx, setVfx] = useState(0);
+  const [vfxVariant, setVfxVariant] = useState(0);
   const [aimUid, setAimUid] = useState<string | null>(null);
 
   const [blockFlash, setBlockFlash] = useState(0);
@@ -131,6 +142,7 @@ export function CombatScreen() {
     if (cardDealsDamage(card)) {
       // Mercy/Moira project a beam instead of physically closing the distance.
       if (!BEAM_HEROES.has(heroId)) setLunge((n) => n + 1);
+      setVfxVariant(vfxVariantFor(card));
       setVfx((n) => n + 1);
     }
     if (card.aoe && cardDealsDamage(card)) setSweep((n) => n + 1);
@@ -221,7 +233,7 @@ export function CombatScreen() {
           </AnimatePresence>
 
           {/* per-hero attack flourish */}
-          {vfx > 0 && <HeroVfx key={`vfx-${vfx}`} heroId={heroId} />}
+          {vfx > 0 && <HeroVfx key={`vfx-${vfx}`} heroId={heroId} variant={vfxVariant} />}
         </div>
 
 
