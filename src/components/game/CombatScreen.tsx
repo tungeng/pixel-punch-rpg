@@ -128,8 +128,13 @@ export function CombatScreen() {
   const launch = (card: CardInstance, resolve: () => void) => {
     if (flying) return;
     setFlying(card);
-    if (cardDealsDamage(card)) setLunge((n) => n + 1);
+    if (cardDealsDamage(card)) {
+      // Mercy/Moira project a beam instead of physically closing the distance.
+      if (!BEAM_HEROES.has(heroId)) setLunge((n) => n + 1);
+      setVfx((n) => n + 1);
+    }
     if (card.aoe && cardDealsDamage(card)) setSweep((n) => n + 1);
+
     const t = setTimeout(() => {
       setFlying(null);
       resolve();
