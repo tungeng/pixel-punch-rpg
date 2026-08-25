@@ -613,7 +613,16 @@ function EnemyView({
       )}
 
 
-      <div className={`relative ${hit ? "hit-shake" : "idle-bob-slow"}`}>
+      <motion.div
+        key={`hitfx-${hitFx?.seq ?? 0}`}
+        className={`relative ${hit ? "" : "idle-bob-slow"}`}
+        animate={
+          hit
+            ? { x: [0, kick, -kick * 0.7, kick * 0.4, 0], rotate: heavy ? [0, -6, 4, 0] : [0, -2, 0] }
+            : { x: 0, rotate: 0 }
+        }
+        transition={hitstop ? { duration: 0 } : { duration: heavy ? 0.34 : 0.2, ease: "easeOut" }}
+      >
         <img
           src={enemy.asset}
           alt={enemy.name}
@@ -621,11 +630,14 @@ function EnemyView({
           style={{
             opacity: enemy.untargetable ? 0.45 : 1,
             filter: hit
-              ? "drop-shadow(0 0 0 #fff) brightness(3)"
+              ? heavy
+                ? "drop-shadow(0 0 0 #fff) brightness(2.6) sepia(1) hue-rotate(-40deg) saturate(6)"
+                : "drop-shadow(0 0 0 #fff) brightness(2.4)"
               : "drop-shadow(0 5px 0 rgba(0,0,0,0.55))",
             transition: "filter 0.1s",
           }}
         />
+
         {/* impact — white flash + pixel shrapnel burst */}
         <AnimatePresence>
           {hit && (
