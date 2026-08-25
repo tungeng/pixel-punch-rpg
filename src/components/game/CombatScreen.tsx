@@ -7,6 +7,8 @@ import { PixelButton } from "./PixelButton";
 import { useEffect, useRef, useState } from "react";
 import type { CardInstance } from "@/game/types";
 import { RelicTray } from "./RelicTray";
+import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
+
 
 
 
@@ -64,7 +66,9 @@ export function CombatScreen() {
   const [flying, setFlying] = useState<CardInstance | null>(null);
   const [lunge, setLunge] = useState(0);
   const [sweep, setSweep] = useState(0);
+  const [vfx, setVfx] = useState(0);
   const [aimUid, setAimUid] = useState<string | null>(null);
+
   const [blockFlash, setBlockFlash] = useState(0);
   const [healFlash, setHealFlash] = useState(0);
   const prevHp = useRef<number | null>(null);
@@ -124,8 +128,13 @@ export function CombatScreen() {
   const launch = (card: CardInstance, resolve: () => void) => {
     if (flying) return;
     setFlying(card);
-    if (cardDealsDamage(card)) setLunge((n) => n + 1);
+    if (cardDealsDamage(card)) {
+      // Mercy/Moira project a beam instead of physically closing the distance.
+      if (!BEAM_HEROES.has(heroId)) setLunge((n) => n + 1);
+      setVfx((n) => n + 1);
+    }
     if (card.aoe && cardDealsDamage(card)) setSweep((n) => n + 1);
+
     const t = setTimeout(() => {
       setFlying(null);
       resolve();
@@ -210,7 +219,11 @@ export function CombatScreen() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* per-hero attack flourish */}
+          {vfx > 0 && <HeroVfx key={`vfx-${vfx}`} heroId={heroId} />}
         </div>
+
 
         {/* log */}
         <div
@@ -502,30 +515,46 @@ function EnemyView({
 }) {
   const enemy = useGame((s) => s.combat?.enemies.find((e) => e.uid === enemyUid));
   const floats = useGame((s) => s.combat?.floats ?? []);
-  const [hit, setHit] = useState(false);
+  /** hit pulse: seq re-triggers the animation, ratio = damage / max HP */
+  const [hitFx, setHitFx] = useState<{ seq: number; ratio: number } | null>(null);
+  const [hitstop, setHitstop] = useState(false);
   const prev = useRef<number | null>(null);
+  const maxHp = enemy?.maxHp ?? 1;
 
   const hp = enemy?.hp ?? null;
   useEffect(() => {
     if (hp == null) return;
     if (prev.current != null && hp < prev.current) {
-      setHit(true);
-      const t = setTimeout(() => setHit(false), 320);
+      const ratio = Math.min(1, (prev.current - hp) / Math.max(1, maxHp));
+      const lethal = hp <= 0;
+      setHitFx((f) => ({ seq: (f?.seq ?? 0) + 1, ratio }));
+      if (lethal) setHitstop(true);
+      const t = setTimeout(() => setHitFx(null), 340);
+      const t2 = lethal ? setTimeout(() => setHitstop(false), 90) : undefined;
       prev.current = hp;
-      return () => clearTimeout(t);
+      return () => {
+        clearTimeout(t);
+        if (t2) clearTimeout(t2);
+      };
     }
     prev.current = hp;
     return;
-  }, [hp]);
+  }, [hp, maxHp]);
 
   if (!enemy) return null;
+
+  const hit = !!hitFx;
+  const ratio = hitFx?.ratio ?? 0;
+  const heavy = ratio > 0.2;
+  // knockback + shake amplitude scale with how big the hit was
+  const kick = 4 + ratio * 26;
 
   return (
     <motion.button
       layout
       onClick={targeting && !enemy.untargetable ? () => onSelect(enemyUid) : undefined}
       animate={
-        enemy.isDead
+        enemy.isDead && !hitstop
           ? { opacity: 0, scale: 0.3, rotate: 25, y: 20 }
           : {
               opacity: 1,
@@ -533,7 +562,8 @@ function EnemyView({
               y: depth === 1 ? -26 : 0,
             }
       }
-      transition={{ duration: 0.35 }}
+      transition={hitstop ? { duration: 0 } : { duration: 0.35 }}
+
       style={{ zIndex: depth === 1 ? 1 : 2, filter: depth === 1 ? "brightness(0.82)" : "none" }}
       className={`relative flex flex-col items-center ${targeting ? "cursor-crosshair" : ""}`}
     >
@@ -583,7 +613,16 @@ function EnemyView({
       )}
 
 
-      <div className={`relative ${hit ? "hit-shake" : "idle-bob-slow"}`}>
+      <motion.div
+        key={`hitfx-${hitFx?.seq ?? 0}`}
+        className={`relative ${hit ? "" : "idle-bob-slow"}`}
+        animate={
+          hit
+            ? { x: [0, kick, -kick * 0.7, kick * 0.4, 0], rotate: heavy ? [0, -6, 4, 0] : [0, -2, 0] }
+            : { x: 0, rotate: 0 }
+        }
+        transition={hitstop ? { duration: 0 } : { duration: heavy ? 0.34 : 0.2, ease: "easeOut" }}
+      >
         <img
           src={enemy.asset}
           alt={enemy.name}
@@ -591,11 +630,14 @@ function EnemyView({
           style={{
             opacity: enemy.untargetable ? 0.45 : 1,
             filter: hit
-              ? "drop-shadow(0 0 0 #fff) brightness(3)"
+              ? heavy
+                ? "drop-shadow(0 0 0 #fff) brightness(2.6) sepia(1) hue-rotate(-40deg) saturate(6)"
+                : "drop-shadow(0 0 0 #fff) brightness(2.4)"
               : "drop-shadow(0 5px 0 rgba(0,0,0,0.55))",
             transition: "filter 0.1s",
           }}
         />
+
         {/* impact — white flash + pixel shrapnel burst */}
         <AnimatePresence>
           {hit && (
@@ -629,7 +671,8 @@ function EnemyView({
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
+
 
 
       {targeting && !enemy.isDead && (
