@@ -197,16 +197,24 @@
 }
 .energy-ring { animation: energy-spin 6s linear infinite; }
 
-@keyframes rift-drift {
-  0% { background-position: 0% 0%, 100% 100%; }
-  50% { background-position: 12% 8%, 88% 92%; }
-  100% { background-position: 0% 0%, 100% 100%; }
+/* Hard-edged rift field: stepped pixel bands, no blur */
+@keyframes rift-step {
+  0% { background-position: 0 0, 0 0, 0 0; }
+  100% { background-position: 32px 0, 0 32px, 0 0; }
 }
-.rift-bg { animation: rift-drift 14s ease-in-out infinite; }
+.rift-bg {
+  background-image:
+    repeating-linear-gradient(90deg, color-mix(in oklab, var(--corrupt) 16%, transparent) 0 2px, transparent 2px 32px),
+    repeating-linear-gradient(0deg, color-mix(in oklab, var(--stable) 12%, transparent) 0 2px, transparent 2px 32px),
+    repeating-linear-gradient(45deg, color-mix(in oklab, var(--corrupt) 8%, transparent) 0 8px, transparent 8px 24px);
+  image-rendering: pixelated;
+  animation: rift-step 6s steps(8) infinite;
+}
 
 @utility vignette {
-  box-shadow: inset 0 0 90px 20px rgba(0,0,0,0.75);
+  box-shadow: inset 0 0 0 4px oklch(0 0 0 / 0.85), inset 0 0 0 10px oklch(0 0 0 / 0.55);
 }
+
 
 /* --- title screen motion --- */
 @keyframes title-flicker {
