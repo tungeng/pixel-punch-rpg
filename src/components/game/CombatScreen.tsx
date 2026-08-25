@@ -219,7 +219,11 @@ export function CombatScreen() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* per-hero attack flourish */}
+          {vfx > 0 && <HeroVfx key={`vfx-${vfx}`} heroId={heroId} />}
         </div>
+
 
         {/* log */}
         <div
