@@ -66,7 +66,9 @@ export function CombatScreen() {
   const [flying, setFlying] = useState<CardInstance | null>(null);
   const [lunge, setLunge] = useState(0);
   const [sweep, setSweep] = useState(0);
+  const [vfx, setVfx] = useState(0);
   const [aimUid, setAimUid] = useState<string | null>(null);
+
   const [blockFlash, setBlockFlash] = useState(0);
   const [healFlash, setHealFlash] = useState(0);
   const prevHp = useRef<number | null>(null);
