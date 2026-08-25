@@ -67,6 +67,7 @@ export function CombatScreen() {
   const [lunge, setLunge] = useState(0);
   const [sweep, setSweep] = useState(0);
   const [vfx, setVfx] = useState(0);
+  const [vfxVariant, setVfxVariant] = useState(0);
   const [aimUid, setAimUid] = useState<string | null>(null);
 
   const [blockFlash, setBlockFlash] = useState(0);
@@ -131,6 +132,7 @@ export function CombatScreen() {
     if (cardDealsDamage(card)) {
       // Mercy/Moira project a beam instead of physically closing the distance.
       if (!BEAM_HEROES.has(heroId)) setLunge((n) => n + 1);
+      setVfxVariant(vfxVariantFor(card));
       setVfx((n) => n + 1);
     }
     if (card.aoe && cardDealsDamage(card)) setSweep((n) => n + 1);
@@ -221,7 +223,7 @@ export function CombatScreen() {
           </AnimatePresence>
 
           {/* per-hero attack flourish */}
-          {vfx > 0 && <HeroVfx key={`vfx-${vfx}`} heroId={heroId} />}
+          {vfx > 0 && <HeroVfx key={`vfx-${vfx}`} heroId={heroId} variant={vfxVariant} />}
         </div>
 
 
