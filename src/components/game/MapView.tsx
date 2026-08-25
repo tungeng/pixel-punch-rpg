@@ -109,22 +109,17 @@ export function MapView() {
         <div className="relative w-full" style={{ height: totalH }}>
           <Starfield />
 
-          <div
-            className="rift-bg pointer-events-none absolute inset-0 opacity-40"
-            style={{
-              background:
-                "radial-gradient(ellipse at 0% 0%, rgba(196,123,255,0.22), transparent 55%), radial-gradient(ellipse at 100% 100%, rgba(255,122,69,0.20), transparent 55%)",
-            }}
-          />
+          <div className="rift-bg pointer-events-none absolute inset-0 opacity-50" />
 
           <div
-            className="pointer-events-none absolute inset-0 opacity-60"
+            className="pointer-events-none absolute inset-0 opacity-70"
             style={{
-              background:
-                "radial-gradient(ellipse at 50% 0%, rgba(196,123,255,0.16), transparent 60%), radial-gradient(ellipse at 50% 100%, rgba(255,122,69,0.14), transparent 55%)",
+              backgroundImage:
+                "repeating-linear-gradient(90deg, color-mix(in oklab, var(--corrupt) 14%, transparent) 0 3px, transparent 3px 48px)",
             }}
           />
-          <div className="scanlines pointer-events-none absolute inset-0 opacity-60" />
+          <div className="vignette scanlines pointer-events-none absolute inset-0 opacity-60" />
+
 
           <svg
             className="absolute inset-0 h-full w-full"
