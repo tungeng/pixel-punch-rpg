@@ -513,6 +513,20 @@ export function CombatScreen() {
         </motion.div>
       )}
 
+      {/* ultimate announcement — visual only; the ult resolves when it finishes */}
+      <AnimatePresence>
+        {ultAnnounce && (
+          <UltimateAnnounce
+            key="ult-announce"
+            hero={hero}
+            onDone={() => {
+              setUltAnnounce(false);
+              useUlt();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
