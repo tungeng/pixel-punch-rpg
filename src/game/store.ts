@@ -128,6 +128,28 @@ export function computeScore(floorsCleared: number, act: number, gold: number, f
   return floorsCleared * 100 + act * 500 + gold + (fullClear ? 1000 : 0);
 }
 
+export interface HeroStat {
+  runs: number;
+  wins: number;
+  bestScore: number;
+  bestFloor: number;
+}
+
+export interface MetaStats {
+  wins: number;
+  losses: number;
+  bossKills: number;
+  bestScore: number;
+  bestHit: number;
+  /** fewest floors used to complete a full clear */
+  fastestWinFloors: number | null;
+  heroes: Record<string, HeroStat>;
+}
+
+export function emptyStats(): MetaStats {
+  return { wins: 0, losses: 0, bossKills: 0, bestScore: 0, bestHit: 0, fastestWinFloors: null, heroes: {} };
+}
+
 export interface GameState {
   // meta (persisted)
   meta: {
@@ -143,6 +165,8 @@ export interface GameState {
     playerName: string;
     /** hero ids that have killed at least one boss (Bastion mastery unlock) */
     bossHeroes?: string[];
+    /** lifetime accomplishments shown on the Statistics screen */
+    stats?: MetaStats;
   };
   // run
   inRun: boolean;
@@ -237,7 +261,7 @@ export const MAX_RELICS = 10;
 
 
 function defaultMeta() {
-  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "", bossHeroes: [] as string[] };
+  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "", bossHeroes: [] as string[], stats: emptyStats() };
 }
 
 let floatId = 1;
@@ -252,6 +276,8 @@ function loadMetaFromStorage() {
     if (!m.upgrades || typeof m.upgrades !== "object") m.upgrades = {};
     if (!Array.isArray(m.unlockedHeroes)) m.unlockedHeroes = [...STARTER_HEROES];
     if (!Array.isArray(m.bossHeroes)) m.bossHeroes = [];
+    m.stats = { ...emptyStats(), ...(m.stats ?? {}) };
+    if (!m.stats.heroes || typeof m.stats.heroes !== "object") m.stats.heroes = {};
     // starters are always available (new starter heroes reach old saves too)
     m.unlockedHeroes = Array.from(new Set([...STARTER_HEROES, ...m.unlockedHeroes]));
     if (!Array.isArray(m.unlockedRelics)) m.unlockedRelics = [...DEFAULT_UNLOCKED_RELIC_IDS];
@@ -270,6 +296,35 @@ function saveMeta(meta: GameState["meta"]) {
   } catch {
     /* ignore */
   }
+}
+
+/** Fold one finished run into the lifetime stat block. */
+function withRunStats(
+  meta: GameState["meta"],
+  r: { heroId: string; win: boolean; score: number; floorsCleared: number; bestHit: number; bossKills: number },
+): GameState["meta"] {
+  const base = { ...emptyStats(), ...(meta.stats ?? {}) };
+  const prev = base.heroes[r.heroId] ?? { runs: 0, wins: 0, bestScore: 0, bestFloor: 0 };
+  const stats: MetaStats = {
+    wins: base.wins + (r.win ? 1 : 0),
+    losses: base.losses + (r.win ? 0 : 1),
+    bossKills: base.bossKills + r.bossKills,
+    bestScore: Math.max(base.bestScore, r.score),
+    bestHit: Math.max(base.bestHit, r.bestHit),
+    fastestWinFloors: r.win
+      ? Math.min(base.fastestWinFloors ?? Number.MAX_SAFE_INTEGER, r.floorsCleared)
+      : base.fastestWinFloors,
+    heroes: {
+      ...base.heroes,
+      [r.heroId]: {
+        runs: prev.runs + 1,
+        wins: prev.wins + (r.win ? 1 : 0),
+        bestScore: Math.max(prev.bestScore, r.score),
+        bestFloor: Math.max(prev.bestFloor, r.floorsCleared),
+      },
+    },
+  };
+  return { ...meta, stats };
 }
 
 function getHero(heroId: string): HeroDef {
@@ -2378,14 +2433,14 @@ function handleCombatWin(set: any, get: () => GameState) {
       });
       return;
     }
-    const meta = {
+    const score = computeScore(floorsCleared, s.act + 1, gold, true);
+    const meta = withRunStats({
       ...s.meta,
       credits: s.meta.credits + Math.floor((200 + floorsCleared) * upgradeCreditMult(s.meta.upgrades)),
       bestFloor: Math.max(s.meta.bestFloor, floorsCleared),
       totalRuns: s.meta.totalRuns + 1,
-    };
+    }, { heroId: s.heroId, win: true, score, floorsCleared, bestHit: s.runStats.bestHit, bossKills: s.runStats.bossKills });
     saveMeta(meta);
-    const score = computeScore(floorsCleared, s.act + 1, gold, true);
     set({
       hp,
       gold,
@@ -2437,14 +2492,14 @@ function runHighlight(s: GameState): string {
 function handleDeath(set: any, get: () => GameState) {
   const s = get();
   const credits = Math.floor((s.floorsCleared * 8 + s.gold * 0.2) * upgradeCreditMult(s.meta.upgrades));
-  const meta = {
+  const score = computeScore(s.floorsCleared, s.act, s.gold, false);
+  const meta = withRunStats({
     ...s.meta,
     credits: s.meta.credits + credits,
     bestFloor: Math.max(s.meta.bestFloor, s.floorsCleared),
     totalRuns: s.meta.totalRuns + 1,
-  };
+  }, { heroId: s.heroId, win: false, score, floorsCleared: s.floorsCleared, bestHit: s.runStats.bestHit, bossKills: s.runStats.bossKills });
   saveMeta(meta);
-  const score = computeScore(s.floorsCleared, s.act, s.gold, false);
   set({
     phase: "dead",
     combat: null,
