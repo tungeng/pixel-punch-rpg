@@ -128,10 +128,10 @@ export const HEROES: Record<string, HeroDef> = {
     id: "moira",
     name: "Moira",
     role: "Biotic",
-    maxHp: 72,
+    maxHp: 80,
     color: "#a855f7",
     asset: moiraImg,
-    passive: "Life is simply a resource to be moved. Every tick of your Poison returns half of it to you as healing.",
+    passive: "Life is simply a resource to be moved. Your Poison never decays, and every tick of it returns half to you as healing.",
     startingDeck: [
       "moira_orb_dmg", "moira_orb_dmg", "moira_grasp", "moira_grasp",
       "moira_orb_heal", "moira_fade", "moira_fade", "moira_decay",

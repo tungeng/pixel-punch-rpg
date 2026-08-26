@@ -658,7 +658,7 @@ export const useGame = create<GameState>((set, get) => ({
     // was filler punctuated by a wall. Each encounter class now has its own
     // depth: skirmishes are real attrition, elites are puzzles, bosses stay
     // long but hit less brutally per turn.
-    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.95 : 1.08) : nodeType === "elite" ? 2.65 : 2.85;
+    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.9 : 1.0) : nodeType === "elite" ? 2.45 : 2.6;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
@@ -924,7 +924,9 @@ export const useGame = create<GameState>((set, get) => ({
           pushFloat(c, `+${gained} STR`, "buff", "player");
         }
       }
-      e.poison -= 1;
+      // Moira's venom does not fade. Her runs are about stacking rot that
+      // compounds every turn, which is the whole point of playing her.
+      if (s.heroId !== "moira") e.poison -= 1;
     }
     if (dotHeal > 0) {
       pushLog(c, `Poison deals ${dotHeal} damage.`);
