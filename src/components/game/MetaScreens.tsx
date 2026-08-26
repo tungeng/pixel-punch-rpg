@@ -92,6 +92,7 @@ export function RewardScreen() {
 export function AugmentChoiceScreen() {
   const ids = useGame((s) => s.augmentChoices);
   const choose = useGame((s) => s.chooseAugment);
+  const tiers = useGame((s) => s.augmentTiers);
   const relics = useGame((s) => s.relics.length);
   const deck = useGame((s) => s.deck);
   const contract = useGame((s) => s.contractsCompleted);
@@ -99,7 +100,7 @@ export function AugmentChoiceScreen() {
   return (
     <Screen title="HERO EVOLUTION" tone="#ff7a45" scroll>
       <div className="mb-5 text-center text-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        The last boss left a combat protocol exposed. Install one.
+        Commit to one path. Deepening what you carry beats collecting everything.
       </div>
       <div className="text-pixel mb-4 grid w-full max-w-[360px] grid-cols-3 border-2 border-primary/30 bg-background/70 text-center text-[7px]">
         <span className="border-r-2 border-primary/20 px-1 py-2">RELICS<br /><b className="text-primary">{relics}</b></span>
@@ -121,8 +122,15 @@ export function AugmentChoiceScreen() {
             >
               <span className="text-pixel flex h-12 w-12 shrink-0 items-center justify-center bg-primary text-[15px] text-primary-foreground">{augment.icon}</span>
               <span>
-                <span className="text-pixel block text-[9px] text-primary">{augment.name}</span>
-                <span className="mt-1 block text-[14px] leading-[16px] text-foreground/80" style={{ fontFamily: "var(--font-pixel-body)" }}>{augment.text}</span>
+                <span className="text-pixel block text-[9px] text-primary">
+                  {augment.name}
+                  {(tiers[id] ?? 0) > 0 ? ` · TIER ${(tiers[id] ?? 0) + 1}` : ""}
+                </span>
+                <span className="mt-1 block text-[14px] leading-[16px] text-foreground/80" style={{ fontFamily: "var(--font-pixel-body)" }}>
+                  {(tiers[id] ?? 0) > 0
+                    ? `Deepen this path. Every effect scales again: ${augment.text}`
+                    : augment.text}
+                </span>
               </span>
             </motion.button>
           );

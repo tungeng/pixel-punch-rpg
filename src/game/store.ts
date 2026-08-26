@@ -1383,7 +1383,10 @@ export const useGame = create<GameState>((set, get) => ({
 
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
     if (mode === "salvage") {
-      const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
+      // Hero cards carry the run's identity, so they are offered twice as often as
+  // the generic pool. Neutral value cards should season a build, not define it.
+  const heroPool = getHero(s.heroId).cardPool;
+  const pool = [...heroPool, ...heroPool, ...NEUTRAL_POOL];
       const choices = rng.shuffle(pool).slice(0, 3).map((id) => makeCard(id, true));
       set({ phase: "reward", rewardChoices: choices, rewardGold: 0, lastEvent: "Cache salvaged safely. Pick an upgraded card.", lastEventAt: Date.now() });
       return;
@@ -1396,7 +1399,10 @@ export const useGame = create<GameState>((set, get) => ({
     if (mode !== "breach" && !rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
 
       // scanner missed: cache yields a card reward instead
-      const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
+      // Hero cards carry the run's identity, so they are offered twice as often as
+  // the generic pool. Neutral value cards should season a build, not define it.
+  const heroPool = getHero(s.heroId).cardPool;
+  const pool = [...heroPool, ...heroPool, ...NEUTRAL_POOL];
       const remaining = [...pool];
       const choices: CardInstance[] = [];
       for (let i = 0; i < 3 && remaining.length > 0; i++) {
@@ -2101,7 +2107,10 @@ function handleCombatWin(set: any, get: () => GameState) {
   }
   // card reward
   const rng = rngForRun(s.seed, 9000 + floorsCleared);
-  const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
+  // Hero cards carry the run's identity, so they are offered twice as often as
+  // the generic pool. Neutral value cards should season a build, not define it.
+  const heroPool = getHero(s.heroId).cardPool;
+  const pool = [...heroPool, ...heroPool, ...NEUTRAL_POOL];
   const choices: CardInstance[] = [];
   const remaining = [...pool];
   const offers = has("codex_shard") ? 4 : 3;
@@ -2257,7 +2266,10 @@ function markNodeVisited(set: any, get: () => GameState) {
 
 function openShop(set: any, get: () => GameState, rng: Rng) {
   const s = get();
-  const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
+  // Hero cards carry the run's identity, so they are offered twice as often as
+  // the generic pool. Neutral value cards should season a build, not define it.
+  const heroPool = getHero(s.heroId).cardPool;
+  const pool = [...heroPool, ...heroPool, ...NEUTRAL_POOL];
   const shopCards: CardInstance[] = [];
   const stock = [...pool];
   for (let i = 0; i < 5 && stock.length > 0; i++) {
