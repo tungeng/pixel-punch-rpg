@@ -1777,8 +1777,9 @@ function handleCombatWin(set: any, get: () => GameState) {
   if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 6);
   if (has("blood_pact")) hp = Math.min(s.maxHp, hp + Math.ceil(s.maxHp * 0.08));
   // gold reward
-  const baseGold = c.nodeType === "boss" ? 60 : c.nodeType === "elite" ? 35 : 18;
+  const baseGold = c.nodeType === "boss" ? 55 : c.nodeType === "elite" ? 32 : 15;
   let g = baseGold + new Rng(s.seed ^ (s.floorsCleared * 7)).int(0, 10);
+
   if (has("lucky_coin")) g = Math.floor(g * 1.75);
   if (has("salvage_claw")) g += 20;
   gold += g;
