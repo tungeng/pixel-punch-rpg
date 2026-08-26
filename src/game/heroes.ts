@@ -12,10 +12,10 @@ export const HEROES: Record<string, HeroDef> = {
     id: "tracer",
     name: "Tracer",
     role: "Damage",
-    maxHp: 64,
+    maxHp: 72,
     color: "#f59e0b",
     asset: tracerImg,
-    passive: "Cheers, love, she's always got one more in the tank. +1 max Energy.",
+    passive: "Cheers, love! +1 max Energy, and every third card she plays in a turn blinks 1 Energy right back.",
     startingDeck: [
       "tracer_blink", "tracer_blink", "tracer_pistols", "tracer_pistols",
       "tracer_recall", "tracer_strafe", "tracer_strafe", "tracer_hnr",
@@ -70,10 +70,10 @@ export const HEROES: Record<string, HeroDef> = {
     id: "genji",
     name: "Genji",
     role: "Combo",
-    maxHp: 58,
+    maxHp: 74,
     color: "#22c55e",
     asset: genjiImg,
-    passive: "The body moves before the mind asks. Draw 1 extra card each turn.",
+    passive: "The body moves before the mind asks. Draw 1 extra card each turn, and every Attack after the first in a turn strikes for +4.",
     startingDeck: [
       "genji_shuriken", "genji_shuriken", "genji_swift", "genji_swift",
       "genji_deflect", "genji_fang", "genji_agility", "genji_riposte",
@@ -102,7 +102,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 104,
     color: "#eab308",
     asset: junkratImg,
-    passive: "Everyone starts the party rattled! Enemies open combat with 3 Vulnerable, and the first 3 damage of Junkrat's own blasts barely tickles.",
+    passive: "Everyone starts the party rattled! Enemies open combat with 3 Vulnerable, the first 3 damage of Junkrat's own blasts barely tickles, and every self-blast pumps him up with 1 Strength.",
     startingDeck: [
       "junkrat_launcher", "junkrat_launcher", "junkrat_trap", "junkrat_rummage",
       "junkrat_concussive", "junkrat_mine", "junkrat_scatter", "junkrat_armor",
@@ -161,7 +161,7 @@ export const HEROES: Record<string, HeroDef> = {
     color: "#38bdf8",
     asset: reinhardtImg,
     passive:
-      "Crusader steel does not fade. Armor endures between turns, and every 3 Block left standing at turn's end is forged into 1 permanent Armor.",
+      "Crusader steel does not fade. Armor endures between turns, and every 2 Block left standing at turn's end is forged into 1 permanent Armor.",
     startingDeck: [
       "rein_hammer", "rein_hammer", "rein_hammer", "rein_plating",
       "rein_plating", "rein_barrier", "rein_barrier", "rein_firestrike",
@@ -193,7 +193,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 98,
     color: "#7c3aed",
     asset: doomfistImg,
-    passive: "The best defense is a fist already moving. Every Attack you play grants 4 Block.",
+    passive: "The best defense is a fist already moving. Every Attack grants 4 Block, and every 8 damage he takes in a fight answers back with 1 permanent Strength.",
     startingDeck: [
       "doomfist_punch", "doomfist_punch", "doomfist_slam", "doomfist_slam",
       "doomfist_shield", "doomfist_uppercut", "doomfist_grapple",

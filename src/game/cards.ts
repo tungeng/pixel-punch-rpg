@@ -38,7 +38,7 @@ export const CARDS: Record<string, CardDef> = {
   // ---------------- GENJI (combo) ----------------
   genji_shuriken: { id: "genji_shuriken", name: "Shuriken", type: "attack", cost: 0, hero: "genji", rarity: "starter", damage: 3, text: "Deal 3 damage.", up: { damage: 5 } },
   genji_swift: { id: "genji_swift", name: "Swift Strike", type: "attack", cost: 1, hero: "genji", rarity: "starter", damage: 6, bonusIfAttack: 3, text: "Deal 6 damage. +3 if you played an Attack this turn.", up: { damage: 9, bonusIfAttack: 5 } },
-  genji_deflect: { id: "genji_deflect", name: "Deflect", type: "skill", cost: 1, hero: "genji", rarity: "starter", block: 6, text: "Gain 6 Block.", up: { block: 9 } },
+  genji_deflect: { id: "genji_deflect", name: "Deflect", type: "skill", cost: 1, hero: "genji", rarity: "starter", block: 8, text: "Gain 8 Block.", up: { block: 11 } },
   genji_fang: { id: "genji_fang", name: "Dragon Fang", type: "attack", cost: 1, hero: "genji", rarity: "common", damage: 5, draw: 1, text: "Deal 5 damage. Draw 1 card.", up: { damage: 8 } },
   genji_agility: { id: "genji_agility", name: "Cyber Agility", type: "skill", cost: 1, hero: "genji", rarity: "common", block: 5, comboCards: 2, comboEnergy: 1, text: "Gain 5 Block. If you played 2+ cards this turn, gain 1 Energy.", up: { block: 8 } },
   genji_spirit: { id: "genji_spirit", name: "Spirit Dragon", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 3, hitsPerAttack: true, text: "Deal 3 damage, once more for each Attack already played this turn.", up: { damage: 5 } },
@@ -103,7 +103,7 @@ export const CARDS: Record<string, CardDef> = {
   n_focus: { id: "n_focus", name: "Focus", type: "skill", cost: 0, rarity: "uncommon", draw: 2, text: "Draw 2 cards.", up: { draw: 3 } },
   n_power: { id: "n_power", name: "Power Surge", type: "skill", cost: 1, rarity: "uncommon", strength: 1, block: 3, text: "Gain 1 Strength and 3 Block.", up: { strength: 2 } },
   // ---------------- REINHARDT (persistent armor / bulwark) ----------------
-  rein_hammer: { id: "rein_hammer", name: "Rocket Hammer", type: "attack", cost: 1, hero: "reinhardt", rarity: "starter", damage: 6, damagePerArmor: 2, text: "Deal 6 damage, +1 per 2 Armor.", up: { damage: 9, damagePerArmor: 1 } },
+  rein_hammer: { id: "rein_hammer", name: "Rocket Hammer", type: "attack", cost: 1, hero: "reinhardt", rarity: "starter", damage: 6, damagePerArmor: 1, text: "Deal 6 damage, +1 per Armor.", up: { damage: 10 } },
   rein_plating: { id: "rein_plating", name: "Steel Plating", type: "skill", cost: 1, hero: "reinhardt", rarity: "starter", armor: 9, text: "Gain 9 Armor (Armor never expires).", up: { armor: 10 } },
   rein_barrier: { id: "rein_barrier", name: "Barrier Field", type: "skill", cost: 1, hero: "reinhardt", rarity: "starter", block: 5, blockFromArmor: true, text: "Gain 5 Block plus Block equal to your Armor.", up: { block: 8 } },
   rein_firestrike: { id: "rein_firestrike", name: "Fire Strike", type: "attack", cost: 1, hero: "reinhardt", rarity: "starter", damage: 6, aoe: true, ignoreBlock: true, text: "Deal 6 damage to ALL enemies, ignoring Block.", up: { damage: 9 } },
@@ -111,7 +111,7 @@ export const CARDS: Record<string, CardDef> = {
   rein_bulwark: { id: "rein_bulwark", name: "Barbed Bulwark", type: "skill", cost: 1, hero: "reinhardt", rarity: "common", thorns: 5, block: 3, text: "Gain 3 Block. Retaliate 5: attackers take 5 damage this turn.", up: { thorns: 8, block: 5 } },
   rein_forge: { id: "rein_forge", name: "Crusader Forge", type: "skill", cost: 0, hero: "reinhardt", rarity: "common", blockToArmor: true, text: "Reforge all of your Block into Armor.", up: { armor: 3 } },
   rein_bash: { id: "rein_bash", name: "Shield Bash", type: "attack", cost: 1, hero: "reinhardt", rarity: "uncommon", damage: 7, stealBlockAsArmor: true, text: "Deal 7 damage. Strip the target's Block and bolt it on as Armor.", up: { damage: 10 } },
-  rein_smash: { id: "rein_smash", name: "Ground Smash", type: "attack", cost: 2, hero: "reinhardt", rarity: "uncommon", damage: 3, damagePerArmor: 2, aoe: true, text: "Deal 3 damage, +1 per 2 Armor, to ALL enemies.", up: { damagePerArmor: 1 } },
+  rein_smash: { id: "rein_smash", name: "Ground Smash", type: "attack", cost: 2, hero: "reinhardt", rarity: "uncommon", damage: 4, damagePerArmor: 1, aoe: true, text: "Deal 4 damage, +1 per Armor, to ALL enemies.", up: { damage: 8 } },
   rein_endure: { id: "rein_endure", name: "Endure", type: "skill", cost: 1, hero: "reinhardt", rarity: "uncommon", armor: 12, selfDamage: 5, text: "Take 5 damage. Gain 12 Armor.", up: { armor: 18 } },
   rein_rally: { id: "rein_rally", name: "Rally", type: "skill", cost: 1, hero: "reinhardt", rarity: "uncommon", armorPerCardPlayed: 3, draw: 1, text: "Draw 1. Gain 3 Armor per card played earlier this turn.", up: { armorPerCardPlayed: 4 } },
   rein_will: { id: "rein_will", name: "Unbreakable Will", type: "skill", cost: 2, hero: "reinhardt", rarity: "rare", armor: 8, strength: 2, retain: true, text: "Gain 8 Armor and 2 Strength. Retained in hand.", up: { armor: 12, strength: 3 } },
@@ -119,13 +119,14 @@ export const CARDS: Record<string, CardDef> = {
 
 export const NEUTRAL_EXPANSION: Record<string, CardDef> = {
   n_gambit: { id: "n_gambit", name: "Gambit", type: "attack", cost: 1, rarity: "uncommon", damageEqualToBlock: true, exhaust: true, text: "Deal damage equal to your current Block. Exhaust." },
-  n_overclock_cell: { id: "n_overclock_cell", name: "Overclock Cell", type: "skill", cost: 0, rarity: "uncommon", selfDamage: 3, draw: 2, energyGain: 1, text: "Take 3 damage. Draw 2 cards. Gain 1 Energy.", up: { draw: 3 } },
+  n_overclock_cell: { id: "n_overclock_cell", name: "Overclock Cell", type: "skill", cost: 0, rarity: "uncommon", selfDamage: 4, draw: 2, energyGain: 1, exhaust: true, text: "Take 4 damage. Draw 2 cards. Gain 1 Energy. Exhaust.", up: { draw: 3 } },
   n_adrenaline: { id: "n_adrenaline", name: "Adrenaline Rush", type: "skill", cost: 2, rarity: "uncommon", freeIfCardsPlayed: 3, energyGain: 2, draw: 1, text: "Gain 2 Energy. Draw 1. Costs 0 if you have played 3+ cards this turn.", up: { draw: 2 } },
   n_scavenge: { id: "n_scavenge", name: "Scavenge", type: "attack", cost: 1, rarity: "common", damage: 4, goldOnKill: 15, text: "Deal 4 damage. If this kills the enemy, gain 15 gold.", up: { damage: 7 } },
   n_mirror_ward: { id: "n_mirror_ward", name: "Mirror Ward", type: "skill", cost: 1, rarity: "uncommon", block: 5, nextAttackBonusPct: 50, text: "Gain 5 Block. Your next Attack this turn deals +50% damage.", up: { block: 8 } },
   n_last_stand: { id: "n_last_stand", name: "Last Stand", type: "skill", cost: 1, rarity: "rare", strength: 1, lowHpStrength: 3, lowHpBlock: 10, exhaust: true, text: "Below half HP: gain 3 Strength and 10 Block. Otherwise gain 1 Strength. Exhaust.", up: { strength: 2 } },
-  n_pawn_shop: { id: "n_pawn_shop", name: "Pawn Shop", type: "skill", cost: 0, rarity: "uncommon", goldCost: 20, draw: 2, energyGain: 1, exhaust: true, text: "Spend 20 gold. Draw 2 cards and gain 1 Energy. Exhaust.", up: { draw: 3 } },
-  n_bloodletting: { id: "n_bloodletting", name: "Bloodletting", type: "attack", cost: 0, rarity: "uncommon", damage: 12, selfDamage: 4, text: "Take 4 damage. Deal 12 damage.", up: { damage: 16 } },
+  n_pawn_shop: { id: "n_pawn_shop", name: "Pawn Shop", type: "skill", cost: 0, rarity: "uncommon", goldCost: 45, draw: 2, energyGain: 1, exhaust: true, text: "Spend 45 gold. Draw 2 cards and gain 1 Energy. Exhaust.", up: { draw: 3 } },
+  n_bloodletting: { id: "n_bloodletting", name: "Bloodletting", type: "attack", cost: 0, rarity: "uncommon", damage: 8, selfDamage: 5, text: "Take 5 damage. Deal 8 damage.", up: { damage: 11 } },
+
   n_salvage_rites: { id: "n_salvage_rites", name: "Salvage Rites", type: "skill", cost: 1, rarity: "uncommon", blockPerExhaust: 4, text: "Gain 4 Block for each card in your exhaust pile.", up: { block: 4 } },
   n_second_wind: { id: "n_second_wind", name: "Second Wind", type: "skill", cost: 1, rarity: "uncommon", blockToHealRatio: 2, draw: 1, exhaust: true, text: "Convert all your Block into 1 HP per 2 Block. Draw 1. Exhaust.", up: { draw: 2 } },
   n_all_in: { id: "n_all_in", name: "All In", type: "attack", cost: 2, rarity: "rare", damage: 9, doubleIfHandEmpty: true, exhaust: true, text: "Deal 9 damage, doubled if your hand is empty. Exhaust.", up: { damage: 13 } },

@@ -65,6 +65,7 @@ export interface Combat {
   nodeType: NodeType;
   ultUsedThisCombat: boolean;
   damageTakenThisCombat: number;
+  ragePaid: number;
   overclock: { blockPerEnergy: number; damagePerEnergy: number } | null;
   /** Heal-over-time stacks on the player (Moira). */
   regen: number;
@@ -135,6 +136,8 @@ export interface GameState {
   currentNodeId: number | null;
   act: number;
   floorsCleared: number;
+  /** Fights cleared inside the current act. Drives the difficulty curve. */
+  actFloors: number;
   phase: Phase;
   rewardChoices: CardInstance[];
   startingRelicChoices: string[];
@@ -184,6 +187,13 @@ export interface GameState {
 
 const META_KEY = "overtung_meta_v1";
 const LEGACY_META_KEY = "chronobreak_meta_v1";
+
+/**
+ * Hard ceiling on relics per run. Collecting the whole vault every run flattened
+ * build identity and trivialised acts 2-4, so a satchel now holds ten.
+ */
+export const MAX_RELICS = 10;
+
 
 function defaultMeta() {
   return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "" };
@@ -308,11 +318,11 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
     c.block -= absorbed;
     remaining -= absorbed;
   }
-  // Reinhardt: Armor soaks what Block could not, and carries between turns
+  // Reinhardt: Crusader Armor halves what gets past Block and barely chips away.
   if (remaining > 0 && c.armor > 0) {
-    const soaked = Math.min(c.armor, remaining);
-    c.armor -= soaked;
-    remaining -= soaked;
+    const reduced = Math.min(remaining, Math.ceil(remaining / 2) + Math.floor(c.armor / 8));
+    remaining -= reduced;
+    c.armor = Math.max(0, c.armor - 1);
   }
   c.hp -= remaining;
   c.damageTakenThisCombat += remaining;
@@ -441,6 +451,7 @@ export const useGame = create<GameState>((set, get) => ({
   currentNodeId: null,
   act: 0,
   floorsCleared: 0,
+  actFloors: 0,
   phase: "map",
   rewardChoices: [],
   startingRelicChoices: [],
@@ -489,6 +500,7 @@ export const useGame = create<GameState>((set, get) => ({
       currentNodeId: null,
       act: 0,
       floorsCleared: 0,
+      actFloors: 0,
       phase: "relic_choice",
       startingRelicChoices: rng.shuffle(startingRelicChoices),
       combat: null,
@@ -553,14 +565,17 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // Difficulty curve: the breach hardens the deeper you fall, and it adapts
     // to how much relic power you're carrying, so a stacked run still bites.
-    const floor = s.floorsCleared;
+    // Difficulty is anchored to the act and how deep you are inside it, so a
+    // longer act does not spiral, and relic power is only softly answered.
+    const floor = s.actFloors;
     const relicCount = s.relics.length;
-    const hpScale = 1 + floor * 0.185 + s.act * 0.4 + relicCount * 0.09;
+    const bossEase = nodeType === "boss" ? 0.86 : 1;
+    const hpScale = (1 + s.act * 0.5 + floor * 0.09 + relicCount * 0.05) * bossEase;
     const strBonus =
-      Math.floor(floor / 2) +
-      Math.round(s.act * 2.5) +
-      Math.floor(relicCount / 2) +
-      (nodeType === "elite" ? 4 + s.act : 0);
+      Math.floor(floor / 3) +
+      Math.round(s.act * 1.6) +
+      Math.floor(relicCount / 3) +
+      (nodeType === "elite" ? 3 + s.act : 0);
 
 
     for (const e of enemies) {
@@ -616,6 +631,7 @@ export const useGame = create<GameState>((set, get) => ({
       regen: 0,
       poisonBoost: 0,
       armor: 0,
+      ragePaid: 0,
       thorns: 0,
       hackedType: null,
       hackEnergy: false,
@@ -946,9 +962,19 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // start player turn
     c.turn += 1;
+    // Doomfist: The Rising Uppercut. Pain fuels permanent Strength.
+    if (s.heroId === "doomfist") {
+      const owed = Math.floor(c.damageTakenThisCombat / 8) - (c.ragePaid ?? 0);
+      if (owed > 0) {
+        c.ragePaid = (c.ragePaid ?? 0) + owed;
+        const gained = gainStrength(c, owed, relics);
+        pushFloat(c, `+${gained} STR`, "buff", "player");
+        pushLog(c, `Doomfist answers the pain. +${gained} Strength.`);
+      }
+    }
     // Reinhardt: Crusader Plating forges leftover Block into permanent Armor
-    if (s.heroId === "reinhardt" && c.block >= 3) {
-      const forged = Math.floor(c.block / 3);
+    if (s.heroId === "reinhardt" && c.block >= 2) {
+      const forged = Math.floor(c.block / 2);
       c.armor += forged;
       pushFloat(c, `+${forged} ARM`, "block", "player");
       pushLog(c, `Crusader Plating forges ${forged} Armor from leftover Block.`);
@@ -1178,14 +1204,17 @@ export const useGame = create<GameState>((set, get) => ({
     const owned = new Set(s.relics);
     const unlocked = new Set(s.meta.unlockedRelics);
     const avail = ALL_RELIC_IDS.filter((r) => unlocked.has(r) && !owned.has(r) && isDropEligible(r));
-    if (avail.length === 0) {
-      set({ phase: "map" });
+    if (avail.length === 0 || s.relics.length >= MAX_RELICS) {
+      // full satchel: the cache pays out in gold instead
+      set({ phase: "map", gold: s.gold + 60 });
       markNodeVisited(set, get);
       return;
     }
+
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
-    // caches are relic-first now; the scanner upgrade only widens the odds
-    if (!rng.chance(Math.max(0.9, upgradeCacheRelicChance(s.meta.upgrades)))) {
+    // caches usually hold a relic; otherwise they pay out a card choice
+    if (!rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
+
       // scanner missed: cache yields a card reward instead
       const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
       const remaining = [...pool];
@@ -1230,6 +1259,7 @@ export const useGame = create<GameState>((set, get) => ({
     const relicId = s.shopRelics[index];
     if (!relicId) return;
     if (s.relics.includes(relicId)) return;
+    if (s.relics.length >= MAX_RELICS) return;
     const cost = relicPrice(relicId);
     if (s.gold < cost) return;
     const relics = [...s.relics, relicId];
@@ -1419,6 +1449,13 @@ function resolveCard(
     pushFloat(c, "+4", "block", "player");
   }
 
+  // Tracer: Blink Chain. Every 3rd card played in a turn refunds 1 Energy.
+  if (s.heroId === "tracer" && !isUlt && c.cardsPlayedThisTurn % 3 === 0) {
+    c.energy += 1;
+    pushFloat(c, "+1 NRG", "buff", "player");
+    pushLog(c, "Blink Chain snaps back a point of Energy.");
+  }
+
   // strength gain (Last Stand pays out far harder while you are bleeding)
   const lowHpNow = c.hp * 2 <= c.maxHp;
   const strengthAmount =
@@ -1492,6 +1529,11 @@ function resolveCard(
   if (card.selfDamage) {
     // Junkrat's Total Mayhem soaks the first 3 damage of every self-blast.
     const soak = s.heroId === "junkrat" ? 3 : 0;
+    // Junkrat: Total Mayhem. Every self-blast feeds his Strength for the fight.
+    if (s.heroId === "junkrat") {
+      const gained = gainStrength(c, 1, relics);
+      pushFloat(c, `+${gained} STR`, "buff", "player");
+    }
     const selfDmg = Math.max(0, card.selfDamage - soak);
     if (selfDmg > 0) {
       c.hp -= selfDmg;
@@ -1542,6 +1584,10 @@ function resolveCard(
     if (hitRoll !== undefined) hits = hitRoll;
     let bonus = 0;
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
+    // Genji: Strike Chain. Each Attack after the first this turn escalates.
+    if (s.heroId === "genji" && isAttack && !isUlt) {
+      bonus += 4 * Math.max(0, c.attacksPlayedThisTurn - 1);
+    }
     let totalBase = scaled + bonus;
     if (card.doubleIfHandEmpty && c.hand.length === 0) {
       totalBase *= 2;
@@ -1777,12 +1823,14 @@ function handleCombatWin(set: any, get: () => GameState) {
   if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 6);
   if (has("blood_pact")) hp = Math.min(s.maxHp, hp + Math.ceil(s.maxHp * 0.08));
   // gold reward
-  const baseGold = c.nodeType === "boss" ? 60 : c.nodeType === "elite" ? 35 : 18;
+  const baseGold = c.nodeType === "boss" ? 55 : c.nodeType === "elite" ? 32 : 15;
   let g = baseGold + new Rng(s.seed ^ (s.floorsCleared * 7)).int(0, 10);
+
   if (has("lucky_coin")) g = Math.floor(g * 1.75);
   if (has("salvage_claw")) g += 20;
   gold += g;
   const floorsCleared = s.floorsCleared + 1;
+  const actFloors = s.actFloors + 1;
   // card reward
   const rng = rngForRun(s.seed, 9000 + floorsCleared);
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
@@ -1795,17 +1843,23 @@ function handleCombatWin(set: any, get: () => GameState) {
     choices.push(makeCard(id, rng.chance(0.12)));
   }
 
-  // ---- relic drops: bosses and elites always, normal fights sometimes ----
+  // ---- relic drops: bosses always, elites often, normal fights rarely ----
+  // Relics are meant to define a run, not fill a checklist, so the odds fall
+  // off hard as your collection grows.
   const ownedIds = new Set(s.relics);
   const unlockedIds = new Set(s.meta.unlockedRelics);
   const availRelics = ALL_RELIC_IDS.filter((r) => unlockedIds.has(r) && !ownedIds.has(r) && isDropEligible(r, true));
-  const dropChance =
-    c.nodeType === "boss" || c.nodeType === "elite" ? 1 : has("relic_scanner") ? 0.35 : 0.18;
+  const atCap = s.relics.length >= MAX_RELICS;
+  const glut = Math.max(0.25, 1 - s.relics.length * 0.1);
+  const baseDrop =
+    c.nodeType === "boss" ? 1 : c.nodeType === "elite" ? 0.8 : has("relic_scanner") ? 0.12 : 0.05;
+  const dropChance = atCap ? 0 : c.nodeType === "boss" ? 1 : baseDrop * glut;
   const droppedRelic =
     availRelics.length > 0 && rng.chance(dropChance)
       ? (pickRelicId(availRelics, rng.next(), true) ?? null)
       : null;
   const relics = droppedRelic ? [...s.relics, droppedRelic] : s.relics;
+
 
   // boss -> next act or victory
   if (c.nodeType === "boss") {
@@ -1819,6 +1873,7 @@ function handleCombatWin(set: any, get: () => GameState) {
         gold,
         relics,
         floorsCleared,
+        actFloors: 0,
         act: nextAct,
         map: newMap,
         currentNodeId: null,
@@ -1860,6 +1915,7 @@ function handleCombatWin(set: any, get: () => GameState) {
     gold,
     relics,
     floorsCleared,
+    actFloors,
     phase: "reward",
     pendingRelic: droppedRelic,
     rewardChoices: choices,
@@ -1907,15 +1963,19 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
   }
   const owned = new Set(s.relics);
   const unlockedShop = new Set(s.meta.unlockedRelics);
-  let avail = ALL_RELIC_IDS.filter((r) => unlockedShop.has(r) && !owned.has(r) && isDropEligible(r));
+  let avail =
+    s.relics.length >= MAX_RELICS
+      ? []
+      : ALL_RELIC_IDS.filter((r) => unlockedShop.has(r) && !owned.has(r) && isDropEligible(r));
   const shopRelics: string[] = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     const id = pickRelicId(avail, rng.next());
     if (!id) break;
     shopRelics.push(id);
     avail = avail.filter((r) => r !== id);
   }
-  while (shopRelics.length < 3) shopRelics.push("");
+  while (shopRelics.length < 2) shopRelics.push("");
+
   set({ phase: "shop", shopCards, shopRelics });
 }
 
@@ -1927,8 +1987,9 @@ export function cardPrice(card: CardInstance): number {
 /** Shop price for a relic, scaled by tier. */
 export function relicPrice(relicId: string): number {
   const tier = RELICS[relicId]?.tier ?? "common";
-  return tier === "mythic" ? 520 : tier === "legendary" ? 340 : tier === "rare" ? 190 : tier === "uncommon" ? 145 : 110;
+  return tier === "mythic" ? 600 : tier === "legendary" ? 420 : tier === "rare" ? 250 : tier === "uncommon" ? 185 : 140;
 }
+
 
 
 export { HEROES, RELICS, CARDS, tracerImg };
