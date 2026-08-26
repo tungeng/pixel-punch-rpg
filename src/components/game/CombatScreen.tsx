@@ -194,6 +194,9 @@ export function CombatScreen() {
         <RelicTray size={20} />
       </div>
 
+      {/* first-encounter keyword tutorials */}
+      <KeywordTips />
+
       {/* arena — enemies centered in the remaining space */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <div className="relative flex flex-1 items-center justify-center gap-1 px-3 pt-3">
