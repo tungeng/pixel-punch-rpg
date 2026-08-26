@@ -599,15 +599,17 @@ export const useGame = create<GameState>((set, get) => ({
     const upgradedCount = s.deck.filter((card) => card.upgraded).length;
     const leanDeckBonus = s.deck.length < 24 ? (24 - s.deck.length) * 0.012 : 0;
     const bossEase = nodeType === "boss" ? 0.95 : 1;
-    const sustainPressure = s.heroId === "mercy" ? 1.2 : 1;
+    // Longer fights reward sustain and punish burst, so each hero meets a
+    // difficulty curve tuned to how their kit ages across a combat.
+    const heroPressure = HERO_PRESSURE[s.heroId] ?? 1;
     // Fights are meant to be read, not deleted. Enemies carry a deeper HP pool so
     // a combat plays out over several turns of real decisions.
-    const DEPTH = 1.75;
+    const DEPTH = 1.5;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
       bossEase *
-      sustainPressure;
+      heroPressure;
     // ...and hit softer per turn, so length creates tension instead of coin-flips.
     const strBonus =
       Math.floor(floor / 4) +
