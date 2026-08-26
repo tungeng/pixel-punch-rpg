@@ -15,7 +15,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 64,
     color: "#f59e0b",
     asset: tracerImg,
-    passive: "Cheers, love — she's always got one more in the tank. +1 max Energy.",
+    passive: "Cheers, love, she's always got one more in the tank. +1 max Energy.",
     startingDeck: [
       "tracer_blink", "tracer_blink", "tracer_pistols", "tracer_pistols",
       "tracer_recall", "tracer_strafe", "tracer_strafe", "tracer_hnr",
