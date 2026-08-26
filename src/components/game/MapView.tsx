@@ -275,7 +275,11 @@ export function MapView() {
         </AnimatePresence>
       </div>
 
-      <div ref={scroller} className="relative flex-1 overflow-y-auto">
+      <div
+        ref={scroller}
+        className="relative flex-1 overflow-y-auto"
+        style={{ paddingBottom: selected != null ? 210 : 0 }}
+      >
         <div className="relative w-full" style={{ height: totalH }}>
           <Starfield />
           <div className="rift-bg pointer-events-none absolute inset-0 opacity-35" />
