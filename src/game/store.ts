@@ -381,7 +381,7 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
   const inMult = c.mutator ? MUTATORS[c.mutator]?.inMult ?? 1 : 1;
   if (inMult !== 1) dmg = Math.ceil(dmg * inMult);
   // Bastion: SENTRY bolts him down. He hits more, he gets hit harder.
-  if (c.stance === "sentry" && !process.env["SIM_NOPEN"]) dmg = Math.ceil(dmg * 1.15);
+  if (c.stance === "sentry") dmg = Math.ceil(dmg * 1.15);
   dmg = Math.max(0, dmg);
   let remaining = dmg;
   if (c.block > 0) {
@@ -464,7 +464,7 @@ export function scaledBlock(card: CardInstance, c: Combat): number {
   if (card.blockPerStanceSwap) b += card.blockPerStanceSwap * c.stanceSwaps;
   // Bastion: RECON keeps the plating loose, TANK welds the vents shut.
   if (c.stance === "recon" && card.type === "skill" && b > 0) b += 3;
-  if (c.stance === "tank" && b > 0 && !process.env["SIM_NOPEN"]) b = Math.floor(b * 0.5);
+  if (c.stance === "tank" && b > 0) b = Math.floor(b * 0.5);
   return b;
 }
 
