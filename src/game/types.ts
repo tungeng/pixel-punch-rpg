@@ -1,4 +1,6 @@
 export type CardType = "attack" | "skill" | "ultimate";
+/** Bastion: the Configuration he is locked into right now. */
+export type Stance = "recon" | "sentry" | "tank";
 export type Rarity = "starter" | "common" | "uncommon" | "rare";
 export type NodeType = "combat" | "elite" | "rest" | "shop" | "treasure" | "boss";
 
@@ -105,6 +107,16 @@ export interface CardDef {
   /** Deal damage equal to this multiple of your Armor without spending it (Reinhardt). */
   armorBurst?: number;
 
+  // ---- Bastion: Configuration stances ----
+  /** Lock into a specific Configuration (Bastion). */
+  setStance?: Stance;
+  /** Rotate to the next Configuration in the cycle (Bastion). */
+  stanceCycle?: boolean;
+  /** +N damage per Configuration change made this combat (Bastion). */
+  damagePerStanceSwap?: number;
+  /** +N Block per Configuration change made this combat (Bastion). */
+  blockPerStanceSwap?: number;
+
   // ---- Neutral pool mechanics ----
   /** Deal damage equal to your current Block (neutral: Gambit). */
   damageEqualToBlock?: boolean;
@@ -170,6 +182,8 @@ export interface CardDef {
       | "thorns"
       | "armorPerCardPlayed"
       | "armorBurst"
+      | "damagePerStanceSwap"
+      | "blockPerStanceSwap"
 
     >
   >;
@@ -187,7 +201,7 @@ export interface UltimateDef extends CardDef {
 export interface HeroDef {
   id: string;
   name: string;
-  role: "Damage" | "Tank" | "Support" | "Combo" | "Biotic";
+  role: "Damage" | "Tank" | "Support" | "Combo" | "Biotic" | "Turret";
   maxHp: number;
   passive: string;
   startingDeck: string[];

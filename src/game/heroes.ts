@@ -5,6 +5,7 @@ import junkratImg from "../assets/junkrat.png";
 import doomfistImg from "../assets/doomfist.png";
 import moiraImg from "../assets/moira.png";
 import reinhardtImg from "../assets/reinhardt.png";
+import bastionImg from "../assets/bastion.png";
 import type { HeroDef } from "./types";
 
 export const HEROES: Record<string, HeroDef> = {
@@ -216,7 +217,40 @@ export const HEROES: Record<string, HeroDef> = {
       text: "Deal 18 damage to ALL enemies. Apply 2 Vulnerable.",
     },
   },
+  bastion: {
+    id: "bastion",
+    name: "Bastion",
+    role: "Turret",
+    maxHp: 90,
+    color: "#84cc16",
+    asset: bastionImg,
+    passive:
+      "Reconfiguring. RECON draws an extra card each turn and plates 3 Block per Skill. SENTRY adds a hit to every Attack but takes 20% more damage. TANK swings for 50% more and ignores enemy Block, yet bolts down too hard to gain any Block.",
+    startingDeck: [
+      "bastion_rounds", "bastion_rounds", "bastion_rounds", "bastion_plating",
+      "bastion_plating", "bastion_suppress", "bastion_repair", "bastion_recon",
+      "bastion_sentry", "bastion_assaultmode",
+    ],
+    cardPool: [
+      "bastion_grenade", "bastion_recalibrate", "bastion_ricochet", "bastion_assault",
+      "bastion_burst", "bastion_bunker", "bastion_lockdown", "bastion_overhaul",
+      "bastion_siege", "bastion_rounds",
+    ],
+    ultimate: {
+      id: "bastion_artillery",
+      name: "Configuration: Artillery",
+      type: "ultimate",
+      cost: 0,
+      rarity: "rare",
+      hero: "bastion",
+      damage: 26,
+      aoe: true,
+      ignoreBlock: true,
+      setStance: "tank",
+      text: "Deal 26 damage to ALL enemies, ignoring Block. Lock into TANK.",
+    },
+  },
 };
 
-export const UNLOCKABLE_HEROES = ["junkrat", "doomfist"];
+export const UNLOCKABLE_HEROES = ["junkrat", "doomfist", "bastion"];
 export const STARTER_HEROES = ["tracer", "mercy", "genji", "moira", "reinhardt"];
