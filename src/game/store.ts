@@ -268,6 +268,22 @@ function drawCountFor(heroId: string, relics: string[]): number {
   return d;
 }
 
+/**
+ * Per-hero encounter pressure. Sustain kits gain value every extra turn a fight
+ * runs, so they face deeper enemy HP pools; burst kits get a shallower curve
+ * so their damage window still closes fights.
+ */
+const HERO_PRESSURE: Record<string, number> = {
+  mercy: 1.3,
+  moira: 1.14,
+  reinhardt: 1.0,
+  tracer: 0.9,
+  genji: 0.85,
+  junkrat: 0.85,
+  doomfist: 0.85,
+};
+
+
 function maxHpFor(heroId: string, relics: string[], act = 0, upgrades?: Record<string, number>): number {
   let h = getHero(heroId).maxHp;
   if (relics.includes("gold_heart")) h += 30;
