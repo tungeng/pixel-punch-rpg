@@ -33,6 +33,9 @@ export interface RunResult {
   totalDamageTaken: number;
   maxDamageInTurn: number;
   creditsEarned: number;
+  augments: string[];
+  contractsCompleted: number;
+  rewardsSkipped: number;
   error?: string;
 }
 
@@ -80,6 +83,9 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
     totalDamageTaken: 0,
     maxDamageInTurn: 0,
     creditsEarned: 0,
+    augments: [],
+    contractsCompleted: 0,
+    rewardsSkipped: 0,
   };
 
   let steps = 0;
@@ -117,6 +123,8 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       res.deckSize = s.deck.length;
       res.hpPct = s.hp / s.maxHp;
       res.creditsEarned = computeScore(s.floorsCleared, s.act, s.gold, res.won);
+      res.augments = [...s.augments];
+      res.contractsCompleted = s.contractsCompleted;
       if (!res.won) res.deathNode = lastNodeType;
       return res;
     }
@@ -129,6 +137,12 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         } else {
           s.chooseStartingRelic(choices[Math.floor(Math.random() * choices.length)]!);
         }
+        break;
+      }
+      case "augment_choice": {
+        const choice = s.augmentChoices[res.augments.length % Math.max(1, s.augmentChoices.length)];
+        if (choice) s.chooseAugment(choice);
+        else s.toMap();
         break;
       }
       case "map": {
@@ -246,7 +260,10 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
             (a, b) => (counts[a.id] ?? 0) - (counts[b.id] ?? 0),
           );
           s.pickRewardCard(sorted[0]!.id);
-        } else s.skipReward();
+        } else {
+          res.rewardsSkipped++;
+          s.skipReward();
+        }
         break;
       }
       case "rest": {
