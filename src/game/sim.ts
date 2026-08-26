@@ -79,7 +79,7 @@ function cardScore(
     energyGain?: number; retain?: boolean; thorns?: number; regen?: number;
     damagePerArmor?: number; damagePerCardPlayed?: number; damagePerDebuff?: number;
     damagePerBlock?: number; damagePerMissingHp?: number; blockFromArmor?: boolean;
-    blockToArmor?: boolean; poisonBoost?: number; poisonDetonate?: boolean; hero?: string;
+    blockToArmor?: boolean; poisonBoost?: number; poisonDetonate?: number; hero?: string;
   },
   hero: string,
   counts: Record<string, number>,
@@ -98,7 +98,7 @@ function cardScore(
   score += (card.weak ?? 0) * 3;
   score += (card.poison ?? 0) * 3.4;
   score += (card.poisonBoost ?? 0) * 4;
-  score += card.poisonDetonate ? 6 : 0;
+  score += (card.poisonDetonate ?? 0) * 3;
   score += (card.regen ?? 0) * 2.4;
   score += (card.thorns ?? 0) * 1.1;
   score += (card.energyGain ?? 0) * 6;
