@@ -4,20 +4,13 @@
  * Drives the real Zustand store with a heuristic bot so we can run tens of
  * thousands of runs and mine the results for balance/stability data.
  * Shared by playtest.test.ts (small smoke run) and the mass-sim harness.
- * Shared by playtest.test.ts (small smoke run) and the mass-sim harness.
  */
-import { useGame, computeScore } from "./store";
-import { useGame } from "./store";
+import { useGame, computeScore, type GameState } from "./store";
 import { STARTER_HEROES, UNLOCKABLE_HEROES } from "./heroes";
 import { ALL_RELIC_IDS } from "./relics";
 
 export const ALL_HEROES = [...STARTER_HEROES, ...UNLOCKABLE_HEROES];
 
-  minHp: number;
-  totalDamageTaken: number;
-  totalOverkill: number;
-  creditsEarned: number;
-  maxDamageTakenInTurn: number;
 export interface RunResult {
   hero: string;
   seed: string;
@@ -36,27 +29,33 @@ export interface RunResult {
   ultsUsed: number;
   restHeals: number;
   hpPct: number;
+  minHpPct: number;
+  totalDamageTaken: number;
+  maxDamageInTurn: number;
+  creditsEarned: number;
   error?: string;
 }
 
 interface BotOpts {
-  /** unlock everything (default) or use default meta */
+  /** unlock everything (default) or use specific meta */
+  meta?: GameState["meta"];
   fullUnlock?: boolean;
 }
 
 export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): RunResult {
   const g = () => useGame.getState();
-  useGame.setState({
-    meta: {
-      unlockedHeroes: ALL_HEROES,
-      unlockedRelics: opts.fullUnlock === false ? [] : [...ALL_RELIC_IDS],
-      credits: 0,
-      bestFloor: 0,
-      playerName: "sim",
-      totalRuns: 0,
-      upgrades: {},
-    },
-  });
+  
+  const initialMeta = opts.meta || {
+    unlockedHeroes: opts.fullUnlock === false ? [...STARTER_HEROES] : ALL_HEROES,
+    unlockedRelics: opts.fullUnlock === false ? [] : [...ALL_RELIC_IDS],
+    credits: 0,
+    bestFloor: 0,
+    playerName: "sim",
+    totalRuns: 0,
+    upgrades: {},
+  };
+
+  useGame.setState({ meta: initialMeta });
   g().startRun(hero, seed);
 
   const res: RunResult = {
@@ -72,33 +71,41 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
     goldLeft: 0,
     relics: [],
     deckSize: 0,
-    minHp: 1,
-    totalDamageTaken: 0,
-    totalOverkill: 0,
-    creditsEarned: 0,
-    maxDamageTakenInTurn: 0,
     cardsPlayed: {},
     wastedEnergy: 0,
     ultsUsed: 0,
     restHeals: 0,
     hpPct: 1,
+    minHpPct: 1,
+    totalDamageTaken: 0,
+    maxDamageInTurn: 0,
+    creditsEarned: 0,
   };
 
   let steps = 0;
   let playsThisTurn = 0;
   let lastTurnKey = "";
   let lastNodeType = "";
-  const MAX_STEPS = 12000;
+  let lastHp = g().hp;
+  const MAX_STEPS = 15000;
 
   while (steps++ < MAX_STEPS) {
     const s = g();
     if (!s.inRun) break;
 
+    const currentHpPct = s.hp / s.maxHp;
+    if (currentHpPct < res.minHpPct) res.minHpPct = currentHpPct;
+    
+    if (s.hp < lastHp) {
+        const diff = lastHp - s.hp;
+        res.totalDamageTaken += diff;
+        if (diff > res.maxDamageInTurn) res.maxDamageInTurn = diff;
+    }
+    lastHp = s.hp;
+
     if (!Number.isFinite(s.hp) || !Number.isFinite(s.gold) || s.gold < 0 || s.hp > s.maxHp) {
       res.error = `bad state hp=${s.hp}/${s.maxHp} gold=${s.gold}`;
       return res;
-      res.minHp = s.hp / s.maxHp;
-      res.creditsEarned = computeScore(s.floorsCleared, s.act, s.gold, res.won);
     }
 
     if (s.phase === "dead" || s.phase === "victory") {
@@ -109,6 +116,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       res.relics = [...s.relics];
       res.deckSize = s.deck.length;
       res.hpPct = s.hp / s.maxHp;
+      res.creditsEarned = computeScore(s.floorsCleared, s.act, s.gold, res.won);
       if (!res.won) res.deathNode = lastNodeType;
       return res;
     }
@@ -164,7 +172,6 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
           const alive = c.enemies.filter((e) => !e.isDead);
           if (alive.length === 0) s.cancelTarget();
           else {
-            // focus the lowest-HP threatening enemy
             const sorted = [...alive].sort((a, b) => a.hp - b.hp);
             s.selectTarget(sorted[0]!.uid);
           }
@@ -233,7 +240,6 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       case "reward": {
         const choices = s.rewardChoices;
         if (choices.length > 0) {
-          // prefer a card the deck doesn't already have a lot of
           const counts: Record<string, number> = {};
           for (const cd of s.deck) counts[cd.id] = (counts[cd.id] ?? 0) + 1;
           const sorted = [...choices].sort(
@@ -297,6 +303,10 @@ export interface Report {
   avgGoldLeft: number;
   avgDeckSize: number;
   avgWastedEnergy: number;
+  avgMinHpPct: number;
+  avgTotalDamageTaken: number;
+  avgMaxDamageInTurn: number;
+  avgCreditsEarned: number;
 }
 
 export function summarize(results: RunResult[]): Report {
@@ -345,5 +355,9 @@ export function summarize(results: RunResult[]): Report {
     avgGoldLeft: results.reduce((a, r) => a + r.goldLeft, 0) / results.length,
     avgDeckSize: results.reduce((a, r) => a + r.deckSize, 0) / results.length,
     avgWastedEnergy: results.reduce((a, r) => a + r.wastedEnergy, 0) / results.length,
+    avgMinHpPct: results.reduce((a, r) => a + r.minHpPct, 0) / results.length,
+    avgTotalDamageTaken: results.reduce((a, r) => a + r.totalDamageTaken, 0) / results.length,
+    avgMaxDamageInTurn: results.reduce((a, r) => a + r.maxDamageInTurn, 0) / results.length,
+    avgCreditsEarned: results.reduce((a, r) => a + r.creditsEarned, 0) / results.length,
   };
 }
