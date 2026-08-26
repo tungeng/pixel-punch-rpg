@@ -378,3 +378,55 @@ export function Hud() {
     </div>
   );
 }
+
+export function RelicChoiceScreen() {
+  const choices = useGame((s) => s.startingRelicChoices);
+  const choose = useGame((s) => s.chooseStartingRelic);
+  return (
+    <Screen title="CHOOSE YOUR RELIC" tone="#ffcc4d" scroll>
+      <div
+        className="mb-4 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/75"
+        style={{ fontFamily: "var(--font-pixel-body)" }}
+      >
+        One artifact survives the breach with you. Choose carefully.
+      </div>
+      <div className="flex w-full max-w-[440px] flex-col gap-3 pb-6">
+        {choices.map((id, i) => {
+          const relic = RELICS[id];
+          if (!relic) return null;
+          const tierColor = RELIC_TIER_COLOR[relic.tier ?? "common"] ?? "#cbd5e1";
+          return (
+            <motion.button
+              key={id}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => choose(id)}
+              className="flex items-center gap-3 bg-[#0b0a12] p-3 text-left"
+              style={{ border: `3px solid ${tierColor}`, boxShadow: `0 0 16px -6px ${relic.color}` }}
+            >
+              <RelicIcon id={id} />
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="text-pixel text-[9px]" style={{ color: relic.color }}>
+                    {relic.name}
+                  </span>
+                  <span className="text-pixel text-[6px]" style={{ color: tierColor }}>
+                    {(relic.tier ?? "common").toUpperCase()}
+                  </span>
+                </div>
+                <div
+                  className="text-[14px] leading-[15px] text-foreground/80"
+                  style={{ fontFamily: "var(--font-pixel-body)" }}
+                >
+                  {relic.text}
+                </div>
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+    </Screen>
+  );
+}

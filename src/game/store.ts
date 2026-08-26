@@ -20,6 +20,7 @@ import { UPGRADES, tierOf, upgradeBonusMaxHp, upgradeCacheRelicChance, upgradeCr
 
 export type Phase =
   | "map"
+  | "relic_choice"
   | "combat"
   | "reward"
   | "rest"
@@ -111,6 +112,7 @@ export interface GameState {
   floorsCleared: number;
   phase: Phase;
   rewardChoices: CardInstance[];
+  startingRelicChoices: string[];
   rewardGold: number;
   pendingRelic: string | null;
   shopCards: CardInstance[];
@@ -120,6 +122,7 @@ export interface GameState {
   // actions
   loadMeta: () => void;
   startRun: (heroId: string, seedLabel?: string) => void;
+  chooseStartingRelic: (relicId: string) => void;
   enterNode: (nodeId: number) => void;
   startCombat: (nodeType: NodeType, rng: Rng) => void;
   playCard: (uid: string, targetUid?: string) => void;
@@ -378,6 +381,7 @@ export const useGame = create<GameState>((set, get) => ({
   floorsCleared: 0,
   phase: "map",
   rewardChoices: [],
+  startingRelicChoices: [],
   rewardGold: 0,
   pendingRelic: null,
   shopCards: [],
@@ -396,6 +400,14 @@ export const useGame = create<GameState>((set, get) => ({
     const deck = getHero(heroId).startingDeck.map((id) => makeCard(id));
     const rng = rngForRun(seed, 1);
     const map = generateMap(rng);
+    const byTier = (t: string) => ALL_RELIC_IDS.filter((id) => (RELICS[id]?.tier ?? "common") === t);
+    const startingRelicChoices: string[] = [];
+    const uncommons = rng.shuffle(byTier("uncommon"));
+    if (uncommons[0]) startingRelicChoices.push(uncommons[0]);
+    for (const id of rng.shuffle(byTier("common"))) {
+      if (startingRelicChoices.length >= 3) break;
+      if (!startingRelicChoices.includes(id)) startingRelicChoices.push(id);
+    }
     set({
       inRun: true,
       seed,
@@ -410,10 +422,18 @@ export const useGame = create<GameState>((set, get) => ({
       currentNodeId: null,
       act: 0,
       floorsCleared: 0,
-      phase: "map",
+      phase: "relic_choice",
+      startingRelicChoices: rng.shuffle(startingRelicChoices),
       combat: null,
       lastEvent: "",
     });
+  },
+
+  chooseStartingRelic: (relicId) => {
+    const s = get();
+    const relics = [relicId];
+    const maxHp = maxHpFor(s.heroId, relics, s.act, s.meta.upgrades);
+    set({ relics, maxHp, hp: maxHp, startingRelicChoices: [], phase: "map" });
   },
 
   enterNode: (nodeId) => {
