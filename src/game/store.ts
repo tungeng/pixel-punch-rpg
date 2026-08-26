@@ -632,7 +632,7 @@ export const useGame = create<GameState>((set, get) => ({
     const heroPressure = HERO_PRESSURE[s.heroId] ?? 1;
     // Fights are meant to be read, not deleted. Enemies carry a deeper HP pool so
     // a combat plays out over several turns of real decisions.
-    const DEPTH = 1.72;
+    const DEPTH = 1.9;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
@@ -641,7 +641,7 @@ export const useGame = create<GameState>((set, get) => ({
     // ...and hit softer per turn, so length creates tension instead of coin-flips.
     const strBonus =
       Math.floor(floor / 4) +
-      Math.round(s.act * 1.4) +
+      Math.round(s.act * 1.1) +
       Math.floor(relicCount / 4) +
       Math.floor(augmentCount / 3) +
       (nodeType === "elite" ? 2 + s.act : 0) +
