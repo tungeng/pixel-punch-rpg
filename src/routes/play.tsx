@@ -36,7 +36,8 @@ function PlaySetup() {
   const meta = useGame((s) => s.meta);
   const inRun = useGame((s) => s.inRun);
   const startRun = useGame((s) => s.startRun);
-  const [selected, setSelected] = useState<string>("tracer");
+  const selectHero = useGame((s) => s.selectHero);
+  const [selected, setSelected] = useState<string>(() => meta.selectedHeroId ?? "tracer");
   const [seed, setSeed] = useState("");
 
   const bossHeroes = meta.bossHeroes ?? [];
@@ -114,7 +115,10 @@ function PlaySetup() {
               transition={{ delay: i * 0.04, type: "spring", stiffness: 260, damping: 18 }}
               whileTap={{ scale: 0.95 }}
               whileHover={{ y: -3 }}
-              onClick={() => setSelected(id)}
+              onClick={() => {
+                setSelected(id);
+                if (!locked(id)) selectHero(id);
+              }}
               className={`group relative flex flex-col items-center gap-0.5 p-1 transition-colors ${
                 isLocked
                   ? "border-2 border-border/60 bg-card/40"
