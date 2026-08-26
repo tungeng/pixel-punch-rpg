@@ -4,13 +4,20 @@
  * Drives the real Zustand store with a heuristic bot so we can run tens of
  * thousands of runs and mine the results for balance/stability data.
  * Shared by playtest.test.ts (small smoke run) and the mass-sim harness.
+ * Shared by playtest.test.ts (small smoke run) and the mass-sim harness.
  */
+import { useGame, computeScore } from "./store";
 import { useGame } from "./store";
 import { STARTER_HEROES, UNLOCKABLE_HEROES } from "./heroes";
 import { ALL_RELIC_IDS } from "./relics";
 
 export const ALL_HEROES = [...STARTER_HEROES, ...UNLOCKABLE_HEROES];
 
+  minHp: number;
+  totalDamageTaken: number;
+  totalOverkill: number;
+  creditsEarned: number;
+  maxDamageTakenInTurn: number;
 export interface RunResult {
   hero: string;
   seed: string;
@@ -65,6 +72,11 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
     goldLeft: 0,
     relics: [],
     deckSize: 0,
+    minHp: 1,
+    totalDamageTaken: 0,
+    totalOverkill: 0,
+    creditsEarned: 0,
+    maxDamageTakenInTurn: 0,
     cardsPlayed: {},
     wastedEnergy: 0,
     ultsUsed: 0,
@@ -85,6 +97,8 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
     if (!Number.isFinite(s.hp) || !Number.isFinite(s.gold) || s.gold < 0 || s.hp > s.maxHp) {
       res.error = `bad state hp=${s.hp}/${s.maxHp} gold=${s.gold}`;
       return res;
+      res.minHp = s.hp / s.maxHp;
+      res.creditsEarned = computeScore(s.floorsCleared, s.act, s.gold, res.won);
     }
 
     if (s.phase === "dead" || s.phase === "victory") {
