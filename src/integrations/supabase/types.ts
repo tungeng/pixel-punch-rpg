@@ -14,7 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      run_scores: {
+        Row: {
+          act_reached: number
+          created_at: string
+          floors_cleared: number
+          full_clear: boolean
+          hero_id: string
+          id: string
+          player_name: string
+          score: number
+        }
+        Insert: {
+          act_reached?: number
+          created_at?: string
+          floors_cleared?: number
+          full_clear?: boolean
+          hero_id: string
+          id?: string
+          player_name: string
+          score: number
+        }
+        Update: {
+          act_reached?: number
+          created_at?: string
+          floors_cleared?: number
+          full_clear?: boolean
+          hero_id?: string
+          id?: string
+          player_name?: string
+          score?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
