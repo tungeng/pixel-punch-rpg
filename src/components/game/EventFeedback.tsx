@@ -86,7 +86,7 @@ export function EventFeedback() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.18 }}
-            className="pointer-events-none fixed left-1/2 top-16 z-[110] w-[min(440px,92vw)] -translate-x-1/2 border-2 px-3 py-2 text-center"
+            className="pointer-events-none fixed left-1/2 top-[104px] z-[110] w-[min(420px,88vw)] -translate-x-1/2 border-2 px-3 py-2 text-center"
             style={{
               borderColor: "#5ff2e0",
               background: "rgba(6,10,20,0.94)",
