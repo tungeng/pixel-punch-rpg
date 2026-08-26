@@ -865,20 +865,36 @@ function EnemyView({
         }
         transition={hitstop ? { duration: 0 } : { duration: heavy ? 0.34 : 0.2, ease: "easeOut" }}
       >
+        {/* rank aura: bosses and elites are readable at a glance in a crowded row */}
+        {(isBoss || isElite) && !enemy.isDead && (
+          <motion.div
+            animate={{ opacity: [0.35, 0.7, 0.35] }}
+            transition={{ repeat: Infinity, duration: isBoss ? 1.8 : 2.6 }}
+            className="pointer-events-none absolute inset-x-1 bottom-1 h-3 rounded-full"
+            style={{
+              background: isBoss
+                ? "radial-gradient(ellipse, #ff5cf0, transparent 70%)"
+                : "radial-gradient(ellipse, #ffb020, transparent 70%)",
+            }}
+          />
+        )}
         <img
           src={enemy.asset}
           alt={enemy.name}
-          className="pixelated h-24 w-24 object-contain"
+          className={`pixelated object-contain ${isBoss ? "h-32 w-32" : isElite ? "h-28 w-28" : "h-24 w-24"}`}
           style={{
             opacity: enemy.untargetable ? 0.45 : 1,
             filter: hit
               ? heavy
                 ? "drop-shadow(0 0 0 #fff) brightness(2.6) sepia(1) hue-rotate(-40deg) saturate(6)"
                 : "drop-shadow(0 0 0 #fff) brightness(2.4)"
-              : "drop-shadow(0 5px 0 rgba(0,0,0,0.55))",
+              : isBoss
+                ? "drop-shadow(0 5px 0 rgba(0,0,0,0.55)) drop-shadow(0 0 6px #ff5cf077)"
+                : "drop-shadow(0 5px 0 rgba(0,0,0,0.55))",
             transition: "filter 0.1s",
           }}
         />
+
 
         {/* impact — white flash + pixel shrapnel burst */}
         <AnimatePresence>
