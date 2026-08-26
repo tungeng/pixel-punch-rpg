@@ -1028,30 +1028,56 @@ function Badge({ text, color }: { text: string; color: string }) {
   );
 }
 
-function FloatText({ text, kind }: { text: string; kind: string }) {
+/**
+ * Damage numbers carry their own weight class. `of` is the target's max HP, so a
+ * 12 into a trash mob reads big while a 12 into a boss stays quiet.
+ */
+function FloatText({ text, kind, of }: { text: string; kind: string; of?: number }) {
+  const n = Math.abs(parseInt(text.replace(/[^0-9-]/g, ""), 10)) || 0;
+  const share = of ? n / Math.max(1, of) : 0;
+  const tier = kind !== "dmg" ? 0 : share >= 0.4 || n >= 40 ? 2 : share >= 0.18 || n >= 18 ? 1 : 0;
+
   const color =
-    kind === "heal"
-      ? "#54d98c"
-      : kind === "block"
-        ? "#54a8ff"
-        : kind === "buff"
-          ? "#ffcc4d"
-          : kind === "ult"
-            ? "#c47bff"
-            : "#ff5555";
+    tier === 2
+      ? "#fff3b0"
+      : tier === 1
+        ? "#ff9f43"
+        : kind === "heal"
+          ? "#54d98c"
+          : kind === "block"
+            ? "#54a8ff"
+            : kind === "buff"
+              ? "#ffcc4d"
+              : kind === "ult"
+                ? "#c47bff"
+                : "#ff5555";
+
+  const size = tier === 2 ? 26 : tier === 1 ? 18 : 13;
   return (
     <motion.div
-      initial={{ y: 0, opacity: 1, scale: 0.7 }}
-      animate={{ y: -44, opacity: 0, scale: 1.3 }}
+      initial={{ y: 0, opacity: 1, scale: tier === 2 ? 0.4 : 0.7 }}
+      animate={{
+        y: tier === 2 ? -58 : -44,
+        opacity: 0,
+        scale: tier === 2 ? [1.6, 1.25, 1.4] : tier === 1 ? 1.4 : 1.3,
+      }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.85 }}
-      className="text-pixel pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 whitespace-nowrap text-[13px]"
-      style={{ color, textShadow: "2px 2px 0 #000" }}
+      transition={{ duration: tier === 2 ? 1.15 : tier === 1 ? 0.95 : 0.85 }}
+      className="text-pixel pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 whitespace-nowrap"
+      style={{
+        color,
+        fontSize: size,
+        textShadow:
+          tier > 0
+            ? "2px 2px 0 #000, 0 0 10px #ff7a45"
+            : "2px 2px 0 #000",
+      }}
     >
-      {text}
+      {tier === 2 ? `${text}!` : text}
     </motion.div>
   );
 }
+
 
 function PileChip({ label, value, color }: { label: string; value: number; color: string }) {
   return (
