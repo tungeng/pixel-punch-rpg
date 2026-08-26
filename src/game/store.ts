@@ -1284,7 +1284,7 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const card = makeCard(cardId);
     const deck = [...s.deck, card];
-    set({ deck, phase: "map", pendingRelic: null });
+    set({ deck, phase: "map", pendingRelic: null, lastEvent: `${card.name} added to your deck.`, lastEventAt: Date.now() });
     markNodeVisited(set, get);
   },
 
@@ -1299,7 +1299,10 @@ export const useGame = create<GameState>((set, get) => ({
       ? s.deck.map((c) => (c.uid === chosen.uid ? makeCard(c.id, true) : c))
       : s.deck;
     const bonusGold = chosen ? 0 : 18;
-    set({ deck, gold: s.gold + bonusGold, phase: "map", pendingRelic: null, lastEvent: chosen ? `${chosen.name} stabilized.` : "+18 gold recovered." });
+    set({ deck, gold: s.gold + bonusGold, phase: "map", pendingRelic: null, lastEventAt: Date.now(),
+      lastEvent: chosen
+        ? `Deck stabilized: ${chosen.name} permanently upgraded.`
+        : "No card worth stabilizing. Salvaged 18 gold instead." });
     markNodeVisited(set, get);
   },
 
@@ -1307,14 +1310,16 @@ export const useGame = create<GameState>((set, get) => ({
   restHeal: () => {
     const s = get();
     const heal = Math.floor(s.maxHp * 0.3);
-    set({ hp: Math.min(s.maxHp, s.hp + heal), phase: "map" });
+    const healed = Math.min(s.maxHp, s.hp + heal) - s.hp;
+    set({ hp: Math.min(s.maxHp, s.hp + heal), phase: "map", lastEvent: `Rested. Recovered ${healed} HP.`, lastEventAt: Date.now() });
     markNodeVisited(set, get);
   },
 
   restUpgrade: (cardUid) => {
     const s = get();
+    const target = s.deck.find((c) => c.uid === cardUid);
     const deck = s.deck.map((c) => (c.uid === cardUid && !c.upgraded ? makeCard(c.id, true) : c));
-    set({ deck, phase: "map" });
+    set({ deck, phase: "map", lastEvent: target ? `${target.name} upgraded to ${target.name}+.` : "Card upgraded.", lastEventAt: Date.now() });
     markNodeVisited(set, get);
   },
 
@@ -1323,7 +1328,7 @@ export const useGame = create<GameState>((set, get) => ({
     if (s.deck.length <= 6 || !s.deck.some((c) => c.uid === cardUid)) return;
     const deck = s.deck.filter((c) => c.uid !== cardUid);
     const maxHp = s.maxHp + 4;
-    set({ deck, maxHp, hp: Math.min(maxHp, s.hp + 4), phase: "map", lastEvent: "Card recycled into +4 Max HP." });
+    set({ deck, maxHp, hp: Math.min(maxHp, s.hp + 4), phase: "map", lastEvent: `Card scrapped. Deck is leaner and Max HP is now ${maxHp}.`, lastEventAt: Date.now() });
     markNodeVisited(set, get);
   },
 
@@ -1334,7 +1339,7 @@ export const useGame = create<GameState>((set, get) => ({
     const avail = ALL_RELIC_IDS.filter((r) => unlocked.has(r) && !owned.has(r) && isDropEligible(r));
     if (avail.length === 0 || s.relics.length >= MAX_RELICS) {
       // full satchel: the cache pays out in gold instead
-      set({ phase: "map", gold: s.gold + 60 });
+      set({ phase: "map", gold: s.gold + 60, lastEvent: "Satchel full. Cache converted to 60 gold.", lastEventAt: Date.now() });
       markNodeVisited(set, get);
       return;
     }
@@ -1343,12 +1348,12 @@ export const useGame = create<GameState>((set, get) => ({
     if (mode === "salvage") {
       const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
       const choices = rng.shuffle(pool).slice(0, 3).map((id) => makeCard(id, true));
-      set({ phase: "reward", rewardChoices: choices, rewardGold: 0, lastEvent: "Cache safely salvaged." });
+      set({ phase: "reward", rewardChoices: choices, rewardGold: 0, lastEvent: "Cache salvaged safely. Pick an upgraded card.", lastEventAt: Date.now() });
       return;
     }
     if (mode === "breach") {
       const damage = Math.max(1, Math.floor(s.maxHp * 0.12));
-      set({ hp: Math.max(1, s.hp - damage), lastEvent: `Cache breached for ${damage} HP.` });
+      set({ hp: Math.max(1, s.hp - damage), lastEvent: `Cache forced open. Took ${damage} damage.`, lastEventAt: Date.now() });
     }
     // caches usually hold a relic; otherwise they pay out a card choice
     if (mode !== "breach" && !rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
@@ -1459,6 +1464,8 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   clearBossOutro: () => set({ bossOutro: null }),
+
+  clearBanner: () => set({ banner: null }),
 
   setPlayerName: (name) => {
     const meta = { ...get().meta, playerName: name.slice(0, 16) };
