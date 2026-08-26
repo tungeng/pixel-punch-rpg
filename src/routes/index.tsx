@@ -211,7 +211,7 @@ function HeroInfo({ id }: { id: string }) {
         <div className="flex items-start gap-1.5 text-[14px] text-foreground/75">
           <Star size={13} className="mt-[3px] shrink-0 text-accent" />
           <span>
-            {hero.ultimate.name} — {hero.ultimate.text}
+            {hero.ultimate.name}: {hero.ultimate.text}
           </span>
         </div>
       </div>
