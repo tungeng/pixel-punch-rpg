@@ -389,7 +389,7 @@ export function CombatScreen() {
               .filter((f) => f.target === "player")
               .slice(-4)
               .map((f) => (
-                <FloatText key={f.id} text={f.text} kind={f.kind} />
+                <FloatText key={f.id} text={f.text} kind={f.kind} of={combat.maxHp} />
               ))}
           </AnimatePresence>
 
@@ -407,6 +407,18 @@ export function CombatScreen() {
                 );
               if (incoming <= 0) return null;
               const net = Math.max(0, incoming - combat.block - combat.armor);
+              // A turn that can kill you must never read like an ordinary turn.
+              const lethal = net >= combat.hp;
+              if (lethal) {
+                return (
+                  <motion.div
+                    animate={{ opacity: [1, 0.45, 1] }}
+                    transition={{ repeat: Infinity, duration: 0.9 }}
+                  >
+                    <Badge text={`LETHAL ${net} vs ${combat.hp} HP`} color="#ff3b3b" />
+                  </motion.div>
+                );
+              }
               return (
                 <Badge
                   text={net > 0 ? `INCOMING ${incoming} → ${net} HP` : `INCOMING ${incoming} BLOCKED`}
@@ -414,6 +426,7 @@ export function CombatScreen() {
                 />
               );
             })()}
+
             {combat.block > 0 && <Badge text={`🛡 ${combat.block}`} color="#54a8ff" />}
             {combat.stance && (
               <Badge
