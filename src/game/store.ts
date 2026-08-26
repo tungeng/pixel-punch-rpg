@@ -961,8 +961,8 @@ export const useGame = create<GameState>((set, get) => ({
     // start player turn
     c.turn += 1;
     // Reinhardt: Crusader Plating forges leftover Block into permanent Armor
-    if (s.heroId === "reinhardt" && c.block >= 3) {
-      const forged = Math.floor(c.block / 3);
+    if (s.heroId === "reinhardt" && c.block >= 2) {
+      const forged = Math.floor(c.block / 2);
       c.armor += forged;
       pushFloat(c, `+${forged} ARM`, "block", "player");
       pushLog(c, `Crusader Plating forges ${forged} Armor from leftover Block.`);
@@ -1437,6 +1437,13 @@ function resolveCard(
     pushFloat(c, "+4", "block", "player");
   }
 
+  // Tracer: Blink Chain. Every 3rd card played in a turn refunds 1 Energy.
+  if (s.heroId === "tracer" && !isUlt && c.cardsPlayedThisTurn % 3 === 0) {
+    c.energy += 1;
+    pushFloat(c, "+1 NRG", "buff", "player");
+    pushLog(c, "Blink Chain snaps back a point of Energy.");
+  }
+
   // strength gain (Last Stand pays out far harder while you are bleeding)
   const lowHpNow = c.hp * 2 <= c.maxHp;
   const strengthAmount =
@@ -1560,6 +1567,10 @@ function resolveCard(
     if (hitRoll !== undefined) hits = hitRoll;
     let bonus = 0;
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
+    // Genji: Strike Chain. Each Attack after the first this turn escalates.
+    if (s.heroId === "genji" && isAttack && !isUlt) {
+      bonus += 3 * Math.max(0, c.attacksPlayedThisTurn - 1);
+    }
     let totalBase = scaled + bonus;
     if (card.doubleIfHandEmpty && c.hand.length === 0) {
       totalBase *= 2;
