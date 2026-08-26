@@ -65,6 +65,7 @@ describe.skipIf(RUNS <= 0)("mass sim", () => {
             floors: r.floors,
             deathNode: r.deathNode,
             deathEnemy: r.deathEnemy,
+            mutator: r.mutator,
             relics: r.relics,
             augments: r.augments,
             augmentsOffered: r.augmentsOffered,
