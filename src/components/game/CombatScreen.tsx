@@ -67,6 +67,7 @@ const BURST = Array.from({ length: 8 }, (_, i) => {
 export function CombatScreen() {
   const combat = useGame((s) => s.combat);
   const heroId = useGame((s) => s.heroId);
+  const gold = useGame((s) => s.gold);
   const playCard = useGame((s) => s.playCard);
   const selectTarget = useGame((s) => s.selectTarget);
   const cancelTarget = useGame((s) => s.cancelTarget);
@@ -161,6 +162,7 @@ export function CombatScreen() {
 
   const onPlayCard = (card: CardInstance) => {
     if (effectiveCost(card, combat) > combat.energy) return;
+    if (card.goldCost && gold < card.goldCost) return;
     const living = combat.enemies.filter((e) => !e.isDead && !e.untargetable);
     const needsTarget = cardDealsDamage(card) && !card.aoe && living.length > 1;
     if (needsTarget) {
@@ -433,6 +435,7 @@ export function CombatScreen() {
             {hand.map((card, i) => {
               const dimmed =
                 effectiveCost(card, combat) > combat.energy ||
+                (!!card.goldCost && gold < card.goldCost) ||
                 combat.hackedType === card.type;
               const offset = i - mid;
               return (
