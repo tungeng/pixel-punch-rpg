@@ -1547,7 +1547,7 @@ function resolveCard(
       totalBase *= 2;
       pushLog(c, `${card.name} goes all in.`);
     }
-    if (c.nextAttackPct > 0) {
+    if (isAttack && c.nextAttackPct > 0) {
       totalBase = Math.floor(totalBase * (1 + c.nextAttackPct / 100));
       pushFloat(c, "MIRRORED", "buff", "player");
       c.nextAttackPct = 0;
