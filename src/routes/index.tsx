@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useGame } from "@/game/store";
 import { HEROES, STARTER_HEROES, UNLOCKABLE_HEROES } from "@/game/heroes";
 import { CabinetShell } from "@/components/game/CabinetShell";
@@ -31,14 +31,13 @@ export const Route = createFileRoute("/")({
 
 const ROSTER = [...STARTER_HEROES, ...UNLOCKABLE_HEROES];
 
-type Entry = { to: string; label: string; blurb: string; glyph: string; tone?: "primary" };
+type Entry = { to: string; label: string; blurb: string; glyph: string; accent: string };
 
 const ENTRIES: Entry[] = [
-  { to: "/heroes", label: "HEROES", blurb: "Roster, unlocks and mastery", glyph: "☗" },
-  { to: "/progression", label: "PROGRESSION", blurb: "Spend Chrono Cores on permanent upgrades", glyph: "▤" },
-  { to: "/archive", label: "ARCHIVE", blurb: "Relics, bosses and Breach Protocols", glyph: "✦" },
-  { to: "/stats", label: "STATISTICS", blurb: "Records, hero performance, leaderboard", glyph: "★" },
-  { to: "/settings", label: "SETTINGS", blurb: "Display name, save data, updates", glyph: "⚙" },
+  { to: "/heroes", label: "HEROES", blurb: "Roster and mastery", glyph: "☗", accent: "var(--stable)" },
+  { to: "/progression", label: "PROGRESSION", blurb: "Permanent upgrades", glyph: "▤", accent: "var(--corrupt)" },
+  { to: "/archive", label: "ARCHIVE", blurb: "Relics and bosses", glyph: "✦", accent: "var(--corrupt)" },
+  { to: "/stats", label: "STATISTICS", blurb: "Records and ranking", glyph: "★", accent: "var(--gold)" },
 ];
 
 function MainMenu() {
@@ -48,7 +47,7 @@ function MainMenu() {
   const firstLaunch = meta.totalRuns === 0;
 
   useEffect(() => {
-    const t = window.setInterval(() => setShowcase((i) => (i + 1) % ROSTER.length), 2600);
+    const t = window.setInterval(() => setShowcase((i) => (i + 1) % ROSTER.length), 3200);
     return () => window.clearInterval(t);
   }, []);
 
@@ -57,87 +56,113 @@ function MainMenu() {
 
   return (
     <CabinetShell>
-      <div className="scanlines relative min-h-screen bg-background">
-        <div className="rift-bg pointer-events-none absolute inset-0 opacity-30" aria-hidden />
+      <div
+        className="scanlines relative min-h-screen bg-background"
+        style={{ ["--screen-accent" as string]: hero.color }}
+      >
+        <div className="rift-bg pointer-events-none absolute inset-0 opacity-25" aria-hidden />
+        <div className="menu-drift pointer-events-none absolute inset-0 opacity-30" aria-hidden />
 
-        <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pt-8 pb-8">
-          <motion.h1
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-pixel title-flicker text-center text-[30px] leading-[1.15] text-primary"
-            style={{ textShadow: "3px 3px 0 oklch(0.1 0.02 265), 6px 6px 0 oklch(0.5 0.18 35)" }}
-          >
-            OVER
-            <br />
-            TUNG
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.25 }}
-            className="text-pixel mt-3 text-center text-[7px] tracking-[0.35em] text-accent"
-          >
-            KING&apos;S ROW HAS COME UNSTUCK
-          </motion.p>
-
+        <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pt-7 pb-6">
+          {/* --- title lockup --- */}
           <motion.div
-            key={hero.id}
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.35 }}
-            className="mt-5 flex items-center justify-center gap-3"
+            initial={{ opacity: 0, y: -14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="relative text-center"
           >
-            <img
-              src={hero.asset}
-              alt={hero.name}
-              width={64}
-              height={64}
-              decoding="async"
-              className="pixelated idle-bob h-16 w-16 object-contain"
-            />
-            <div className="text-left">
-              <div className="text-pixel text-[9px]" style={{ color: hero.color }}>
-                {hero.name}
-              </div>
-              <div
-                className="text-[13px] text-muted-foreground"
-                style={{ fontFamily: "var(--font-pixel-body)" }}
-              >
-                {hero.role} · {hero.maxHp} HP
-              </div>
+            <h1
+              className="text-pixel title-flicker text-[34px] leading-[1.08] text-primary"
+              style={{ textShadow: "3px 3px 0 oklch(0.1 0.02 265), 7px 7px 0 oklch(0.5 0.18 35)" }}
+            >
+              OVER
+              <br />
+              TUNG
+            </h1>
+            <div className="mx-auto mt-3 flex max-w-[280px] items-center gap-2">
+              <span className="h-0.5 flex-1 bg-primary/40" />
+              <span className="text-pixel text-[7px] tracking-[0.3em] text-accent">
+                KING&apos;S ROW UNSTUCK
+              </span>
+              <span className="h-0.5 flex-1 bg-primary/40" />
             </div>
           </motion.div>
 
+          {/* --- rotating hero showcase --- */}
+          <div className="plinth relative mt-5 flex h-[132px] items-end justify-center">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={hero.id}
+                initial={{ opacity: 0, y: 10, scale: 0.94 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="relative flex flex-col items-center"
+              >
+                <img
+                  src={hero.asset}
+                  alt={hero.name}
+                  width={64}
+                  height={64}
+                  decoding="async"
+                  className="pixelated idle-bob h-[88px] w-[88px] object-contain"
+                />
+                <div
+                  className="mt-2 border-2 px-3 py-1"
+                  style={{
+                    borderColor: hero.color,
+                    background: "color-mix(in oklab, var(--card) 90%, black)",
+                  }}
+                >
+                  <span className="text-pixel text-[9px]" style={{ color: hero.color }}>
+                    {hero.name}
+                  </span>
+                  <span
+                    className="ml-2 text-[13px] text-muted-foreground"
+                    style={{ fontFamily: "var(--font-pixel-body)" }}
+                  >
+                    {hero.role}
+                  </span>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* --- primary commitment --- */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15, type: "spring", stiffness: 240, damping: 18 }}
-            className="mt-6"
+            transition={{ delay: 0.12, type: "spring", stiffness: 240, damping: 18 }}
+            className="panel-ticks mt-6"
+            style={{ ["--screen-accent" as string]: "var(--destructive)" }}
           >
             <Link
               to="/play"
-              className="text-pixel cta-throb sheen relative block w-full overflow-hidden border-4 border-[oklch(0.1_0.02_285)] bg-destructive px-6 py-6 text-center text-[18px] text-destructive-foreground shadow-[4px_4px_0_0_oklch(0.1_0.02_265)]"
+              className="press text-pixel cta-throb sheen relative block w-full overflow-hidden border-4 border-[oklch(0.1_0.02_285)] bg-destructive px-6 py-6 text-center text-[19px] text-destructive-foreground shadow-[5px_5px_0_0_oklch(0.1_0.02_265)]"
             >
               ▶ {inRun ? "CONTINUE" : "PLAY"}
             </Link>
-            {inRun && (
-              <p
-                className="mt-2 text-center text-[13px] text-muted-foreground"
-                style={{ fontFamily: "var(--font-pixel-body)" }}
-              >
-                A run is still in progress. Play resumes it.
-              </p>
-            )}
           </motion.div>
+          <p
+            className="mt-2 text-center text-[13px] text-muted-foreground"
+            style={{ fontFamily: "var(--font-pixel-body)" }}
+          >
+            {inRun
+              ? "A run is still in progress. Play resumes it."
+              : "Four acts. One life. Chrono Cores survive you."}
+          </p>
 
           {firstLaunch && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="mt-5 border-2 border-primary/40 bg-card/60 p-3"
+              className="panel-ticks mt-5 border-2 border-primary/40 bg-card/70 p-3"
+              style={{ ["--screen-accent" as string]: "var(--primary)" }}
             >
-              <div className="text-pixel mb-1.5 text-[7px] text-primary">FIRST BREACH</div>
+              <div className="text-pixel mb-2 text-[7px] tracking-[0.2em] text-primary">
+                FIRST BREACH
+              </div>
               <ul
                 className="space-y-1 text-[13px] leading-[15px] text-foreground/80"
                 style={{ fontFamily: "var(--font-pixel-body)" }}
@@ -149,50 +174,69 @@ function MainMenu() {
             </motion.div>
           )}
 
-          <nav className="mt-6 flex flex-col gap-2">
+          {/* --- destinations --- */}
+          <nav className="mt-6 grid grid-cols-2 gap-2">
             {ENTRIES.map((e, i) => (
               <motion.div
                 key={e.to}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + i * 0.05, duration: 0.22 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18 + i * 0.05, duration: 0.24 }}
               >
                 <Link
                   to={e.to}
-                  className="group flex items-center gap-3 border-2 border-border bg-card/70 px-3 py-2.5 transition-colors hover:border-primary hover:bg-card"
+                  className="press tile-lift group flex h-full flex-col gap-1 border-2 border-border bg-card/70 p-2.5 hover:bg-card"
+                  style={{ ["--screen-accent" as string]: e.accent }}
                 >
-                  <span className="text-[15px] text-primary" aria-hidden>
-                    {e.glyph}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="text-pixel block text-[9px] text-foreground group-hover:text-primary">
-                      {e.label}
+                  <span className="flex items-center gap-2">
+                    <span className="text-[15px]" style={{ color: e.accent }} aria-hidden>
+                      {e.glyph}
                     </span>
-                    <span
-                      className="block truncate text-[13px] leading-[14px] text-muted-foreground"
-                      style={{ fontFamily: "var(--font-pixel-body)" }}
-                    >
-                      {e.blurb}
-                    </span>
+                    <span className="text-pixel text-[8px] text-foreground">{e.label}</span>
                   </span>
-                  <span className="text-[13px] text-muted-foreground group-hover:text-primary" aria-hidden>
-                    ▶
+                  <span
+                    className="text-[13px] leading-[14px] text-muted-foreground"
+                    style={{ fontFamily: "var(--font-pixel-body)" }}
+                  >
+                    {e.blurb}
                   </span>
                 </Link>
               </motion.div>
             ))}
           </nav>
 
-          <div className="mt-auto pt-6">
-            <div
-              className="flex justify-between border-t border-primary/30 pt-3 text-[13px] text-muted-foreground"
-              style={{ fontFamily: "var(--font-pixel-body)" }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="mt-2"
+          >
+            <Link
+              to="/settings"
+              className="press text-pixel block border-2 border-border bg-card/50 py-2 text-center text-[8px] text-muted-foreground hover:border-primary/60 hover:text-foreground"
             >
-              <span>⬢ {meta.credits} Cores</span>
-              <span>Best: Floor {meta.bestFloor}</span>
-              <span>
-                Heroes {unlockedCount}/{ROSTER.length}
-              </span>
+              ⚙ SETTINGS
+            </Link>
+          </motion.div>
+
+          {/* --- resource ribbon --- */}
+          <div className="mt-auto pt-6">
+            <div className="grid grid-cols-3 gap-2 border-t-2 border-primary/30 pt-3 text-center">
+              {[
+                { k: "CORES", v: meta.credits },
+                { k: "BEST FLOOR", v: meta.bestFloor },
+                { k: "HEROES", v: `${unlockedCount}/${ROSTER.length}` },
+              ].map((s) => (
+                <div key={s.k}>
+                  <div className="text-pixel text-[10px] text-foreground">{s.v}</div>
+                  <div
+                    className="text-[12px] leading-[13px] text-muted-foreground"
+                    style={{ fontFamily: "var(--font-pixel-body)" }}
+                  >
+                    {s.k}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

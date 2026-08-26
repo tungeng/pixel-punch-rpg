@@ -5,7 +5,7 @@ import { Heart, Zap, Star, Lock } from "lucide-react";
 import { useGame } from "@/game/store";
 import { HEROES, STARTER_HEROES, UNLOCKABLE_HEROES } from "@/game/heroes";
 import { PixelButton } from "@/components/game/PixelButton";
-import { MenuShell, SectionTitle } from "@/components/game/MenuShell";
+import { MenuShell, SectionTitle, Readout } from "@/components/game/MenuShell";
 
 export const Route = createFileRoute("/play")({
   head: () => ({
@@ -67,29 +67,40 @@ function PlaySetup() {
     useGame.setState({ meta: next });
   }
 
+  const heroSel = HEROES[selected]!;
+
   return (
     <MenuShell
       title="RUN SETUP"
+      glyph="▶"
+      accent={locked(selected) ? "var(--primary)" : heroSel.color}
       crumb="Step 1 of 2 · choose your hero, then breach"
-      aside={
-        <span
-          className="text-[13px] text-muted-foreground"
-          style={{ fontFamily: "var(--font-pixel-body)" }}
-        >
-          ⬢ {meta.credits}
-        </span>
-      }
+      aside={<Readout icon="⬢" value={meta.credits} />}
+      {...(locked(selected)
+        ? {}
+        : {
+            footer: (
+              <PixelButton
+                onClick={breach}
+                color="danger"
+                className="cta-throb sheen press relative w-full overflow-hidden px-8 py-5 text-[17px]"
+              >
+                ▶ BREACH AS {heroSel.name.toUpperCase()}
+              </PixelButton>
+            ),
+          })}
     >
       {inRun && (
         <Link
           to="/run"
-          className="text-pixel mb-4 block border-2 border-accent bg-accent/15 px-3 py-3 text-center text-[9px] text-accent"
+          className="text-pixel press mb-4 block border-2 border-accent bg-accent/15 px-3 py-3 text-center text-[9px] text-accent"
         >
           ▶ RESUME CURRENT RUN
         </Link>
       )}
 
-      <SectionTitle>Select your hero</SectionTitle>
+      <SectionTitle right="tap to inspect">Select your hero</SectionTitle>
+
       <div className="grid w-full grid-cols-3 gap-1.5">
         {ROSTER.map((id, i) => {
           const hero = HEROES[id]!;
@@ -186,22 +197,15 @@ function PlaySetup() {
             style={{ fontFamily: "var(--font-pixel-body)" }}
           />
 
-          <motion.div
-            className="mt-6"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, type: "spring", stiffness: 240, damping: 16 }}
+          <p
+            className="mt-2 text-[13px] text-muted-foreground"
+            style={{ fontFamily: "var(--font-pixel-body)" }}
           >
-            <PixelButton
-              onClick={breach}
-              color="danger"
-              className="cta-throb sheen relative w-full overflow-hidden px-8 py-6 text-[18px]"
-            >
-              ▶ BREACH
-            </PixelButton>
-          </motion.div>
+            Step 2 of 2. Breach when you are ready.
+          </p>
         </>
       )}
+
     </MenuShell>
   );
 }
