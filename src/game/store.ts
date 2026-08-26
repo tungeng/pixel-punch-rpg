@@ -1915,13 +1915,14 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
   const unlockedShop = new Set(s.meta.unlockedRelics);
   let avail = ALL_RELIC_IDS.filter((r) => unlockedShop.has(r) && !owned.has(r) && isDropEligible(r));
   const shopRelics: string[] = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     const id = pickRelicId(avail, rng.next());
     if (!id) break;
     shopRelics.push(id);
     avail = avail.filter((r) => r !== id);
   }
-  while (shopRelics.length < 3) shopRelics.push("");
+  while (shopRelics.length < 2) shopRelics.push("");
+
   set({ phase: "shop", shopCards, shopRelics });
 }
 
