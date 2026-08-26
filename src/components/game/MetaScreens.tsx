@@ -372,7 +372,7 @@ function RunOverTail() {
       )}
       <ScoreSubmit />
       <div className="flex w-full max-w-[320px] flex-col gap-2">
-        <PixelButton onClick={rerun} color="destructive">
+        <PixelButton onClick={rerun} color="danger">
           ▶ BREACH AGAIN{hero ? ` AS ${hero.name.toUpperCase()}` : ""}
         </PixelButton>
         <PixelButton onClick={abandon} color="primary">Return to hub</PixelButton>
