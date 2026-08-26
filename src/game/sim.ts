@@ -24,6 +24,7 @@ export interface RunResult {
   combatsByNode: Record<string, number>;
   deathNode: string | null;
   deathEnemy: string | null;
+  mutator: string | null;
   goldLeft: number;
   relics: string[];
   deckSize: number;
@@ -158,6 +159,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
   g().startRun(hero, seed);
 
   const res: RunResult = {
+    mutator: null,
     hero,
     seed,
     floors: 0,
@@ -254,6 +256,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         } else {
           const idx = Math.floor(seedRoll(seed, 11) * choices.length);
           s.chooseStartingRelic(choices[idx]!);
+          res.mutator = useGame.getState().mutator;
         }
         break;
       }
