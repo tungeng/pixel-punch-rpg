@@ -101,14 +101,14 @@ export function CombatScreen() {
   const bannerSeq = useRef(0);
 
   /** children report notable hits so the screen itself can react once, briefly */
-  const onImpact = (kind: "big" | "kill" | "boss") => {
+  const onImpact = useCallback((kind: "big" | "kill" | "boss") => {
     fxSeq.current += 1;
     setFlash({ seq: fxSeq.current, kind });
-  };
-  const onPhase = (kicker: string, text: string) => {
+  }, []);
+  const onPhase = useCallback((kicker: string, text: string) => {
     bannerSeq.current += 1;
     setBigBanner({ kicker, text, seq: bannerSeq.current });
-  };
+  }, []);
 
   useEffect(() => {
     const t = setInterval(pruneFloats, 400);
