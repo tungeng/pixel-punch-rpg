@@ -75,14 +75,14 @@ function HeroRoster() {
             background: `linear-gradient(to bottom, color-mix(in oklab, ${hero.color} 16%, oklch(0.16 0.02 285)) 0 3px, color-mix(in oklab, ${hero.color} 8%, oklch(0.16 0.02 285)) 3px 72px, oklch(0.16 0.02 285) 72px)`,
           }}
         >
-          <div className="plinth flex items-end gap-4">
+          <div className="flex items-end gap-4">
             <img
               src={hero.asset}
               alt={hero.name}
               width={64}
               height={64}
               decoding="async"
-              className="pixelated idle-bob-slow h-20 w-20 shrink-0 object-contain"
+              className="pixelated idle-bob-slow plinth h-20 w-20 shrink-0 object-contain"
               style={{ filter: isLocked ? "grayscale(1) brightness(0.5)" : "none" }}
             />
             <div className="min-w-0 pb-1">
