@@ -295,13 +295,13 @@ function drawCountFor(heroId: string, relics: string[]): number {
  * so their damage window still closes fights.
  */
 const HERO_PRESSURE: Record<string, number> = {
-  mercy: 0.9,
-  moira: 0.88,
-  reinhardt: 0.95,
-  tracer: 1.02,
-  genji: 1.1,
-  junkrat: 0.86,
-  doomfist: 0.94,
+  mercy: 0.84,
+  moira: 0.9,
+  reinhardt: 0.9,
+  tracer: 1.06,
+  genji: 1.18,
+  junkrat: 0.8,
+  doomfist: 0.92,
 };
 
 const HERO_AGGRO: Record<string, number> = {
@@ -699,7 +699,7 @@ export const useGame = create<GameState>((set, get) => ({
     // was filler punctuated by a wall. Each encounter class now has its own
     // depth: skirmishes are real attrition, elites are puzzles, bosses stay
     // long but hit less brutally per turn.
-    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.85 : 0.94) : nodeType === "elite" ? 2.7 : 2.8;
+    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.82 : 0.9) : nodeType === "elite" ? 2.82 : 2.92;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
