@@ -79,7 +79,7 @@ export interface Combat {
   beams: { targetUid: string; damage: number; heal: number; turns: number }[];
   /** Haste Module relic: first card each turn costs 1 less. */
   firstCardDiscount: boolean;
-  /** Reinhardt: persistent Armor — soaks damage after Block and never expires. */
+  /** Reinhardt: persistent Armor that soaks damage after Block and never expires. */
   armor: number;
   /** Reinhardt: retaliation damage dealt back to attackers this turn. */
   thorns: number;
@@ -94,7 +94,7 @@ export interface RunRecord {
   fullClear: boolean;
 }
 
-/** Final run score — floors and act carry the most weight, full clears get a big bonus. */
+/** Final run score. Floors and act carry the most weight, full clears get a big bonus. */
 export function computeScore(floorsCleared: number, act: number, gold: number, fullClear: boolean): number {
   return floorsCleared * 100 + act * 500 + gold + (fullClear ? 1000 : 0);
 }
@@ -523,7 +523,7 @@ export const useGame = create<GameState>((set, get) => ({
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
       }
     }
-    // Difficulty curve: the breach hardens the deeper you fall — and it adapts
+    // Difficulty curve: the breach hardens the deeper you fall, and it adapts
     // to how much relic power you're carrying, so a stacked run still bites.
     const floor = s.floorsCleared;
     const relicCount = s.relics.length;
@@ -576,8 +576,8 @@ export const useGame = create<GameState>((set, get) => ({
       attacksPlayedThisTurn: 0,
       targetingCardUid: null,
       log: bossIntro
-        ? [`Battle start — ${enemies.map((e) => e.name).join(", ")}`, `“${bossIntro}”`]
-        : [`Battle start — ${enemies.map((e) => e.name).join(", ")}`],
+        ? [`Battle start: ${enemies.map((e) => e.name).join(", ")}`, `“${bossIntro}”`]
+        : [`Battle start: ${enemies.map((e) => e.name).join(", ")}`],
       floats: [],
       isBoss,
       bg,
@@ -700,7 +700,7 @@ export const useGame = create<GameState>((set, get) => ({
           e.hp = Math.min(e.maxHp, e.hp + healed);
           e.untargetable = true;
           pushFloat(c, `+${healed}`, "heal", e.uid);
-          pushLog(c, "Reaper slips into WRAITH FORM — untargetable.");
+          pushLog(c, "Reaper slips into WRAITH FORM. He cannot be targeted.");
         } else {
           e.untargetable = false;
         }
@@ -719,7 +719,7 @@ export const useGame = create<GameState>((set, get) => ({
           e.untargetable = true;
           e.block += 8;
           pushFloat(c, "STEALTH", "buff", e.uid);
-          pushLog(c, "Sombra vanishes into STEALTH PROTOCOL — attacks can't find her.");
+          pushLog(c, "Sombra vanishes into STEALTH PROTOCOL. Attacks cannot find her.");
         } else if (e.untargetable) {
           e.untargetable = false;
           const hackRng = new Rng(hashSeed(`${s.seed}_hack_${c.turn}`));
@@ -1004,14 +1004,14 @@ export const useGame = create<GameState>((set, get) => ({
       c.energy += 2;
       pushFloat(c, "+2 EN", "buff", "player");
     }
-    if (c.hackEnergy) pushLog(c, "Hacked — you lose 1 Energy this turn.");
+    if (c.hackEnergy) pushLog(c, "Hacked. You lose 1 Energy this turn.");
     c.cardsPlayedThisTurn = 0;
     c.attacksPlayedThisTurn = 0;
     // draw
     let drawN = drawCountFor(s.heroId, relics);
     if (c.hackDraw) {
       drawN = Math.max(2, drawN - 2);
-      pushLog(c, "Hacked — you draw fewer cards this turn.");
+      pushLog(c, "Hacked. You draw fewer cards this turn.");
     }
     c.hackEnergy = false;
     c.hackDraw = false;
@@ -1324,7 +1324,7 @@ function resolveCard(
     c.strength += card.strength;
     pushFloat(c, `+${card.strength} STR`, "buff", "player");
   }
-  // block (may scale with Attacks played this turn — Doomfist)
+  // block (may scale with Attacks played this turn, for Doomfist)
   const blockGain = scaledBlock(card, c);
   if (blockGain > 0) {
     c.block += blockGain;
@@ -1434,7 +1434,7 @@ function resolveCard(
         if (t.isDead && card.strengthOnKill) {
           c.strength += card.strengthOnKill;
           pushFloat(c, `+${card.strengthOnKill} STR`, "buff", "player");
-          pushLog(c, `${card.name} executes ${t.name} — +${card.strengthOnKill} Strength.`);
+          pushLog(c, `${card.name} executes ${t.name}. +${card.strengthOnKill} Strength.`);
         }
       }
     }
@@ -1547,7 +1547,7 @@ function resolveCard(
         c.hp += healed;
         pushFloat(c, `+${healed}`, "heal", "player");
       }
-      pushLog(c, "COALESCENCE — the beam locks on.");
+      pushLog(c, "COALESCENCE. The beam locks on.");
     }
   }
   // apply debuffs to target
@@ -1564,7 +1564,7 @@ function resolveCard(
       if (card.weak) t.weak += card.weak;
     }
   }
-  // Ultimates never feed their own meter — otherwise faster-charge relics let you
+  // Ultimates never feed their own meter, otherwise faster-charge relics let you
   // chain ults forever off the ult's own damage.
   c.ultCharge = isUlt ? 0 : Math.min(100, charge.v);
   c.targetingCardUid = null;

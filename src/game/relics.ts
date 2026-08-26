@@ -43,7 +43,7 @@ export const RELICS: Record<string, RelicDef> = {
 
 export const ALL_RELIC_IDS = Object.keys(RELICS);
 
-/** Relics available from the very first run — the rest are unlocked in the Relic Codex. */
+/** Relics available from the very first run. The rest are unlocked in the Relic Codex. */
 export const DEFAULT_UNLOCKED_RELIC_IDS = ALL_RELIC_IDS.filter((id) => !RELICS[id]?.startsLocked);
 
 export const RELIC_UNLOCK_COST: Record<string, number> = {
@@ -63,7 +63,7 @@ export const RELIC_TIER_COLOR: Record<string, string> = {
   rare: "#ffcc4d",
 };
 
-/** Weighted relic roll — rarer tiers show up less often. */
+/** Weighted relic roll. Rarer tiers show up less often. */
 export function pickRelicId(pool: string[], roll: number): string | undefined {
   if (pool.length === 0) return undefined;
   const byTier = (t: string) => pool.filter((id) => (RELICS[id]?.tier ?? "common") === t);
