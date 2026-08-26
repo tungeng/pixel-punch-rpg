@@ -71,15 +71,46 @@ function seedRoll(seed: string, salt: number): number {
   return ((h >>> 0) % 10000) / 10000;
 }
 
-function cardScore(card: { id: string; type: string; cost: number; rarity: string; damage?: number; block?: number; heal?: number; draw?: number; strength?: number; vulnerable?: number; weak?: number; exhaust?: boolean }, hero: string, counts: Record<string, number>, deckSize: number, policy: NonNullable<BotOpts["policy"]>): number {
+function cardScore(
+  card: {
+    id: string; type: string; cost: number; rarity: string; damage?: number; block?: number;
+    heal?: number; draw?: number; strength?: number; vulnerable?: number; weak?: number;
+    exhaust?: boolean; hits?: number; aoe?: boolean; armor?: number; poison?: number;
+    energyGain?: number; retain?: boolean; thorns?: number; regen?: number;
+    damagePerArmor?: number; damagePerCardPlayed?: number; damagePerDebuff?: number;
+    damagePerBlock?: number; damagePerMissingHp?: number; blockFromArmor?: boolean;
+    blockToArmor?: boolean; poisonBoost?: number; poisonDetonate?: boolean; hero?: string;
+  },
+  hero: string,
+  counts: Record<string, number>,
+  deckSize: number,
+  policy: NonNullable<BotOpts["policy"]>,
+): number {
   let score = 0;
-  score += (card.damage ?? 0) * (card.type === "attack" ? 1.2 : 0.65);
+  const hits = card.hits ?? 1;
+  score += (card.damage ?? 0) * hits * (card.type === "attack" ? 1.2 : 0.65) * (card.aoe ? 1.4 : 1);
   score += (card.block ?? 0) * 0.72;
+  score += (card.armor ?? 0) * 0.95;
   score += (card.heal ?? 0) * 0.9;
   score += (card.draw ?? 0) * 4.2;
   score += (card.strength ?? 0) * 8;
   score += (card.vulnerable ?? 0) * 4;
   score += (card.weak ?? 0) * 3;
+  score += (card.poison ?? 0) * 3.4;
+  score += (card.poisonBoost ?? 0) * 4;
+  score += card.poisonDetonate ? 6 : 0;
+  score += (card.regen ?? 0) * 2.4;
+  score += (card.thorns ?? 0) * 1.1;
+  score += (card.energyGain ?? 0) * 6;
+  score += card.retain ? 3 : 0;
+  // scaling payoffs are invisible to raw stat math, so price them explicitly
+  score += (card.damagePerArmor ?? 0) * 7;
+  score += (card.damagePerCardPlayed ?? 0) * 6;
+  score += (card.damagePerDebuff ?? 0) * 5;
+  score += (card.damagePerBlock ?? 0) * 5;
+  score += (card.damagePerMissingHp ?? 0) * 4;
+  score += card.blockFromArmor ? 7 : 0;
+  score += card.blockToArmor ? 5 : 0;
   score += card.rarity === "rare" ? 8 : card.rarity === "uncommon" ? 4 : 0;
   if (card.exhaust) score += 2;
   score -= card.cost * 2.5;
@@ -87,10 +118,13 @@ function cardScore(card: { id: string; type: string; cost: number; rarity: strin
   if (deckSize > 26 && card.rarity === "common") score -= 6;
   if (policy === "greedy") score += card.rarity === "rare" ? 6 : 2;
   if (policy === "lean") score -= deckSize > 22 ? 5 : 0;
+  // an experienced player leans into their hero's engine
+  if (card.hero === hero) score += 6;
   if (hero === "genji" && card.cost === 0) score += 4;
   if (hero === "tracer" && (card.draw ?? 0) > 0) score += 3;
   if (hero === "mercy" && ((card.heal ?? 0) > 0 || (card.weak ?? 0) > 0)) score += 3;
-  if (hero === "reinhardt" && ((card.block ?? 0) > 0 || card.id.startsWith("rein_"))) score += 3;
+  if (hero === "reinhardt" && ((card.block ?? 0) > 0 || (card.armor ?? 0) > 0)) score += 3;
+  if (hero === "moira" && ((card.poison ?? 0) > 0 || (card.poisonBoost ?? 0) > 0)) score += 4;
   return score;
 }
 
@@ -156,6 +190,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
   let playsThisTurn = 0;
   let lastTurnKey = "";
   let lastNodeType = "";
+  let lastEnemies: string[] = [];
   let lastHp = g().hp;
   const MAX_STEPS = 15000;
 
@@ -191,7 +226,10 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       for (const cd of s.deck) res.finalDeck[cd.id] = (res.finalDeck[cd.id] ?? 0) + 1;
       res.contractsCompleted = s.contractsCompleted;
       res.bossKills = res.won ? 4 : s.act;
-      if (!res.won) res.deathNode = lastNodeType;
+      if (!res.won) {
+        res.deathNode = lastNodeType;
+        res.deathEnemy = lastEnemies.join(" + ") || null;
+      }
       return res;
     }
 
@@ -261,6 +299,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       }
       case "combat": {
         const c = s.combat!;
+        lastEnemies = c.enemies.map((e) => e.name);
         if (c.energy < 0 || !Number.isFinite(c.hp)) {
           res.error = "bad combat state";
           return res;
