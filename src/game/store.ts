@@ -1184,8 +1184,9 @@ export const useGame = create<GameState>((set, get) => ({
       return;
     }
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
-    // caches are relic-first now; the scanner upgrade only widens the odds
-    if (!rng.chance(Math.max(0.9, upgradeCacheRelicChance(s.meta.upgrades)))) {
+    // caches usually hold a relic; otherwise they pay out a card choice
+    if (!rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
+
       // scanner missed: cache yields a card reward instead
       const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
       const remaining = [...pool];
