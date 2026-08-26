@@ -326,6 +326,9 @@ export interface Report {
   avgTotalDamageTaken: number;
   avgMaxDamageInTurn: number;
   avgCreditsEarned: number;
+  augmentUse: Record<string, number>;
+  avgContractsCompleted: number;
+  avgRewardsSkipped: number;
 }
 
 export function summarize(results: RunResult[]): Report {
@@ -352,9 +355,15 @@ export function summarize(results: RunResult[]): Report {
       e.n++;
       if (r.won) e.wins++;
     }
+    for (const id of r.augments) cardUse[`augment:${id}`] = (cardUse[`augment:${id}`] ?? 0) + 1;
     turns += r.turns;
     combats += r.combats;
   }
+  const augmentUse = Object.fromEntries(
+    Object.entries(cardUse)
+      .filter(([k]) => k.startsWith("augment:"))
+      .map(([k, v]) => [k.slice("augment:".length), v]),
+  );
   for (const h of Object.values(perHero)) {
     h.winRate = h.wins / h.runs;
     h.avgFloors /= h.runs;
@@ -378,5 +387,8 @@ export function summarize(results: RunResult[]): Report {
     avgTotalDamageTaken: results.reduce((a, r) => a + r.totalDamageTaken, 0) / results.length,
     avgMaxDamageInTurn: results.reduce((a, r) => a + r.maxDamageInTurn, 0) / results.length,
     avgCreditsEarned: results.reduce((a, r) => a + r.creditsEarned, 0) / results.length,
+    augmentUse,
+    avgContractsCompleted: results.reduce((a, r) => a + r.contractsCompleted, 0) / results.length,
+    avgRewardsSkipped: results.reduce((a, r) => a + r.rewardsSkipped, 0) / results.length,
   };
 }
