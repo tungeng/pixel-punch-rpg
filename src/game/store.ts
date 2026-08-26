@@ -89,6 +89,8 @@ export interface Combat {
   freeUltUsed: boolean;
   /** Timeline Fracture: waiting on the player's opening choice. */
   fracturePending: boolean;
+  /** Mirror Ward: percent bonus applied to your next Attack this turn. */
+  nextAttackPct: number;
 }
 
 
@@ -332,7 +334,8 @@ export function cardDealsDamage(card: CardInstance): boolean {
     !!card.damagePerPoison ||
     !!card.consumeRegenDamage ||
     !!card.damagePerArmor ||
-    !!card.armorBurst
+    !!card.armorBurst ||
+    !!card.damageEqualToBlock
   );
 }
 
@@ -340,6 +343,7 @@ export function cardDealsDamage(card: CardInstance): boolean {
 export function effectiveCost(card: CardInstance, c: Combat): number {
   let cost = card.cost;
   if (card.freeIfAttack && c.attacksPlayedThisTurn > 0) return 0;
+  if (card.freeIfCardsPlayed !== undefined && c.cardsPlayedThisTurn >= card.freeIfCardsPlayed) return 0;
   if (card.costPerDamageTaken) {
     cost -= Math.floor(c.damageTakenThisCombat / card.costPerDamageTaken);
   }
@@ -357,6 +361,7 @@ export function scaledDamage(card: CardInstance, c: Combat, roll?: number): numb
   if (card.damagePerMissingHp) dmg += Math.floor((c.maxHp - c.hp) / card.damagePerMissingHp);
   if (card.damagePerDiscard) dmg += card.damagePerDiscard * c.discardPile.length;
   if (card.damagePerBlock) dmg += Math.floor(c.block / card.damagePerBlock);
+  if (card.damageEqualToBlock) dmg += c.block;
   if (card.damagePerArmor) dmg += Math.floor(c.armor / card.damagePerArmor);
   if (card.armorBurst) dmg += c.armor * card.armorBurst;
   if (card.doubleIfArmor && c.armor >= card.doubleIfArmor) dmg *= 2;
@@ -368,6 +373,7 @@ export function scaledBlock(card: CardInstance, c: Combat): number {
   let b = card.block ?? 0;
   if (card.blockPerAttackPlayed) b += card.blockPerAttackPlayed * c.attacksPlayedThisTurn;
   if (card.blockFromArmor) b += c.armor;
+  if (card.blockPerExhaust) b += card.blockPerExhaust * c.exhaustPile.length;
   if (card.blockPerPoisonedEnemy)
     b += card.blockPerPoisonedEnemy * c.enemies.filter((e) => !e.isDead && e.poison > 0).length;
   return b;
@@ -398,6 +404,13 @@ export function cardSynergyActive(card: CardInstance, c: Combat): boolean {
   if (card.consumeRegenDamage && c.regen > 0) return true;
   if (card.damagePerArmor && c.armor >= card.damagePerArmor) return true;
   if (card.armorBurst && c.armor > 0) return true;
+  if (card.damageEqualToBlock && c.block > 0) return true;
+  if (card.freeIfCardsPlayed !== undefined && c.cardsPlayedThisTurn >= card.freeIfCardsPlayed) return true;
+  if (card.blockPerExhaust && c.exhaustPile.length > 0) return true;
+  if (card.blockToHealRatio && c.block >= card.blockToHealRatio) return true;
+  if (card.doubleIfHandEmpty && c.hand.length <= 1) return true;
+  if ((card.lowHpStrength || card.lowHpBlock) && c.hp * 2 <= c.maxHp) return true;
+  if (card.type === "attack" && c.nextAttackPct > 0) return true;
   if (card.doubleIfArmor && c.armor >= card.doubleIfArmor) return true;
   if (card.blockFromArmor && c.armor > 0) return true;
   if (card.blockToArmor && c.block > 0) return true;
@@ -609,6 +622,7 @@ export const useGame = create<GameState>((set, get) => ({
       hackDraw: false,
       beams: [],
       firstCardDiscount: s.relics.includes("haste_module"),
+      nextAttackPct: 0,
       duplicatorUsed: false,
       freeUltUsed: false,
       fracturePending: s.relics.includes("timeline_fracture"),
@@ -654,6 +668,12 @@ export const useGame = create<GameState>((set, get) => ({
       return;
     }
     if (effectiveCost(card, c) > c.energy) return;
+    if (card.goldCost && s.gold < card.goldCost) {
+      pushFloat(c, "NO GOLD", "debuff", "player");
+      pushLog(c, `${card.name} needs ${card.goldCost} gold.`);
+      set({ combat: { ...c } });
+      return;
+    }
     const livingEnemies = c.enemies.filter((e) => !e.isDead && !e.untargetable);
     const needsTarget = cardDealsDamage(card) && !card.aoe && livingEnemies.length > 1;
     if (needsTarget && !targetUid) {
@@ -1025,6 +1045,7 @@ export const useGame = create<GameState>((set, get) => ({
     if (c.hackEnergy) pushLog(c, "Hacked. You lose 1 Energy this turn.");
     c.cardsPlayedThisTurn = 0;
     c.attacksPlayedThisTurn = 0;
+    c.nextAttackPct = 0;
     // draw
     let drawN = drawCountFor(s.heroId, relics);
     if (c.hackDraw) {
@@ -1398,10 +1419,17 @@ function resolveCard(
     pushFloat(c, "+4", "block", "player");
   }
 
-  // strength gain
-  if (card.strength) {
-    const gained = gainStrength(c, card.strength, relics);
+  // strength gain (Last Stand pays out far harder while you are bleeding)
+  const lowHpNow = c.hp * 2 <= c.maxHp;
+  const strengthAmount =
+    lowHpNow && card.lowHpStrength ? Math.max(card.lowHpStrength, card.strength ?? 0) : card.strength;
+  if (strengthAmount) {
+    const gained = gainStrength(c, strengthAmount, relics);
     pushFloat(c, `+${gained} STR`, "buff", "player");
+  }
+  if (lowHpNow && card.lowHpBlock) {
+    c.block += card.lowHpBlock;
+    pushFloat(c, `+${card.lowHpBlock}`, "block", "player");
   }
   // block (may scale with Attacks played this turn, for Doomfist)
   const blockGain = scaledBlock(card, c);
@@ -1423,6 +1451,28 @@ function resolveCard(
     }
   }
 
+  // Pawn Shop: pay the toll before the payoff
+  if (card.goldCost && !isUlt) {
+    set({ gold: Math.max(0, get().gold - card.goldCost) });
+    pushFloat(c, `-${card.goldCost}G`, "debuff", "player");
+    pushLog(c, `${card.name} buys back ${card.goldCost} gold worth of scrap.`);
+  }
+  // Second Wind: cash your Block in for health
+  if (card.blockToHealRatio && c.block > 0) {
+    const heal = Math.floor(c.block / card.blockToHealRatio);
+    c.block = 0;
+    const healed = Math.min(heal, c.maxHp - c.hp);
+    if (healed > 0) {
+      c.hp += healed;
+      pushFloat(c, `+${healed}`, "heal", "player");
+    }
+    pushLog(c, `${card.name} burns your guard for ${healed} HP.`);
+  }
+  // Mirror Ward: arm the next Attack
+  if (card.nextAttackBonusPct) {
+    c.nextAttackPct += card.nextAttackBonusPct;
+    pushFloat(c, `+${card.nextAttackBonusPct}%`, "buff", "player");
+  }
   // energy gain
   if (card.energyGain) c.energy += card.energyGain;
   // draw
@@ -1492,7 +1542,16 @@ function resolveCard(
     if (hitRoll !== undefined) hits = hitRoll;
     let bonus = 0;
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
-    const totalBase = scaled + bonus;
+    let totalBase = scaled + bonus;
+    if (card.doubleIfHandEmpty && c.hand.length === 0) {
+      totalBase *= 2;
+      pushLog(c, `${card.name} goes all in.`);
+    }
+    if (isAttack && c.nextAttackPct > 0) {
+      totalBase = Math.floor(totalBase * (1 + c.nextAttackPct / 100));
+      pushFloat(c, "MIRRORED", "buff", "player");
+      c.nextAttackPct = 0;
+    }
     const targets: EnemyInstance[] = card.aoe
       ? c.enemies.filter((e) => !e.isDead && !e.untargetable)
       : [
@@ -1510,6 +1569,11 @@ function resolveCard(
         const dealt = applyEnemyDamage(c, t, totalBase + debuffBonus, charge, powerCell, card.ignoreBlock);
         pushFloat(c, `${dealt}`, "dmg", t.uid);
         // Doomfist: executions feed permanent Strength
+        if (t.isDead && card.goldOnKill) {
+          set({ gold: get().gold + card.goldOnKill });
+          pushFloat(c, `+${card.goldOnKill}G`, "buff", "player");
+          pushLog(c, `${card.name} strips ${card.goldOnKill} gold off ${t.name}.`);
+        }
         if (t.isDead && card.strengthOnKill) {
           const gained = gainStrength(c, card.strengthOnKill, relics);
           pushFloat(c, `+${gained} STR`, "buff", "player");

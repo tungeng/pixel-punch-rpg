@@ -117,7 +117,31 @@ export const CARDS: Record<string, CardDef> = {
   rein_will: { id: "rein_will", name: "Unbreakable Will", type: "skill", cost: 2, hero: "reinhardt", rarity: "rare", armor: 8, strength: 2, retain: true, text: "Gain 8 Armor and 2 Strength. Retained in hand.", up: { armor: 12, strength: 3 } },
 };
 
-export const NEUTRAL_POOL = ["n_block", "n_strike", "n_vuln", "n_heal", "n_focus", "n_power"];
+export const NEUTRAL_EXPANSION: Record<string, CardDef> = {
+  n_gambit: { id: "n_gambit", name: "Gambit", type: "attack", cost: 1, rarity: "uncommon", damageEqualToBlock: true, exhaust: true, text: "Deal damage equal to your current Block. Exhaust." },
+  n_overclock_cell: { id: "n_overclock_cell", name: "Overclock Cell", type: "skill", cost: 0, rarity: "uncommon", selfDamage: 3, draw: 2, energyGain: 1, text: "Take 3 damage. Draw 2 cards. Gain 1 Energy.", up: { draw: 3 } },
+  n_adrenaline: { id: "n_adrenaline", name: "Adrenaline Rush", type: "skill", cost: 2, rarity: "uncommon", freeIfCardsPlayed: 3, energyGain: 2, draw: 1, text: "Gain 2 Energy. Draw 1. Costs 0 if you have played 3+ cards this turn.", up: { draw: 2 } },
+  n_scavenge: { id: "n_scavenge", name: "Scavenge", type: "attack", cost: 1, rarity: "common", damage: 4, goldOnKill: 15, text: "Deal 4 damage. If this kills the enemy, gain 15 gold.", up: { damage: 7 } },
+  n_mirror_ward: { id: "n_mirror_ward", name: "Mirror Ward", type: "skill", cost: 1, rarity: "uncommon", block: 5, nextAttackBonusPct: 50, text: "Gain 5 Block. Your next Attack this turn deals +50% damage.", up: { block: 8 } },
+  n_last_stand: { id: "n_last_stand", name: "Last Stand", type: "skill", cost: 1, rarity: "rare", strength: 1, lowHpStrength: 3, lowHpBlock: 10, exhaust: true, text: "Below half HP: gain 3 Strength and 10 Block. Otherwise gain 1 Strength. Exhaust.", up: { strength: 2 } },
+  n_pawn_shop: { id: "n_pawn_shop", name: "Pawn Shop", type: "skill", cost: 0, rarity: "uncommon", goldCost: 20, draw: 2, energyGain: 1, exhaust: true, text: "Spend 20 gold. Draw 2 cards and gain 1 Energy. Exhaust.", up: { draw: 3 } },
+  n_bloodletting: { id: "n_bloodletting", name: "Bloodletting", type: "attack", cost: 0, rarity: "uncommon", damage: 12, selfDamage: 4, text: "Take 4 damage. Deal 12 damage.", up: { damage: 16 } },
+  n_salvage_rites: { id: "n_salvage_rites", name: "Salvage Rites", type: "skill", cost: 1, rarity: "uncommon", blockPerExhaust: 4, text: "Gain 4 Block for each card in your exhaust pile.", up: { block: 4 } },
+  n_second_wind: { id: "n_second_wind", name: "Second Wind", type: "skill", cost: 1, rarity: "uncommon", blockToHealRatio: 2, draw: 1, exhaust: true, text: "Convert all your Block into 1 HP per 2 Block. Draw 1. Exhaust.", up: { draw: 2 } },
+  n_all_in: { id: "n_all_in", name: "All In", type: "attack", cost: 2, rarity: "rare", damage: 9, doubleIfHandEmpty: true, exhaust: true, text: "Deal 9 damage, doubled if your hand is empty. Exhaust.", up: { damage: 13 } },
+};
+
+Object.assign(CARDS, NEUTRAL_EXPANSION);
+
+export const NEUTRAL_POOL = [
+  "n_block",
+  "n_strike",
+  "n_vuln",
+  "n_heal",
+  "n_focus",
+  "n_power",
+  ...Object.keys(NEUTRAL_EXPANSION),
+];
 
 export function makeCard(defId: string, upgraded = false): CardInstance {
   const base = CARDS[defId];
