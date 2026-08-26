@@ -514,6 +514,9 @@ export const useGame = create<GameState>((set, get) => ({
   floorsCleared: 0,
   actFloors: 0,
   augments: [],
+  mutator: null,
+  startingMutators: [],
+  runStats: { bestHit: 0, lowestHp: 999, bossKills: 0, clutch: false },
   augmentTiers: {},
   augmentChoices: [],
   contract: makeContract(0),
@@ -554,10 +557,14 @@ export const useGame = create<GameState>((set, get) => ({
       if (startingRelicChoices.length >= 3) break;
       if (!startingRelicChoices.includes(id)) startingRelicChoices.push(id);
     }
+    const startingMutators = rng.shuffle([...MUTATOR_IDS]).slice(0, startingRelicChoices.length);
     set({
       inRun: true,
       seed,
       seedLabel: label,
+      mutator: null,
+      startingMutators,
+      runStats: { bestHit: 0, lowestHp: 999, bossKills: 0, clutch: false },
       heroId,
       hp: maxHp,
       maxHp,
@@ -586,14 +593,18 @@ export const useGame = create<GameState>((set, get) => ({
   chooseStartingRelic: (relicId) => {
     const s = get();
     const relics = [relicId];
-    const maxHp = maxHpFor(s.heroId, relics, s.act, s.meta.upgrades);
+    const idx = s.startingRelicChoices.indexOf(relicId);
+    const mutator = s.startingMutators[idx] ?? null;
+    const maxHp = Math.max(20, maxHpFor(s.heroId, relics, s.act, s.meta.upgrades) + (mutator ? MUTATORS[mutator]?.hpMod ?? 0 : 0));
     set({
       relics,
+      mutator,
       maxHp,
       hp: maxHp,
       startingRelicChoices: [],
+      startingMutators: [],
       phase: "map",
-      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.text}`,
+      lastEvent: `${RELICS[relicId]!.name} equipped. ${mutator ? MUTATORS[mutator]!.name + " online." : ""}`.trim(),
       lastEventAt: Date.now(),
     });
   },
@@ -714,8 +725,18 @@ export const useGame = create<GameState>((set, get) => ({
     if (s.heroId === "junkrat") {
       for (const e of enemies) e.vulnerable = 2;
     }
-    const maxEnergy = maxEnergyFor(s.heroId, s.relics);
-    const drawN = drawCountFor(s.heroId, s.relics);
+    const mut = s.mutator ? MUTATORS[s.mutator] : null;
+    const maxEnergy = maxEnergyFor(s.heroId, s.relics) + (mut?.energy ?? 0);
+    const drawN = drawCountFor(s.heroId, s.relics) + (mut?.draw ?? 0);
+    if (mut?.enemyHpMult || mut?.enemyStrength) {
+      for (const e of enemies) {
+        if (mut.enemyHpMult) {
+          e.maxHp = Math.round(e.maxHp * mut.enemyHpMult);
+          e.hp = e.maxHp;
+        }
+        if (mut.enemyStrength) e.strength += mut.enemyStrength;
+      }
+    }
     const maxHp = s.maxHp;
     let deck = s.deck.map((c) => makeCard(c.id, c.upgraded));
     deck = rng.shuffle(deck);
@@ -728,8 +749,8 @@ export const useGame = create<GameState>((set, get) => ({
       maxEnergy,
       hp: s.hp,
       maxHp,
-      block: 0,
-      strength: 0,
+      block: mut?.startBlock ?? 0,
+      strength: mut?.startStrength ?? 0,
       vulnerable: 0,
       weak: 0,
       poison: 0,
