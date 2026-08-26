@@ -274,13 +274,25 @@ function drawCountFor(heroId: string, relics: string[]): number {
  * so their damage window still closes fights.
  */
 const HERO_PRESSURE: Record<string, number> = {
-  mercy: 1.52,
-  moira: 1.3,
-  reinhardt: 0.85,
-  tracer: 0.92,
-  genji: 0.76,
-  junkrat: 0.88,
-  doomfist: 0.9,
+  mercy: 1.15,
+  moira: 1.1,
+  reinhardt: 0.88,
+  tracer: 0.95,
+  genji: 0.82,
+  junkrat: 0.85,
+  doomfist: 0.85,
+};
+
+/**
+ * Sustain kits shrug off bigger HP bars, so they are answered with harder
+ * hits instead. Bruisers who bank Armor or Strength get a touch of relief.
+ */
+const HERO_AGGRO: Record<string, number> = {
+  mercy: 4,
+  moira: 2,
+  reinhardt: -1,
+  junkrat: -1,
+  doomfist: -1,
 };
 
 
@@ -633,7 +645,8 @@ export const useGame = create<GameState>((set, get) => ({
       Math.floor(relicCount / 4) +
       Math.floor(augmentCount / 3) +
       (nodeType === "elite" ? 2 + s.act : 0) +
-      (nodeType === "boss" ? 1 + s.act : 0);
+      (nodeType === "boss" ? 1 + s.act : 0) +
+      (HERO_AGGRO[s.heroId] ?? 0);
 
 
     for (const e of enemies) {
