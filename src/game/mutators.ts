@@ -64,7 +64,7 @@ export const MUTATORS: Record<string, Mutator> = {
   hemorrhage: {
     id: "hemorrhage",
     name: "HEMORRHAGE",
-    text: "You deal 30% more damage. You take 25% more damage.",
+    text: "You deal 28% more damage. You take 30% more damage.",
     color: "#ff7a45",
     outMult: 1.28,
     inMult: 1.3,
@@ -88,7 +88,7 @@ export const MUTATORS: Record<string, Mutator> = {
   martyr: {
     id: "martyr",
     name: "MARTYR CIRCUIT",
-    text: "Ultimate charges 60% faster. Enemies hit 15% harder.",
+    text: "Ultimate charges 50% faster. Enemies hit 15% harder.",
     color: "#54d98c",
     ultMult: 1.5,
     inMult: 1.15,
