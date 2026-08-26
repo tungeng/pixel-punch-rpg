@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { CardView } from "./CardView";
 import { Bar } from "./Bar";
 import { PixelButton } from "./PixelButton";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CardInstance } from "@/game/types";
 import { RelicTray } from "./RelicTray";
 import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
@@ -80,6 +80,11 @@ export function CombatScreen() {
 
   const [shake, setShake] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
+  /** major, slower announcement reserved for boss openings and phase turns */
+  const [bigBanner, setBigBanner] = useState<{ kicker: string; text: string; seq: number } | null>(
+    null,
+  );
+  const [flash, setFlash] = useState<{ seq: number; kind: "big" | "kill" | "boss" } | null>(null);
   const [flying, setFlying] = useState<CardInstance | null>(null);
   const [lunge, setLunge] = useState(0);
   const [sweep, setSweep] = useState(0);
@@ -92,6 +97,18 @@ export function CombatScreen() {
   const prevHp = useRef<number | null>(null);
   const prevBlock = useRef<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const fxSeq = useRef(0);
+  const bannerSeq = useRef(0);
+
+  /** children report notable hits so the screen itself can react once, briefly */
+  const onImpact = useCallback((kind: "big" | "kill" | "boss") => {
+    fxSeq.current += 1;
+    setFlash({ seq: fxSeq.current, kind });
+  }, []);
+  const onPhase = useCallback((kicker: string, text: string) => {
+    bannerSeq.current += 1;
+    setBigBanner({ kicker, text, seq: bannerSeq.current });
+  }, []);
 
   useEffect(() => {
     const t = setInterval(pruneFloats, 400);
@@ -122,10 +139,19 @@ export function CombatScreen() {
   }, [blockVal]);
 
   const turn = combat?.turn ?? 0;
+  const isBossFight = !!combat?.isBoss;
+  const bossName = combat?.enemies[0]?.name ?? "";
   useEffect(() => {
     if (turn === 0) return;
+    // Turn 1 of a boss fight gets the heavy announcement instead of "TURN 1".
+    if (turn === 1 && isBossFight) {
+      bannerSeq.current += 1;
+      setBigBanner({ kicker: "BREACH CONTACT", text: bossName, seq: bannerSeq.current });
+      return;
+    }
     setBanner(`TURN ${turn}`);
-  }, [turn]);
+  }, [turn, isBossFight, bossName]);
+
 
   if (!combat) return null;
   const hero = HEROES[heroId]!;
@@ -216,6 +242,28 @@ export function CombatScreen() {
       <KeywordTips />
       <BossOutro />
 
+      {/* boss dossier bar — a boss fight announces itself before you read the sprite */}
+      {combat.isBoss && combat.enemies[0] && (
+        <div className="pointer-events-none absolute left-1/2 top-2 z-30 w-[62%] -translate-x-1/2">
+          <div
+            className="px-2 py-1"
+            style={{ background: "#12060f", border: "2px solid #ff5cf0", boxShadow: "0 0 12px #ff5cf055" }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-pixel text-[7px] tracking-widest" style={{ color: "#ff5cf0" }}>
+                BOSS
+              </span>
+              <span className="text-pixel text-[7px] text-foreground/70">
+                {Math.max(0, Math.round((combat.enemies[0].hp / Math.max(1, combat.enemies[0].maxHp)) * 100))}%
+              </span>
+            </div>
+            <div className="text-pixel mt-0.5 truncate text-[9px] text-foreground">
+              {combat.enemies[0].name}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* arena — enemies centered in the remaining space */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <div className="relative flex flex-1 items-center justify-center gap-1 px-3 pt-3">
@@ -231,9 +279,12 @@ export function CombatScreen() {
                 aiming={aimUid === e.uid}
                 depth={depth}
                 onSelect={onSelectTarget}
+                onImpact={onImpact}
+                onPhase={onPhase}
               />
             );
           })}
+
 
           {/* AoE sweep — a shockwave that crosses every depth slot */}
           <AnimatePresence>
@@ -338,7 +389,7 @@ export function CombatScreen() {
               .filter((f) => f.target === "player")
               .slice(-4)
               .map((f) => (
-                <FloatText key={f.id} text={f.text} kind={f.kind} />
+                <FloatText key={f.id} text={f.text} kind={f.kind} of={combat.maxHp} />
               ))}
           </AnimatePresence>
 
@@ -356,6 +407,18 @@ export function CombatScreen() {
                 );
               if (incoming <= 0) return null;
               const net = Math.max(0, incoming - combat.block - combat.armor);
+              // A turn that can kill you must never read like an ordinary turn.
+              const lethal = net >= combat.hp;
+              if (lethal) {
+                return (
+                  <motion.div
+                    animate={{ opacity: [1, 0.45, 1] }}
+                    transition={{ repeat: Infinity, duration: 0.9 }}
+                  >
+                    <Badge text={`LETHAL ${net} vs ${combat.hp} HP`} color="#ff3b3b" />
+                  </motion.div>
+                );
+              }
               return (
                 <Badge
                   text={net > 0 ? `INCOMING ${incoming} → ${net} HP` : `INCOMING ${incoming} BLOCKED`}
@@ -363,6 +426,7 @@ export function CombatScreen() {
                 />
               );
             })()}
+
             {combat.block > 0 && <Badge text={`🛡 ${combat.block}`} color="#54a8ff" />}
             {combat.stance && (
               <Badge
@@ -555,7 +619,7 @@ export function CombatScreen() {
         )}
       </AnimatePresence>
 
-      {/* turn banner — one self-contained pass prevents dev-mode timers from getting stranded */}
+      {/* minor beat: the turn ticker is quick and thin so it never costs tempo */}
       {banner && (
         <motion.div
           key={banner}
@@ -565,13 +629,79 @@ export function CombatScreen() {
             opacity: [0, 1, 1, 0],
             skewX: [-14, 0, 0, 14],
           }}
-          transition={{ duration: 0.82, times: [0, 0.24, 0.62, 1], ease: "easeInOut" }}
+          transition={{ duration: 0.6, times: [0, 0.22, 0.55, 1], ease: "easeInOut" }}
           onAnimationComplete={() => setBanner(null)}
-          className="text-pixel pointer-events-none absolute left-0 right-0 top-1/3 z-30 bg-primary/85 py-2 text-center text-[14px] text-black"
+          className="text-pixel pointer-events-none absolute left-0 right-0 top-1/3 z-30 bg-primary/85 py-1 text-center text-[11px] text-black"
         >
           {banner}
         </motion.div>
       )}
+
+      {/* run-defining beat: boss contact and phase turns get weight and darkness */}
+      <AnimatePresence>
+        {bigBanner && (
+          <motion.div
+            key={`big-${bigBanner.seq}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 1.7, times: [0, 0.14, 0.72, 1] }}
+            onAnimationComplete={() => setBigBanner(null)}
+            className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center bg-black/60"
+          >
+            <motion.div
+              initial={{ scale: 0.82, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-[86%] px-3 py-3 text-center"
+              style={{
+                background: "#0b0410",
+                border: "3px solid #ff5cf0",
+                boxShadow: "0 0 26px #ff5cf066",
+              }}
+            >
+              <div className="text-pixel text-[8px] tracking-[0.3em]" style={{ color: "#ff5cf0" }}>
+                {bigBanner.kicker}
+              </div>
+              <div className="text-pixel mt-2 text-[16px] leading-[20px] text-foreground">
+                {bigBanner.text}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* impact wash — one short frame of colour so big hits register physically */}
+      <AnimatePresence>
+        {flash && (
+          <motion.div
+            key={`flash-${flash.seq}`}
+            initial={{ opacity: flash.kind === "boss" ? 0.85 : flash.kind === "kill" ? 0.5 : 0.28 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: flash.kind === "boss" ? 0.5 : 0.26, ease: "easeOut" }}
+            onAnimationComplete={() => setFlash(null)}
+            className="pointer-events-none absolute inset-0 z-[55]"
+            style={{
+              background:
+                flash.kind === "boss"
+                  ? "#ffffff"
+                  : flash.kind === "kill"
+                    ? "radial-gradient(circle, #fff2c2, transparent 72%)"
+                    : "radial-gradient(circle, #ffd9a0, transparent 78%)",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* near death — a standing warning frame instead of a one-off cue you can miss */}
+      {combat.hp > 0 && combat.hp / combat.maxHp <= 0.25 && (
+        <motion.div
+          animate={{ opacity: [0.35, 0.85, 0.35] }}
+          transition={{ repeat: Infinity, duration: 1.4 }}
+          className="pointer-events-none absolute inset-0 z-[50]"
+          style={{ boxShadow: "inset 0 0 60px 14px #ff2b4d", border: "2px solid #ff2b4d55" }}
+        />
+      )}
+
 
       {/* ultimate announcement — visual only; the ult resolves when it finishes */}
       <AnimatePresence>
@@ -597,20 +727,29 @@ function EnemyView({
   aiming,
   depth,
   onSelect,
+  onImpact,
+  onPhase,
 }: {
   enemyUid: string;
   targeting: boolean;
   aiming?: boolean;
   depth: number;
   onSelect: (uid: string) => void;
+  onImpact: (kind: "big" | "kill" | "boss") => void;
+  onPhase: (kicker: string, text: string) => void;
 }) {
   const enemy = useGame((s) => s.combat?.enemies.find((e) => e.uid === enemyUid));
   const floats = useGame((s) => s.combat?.floats ?? []);
   /** hit pulse: seq re-triggers the animation, ratio = damage / max HP */
   const [hitFx, setHitFx] = useState<{ seq: number; ratio: number } | null>(null);
   const [hitstop, setHitstop] = useState(false);
+  const [slain, setSlain] = useState(false);
   const prev = useRef<number | null>(null);
+  const phased = useRef(false);
   const maxHp = enemy?.maxHp ?? 1;
+  const isBoss = !!enemy?.isBoss;
+  const isElite = !!enemy?.isElite;
+  const name = enemy?.name ?? "";
 
   const hp = enemy?.hp ?? null;
   useEffect(() => {
@@ -619,9 +758,20 @@ function EnemyView({
       const ratio = Math.min(1, (prev.current - hp) / Math.max(1, maxHp));
       const lethal = hp <= 0;
       setHitFx((f) => ({ seq: (f?.seq ?? 0) + 1, ratio }));
-      if (lethal) setHitstop(true);
+      if (lethal) {
+        setHitstop(true);
+        setSlain(true);
+        onImpact(isBoss ? "boss" : "kill");
+      } else if (ratio >= 0.22) {
+        onImpact("big");
+      }
+      // bosses turn at the halfway mark: same rules, much louder presentation
+      if (isBoss && !lethal && !phased.current && hp / Math.max(1, maxHp) <= 0.5) {
+        phased.current = true;
+        onPhase("THRESHOLD BREACHED", `${name} · PHASE II`);
+      }
       const t = setTimeout(() => setHitFx(null), 340);
-      const t2 = lethal ? setTimeout(() => setHitstop(false), 90) : undefined;
+      const t2 = lethal ? setTimeout(() => setHitstop(false), lethal && isBoss ? 220 : 120) : undefined;
       prev.current = hp;
       return () => {
         clearTimeout(t);
@@ -630,7 +780,8 @@ function EnemyView({
     }
     prev.current = hp;
     return;
-  }, [hp, maxHp]);
+  }, [hp, maxHp, isBoss, name, onImpact, onPhase]);
+
 
   if (!enemy) return null;
 
@@ -714,20 +865,36 @@ function EnemyView({
         }
         transition={hitstop ? { duration: 0 } : { duration: heavy ? 0.34 : 0.2, ease: "easeOut" }}
       >
+        {/* rank aura: bosses and elites are readable at a glance in a crowded row */}
+        {(isBoss || isElite) && !enemy.isDead && (
+          <motion.div
+            animate={{ opacity: [0.35, 0.7, 0.35] }}
+            transition={{ repeat: Infinity, duration: isBoss ? 1.8 : 2.6 }}
+            className="pointer-events-none absolute inset-x-1 bottom-1 h-3 rounded-full"
+            style={{
+              background: isBoss
+                ? "radial-gradient(ellipse, #ff5cf0, transparent 70%)"
+                : "radial-gradient(ellipse, #ffb020, transparent 70%)",
+            }}
+          />
+        )}
         <img
           src={enemy.asset}
           alt={enemy.name}
-          className="pixelated h-24 w-24 object-contain"
+          className={`pixelated object-contain ${isBoss ? "h-32 w-32" : isElite ? "h-28 w-28" : "h-24 w-24"}`}
           style={{
             opacity: enemy.untargetable ? 0.45 : 1,
             filter: hit
               ? heavy
                 ? "drop-shadow(0 0 0 #fff) brightness(2.6) sepia(1) hue-rotate(-40deg) saturate(6)"
                 : "drop-shadow(0 0 0 #fff) brightness(2.4)"
-              : "drop-shadow(0 5px 0 rgba(0,0,0,0.55))",
+              : isBoss
+                ? "drop-shadow(0 5px 0 rgba(0,0,0,0.55)) drop-shadow(0 0 6px #ff5cf077)"
+                : "drop-shadow(0 5px 0 rgba(0,0,0,0.55))",
             transition: "filter 0.1s",
           }}
         />
+
 
         {/* impact — white flash + pixel shrapnel burst */}
         <AnimatePresence>
@@ -770,12 +937,61 @@ function EnemyView({
         <div className="text-pixel absolute -top-1 text-[10px] text-destructive">✖</div>
       )}
 
-      <div className="mt-1 w-28">
+      {/* kill confirmation — the moment reads as a result, not just a vanished sprite */}
+      <AnimatePresence>
+        {slain && (
+          <motion.div
+            key="slain"
+            initial={{ opacity: 0, scale: 0.7, y: 0 }}
+            animate={{ opacity: [0, 1, 1, 0], scale: 1.1, y: -18 }}
+            transition={{ duration: isBoss ? 1.5 : 0.9, times: [0, 0.15, 0.7, 1] }}
+            onAnimationComplete={() => setSlain(false)}
+            className="text-pixel pointer-events-none absolute top-8 z-40 whitespace-nowrap px-1 text-[10px]"
+            style={{
+              color: "#07060c",
+              background: isBoss ? "#ff5cf0" : "#ffcc4d",
+              border: "2px solid #07060c",
+            }}
+          >
+            {isBoss ? "BOSS DOWN" : isElite ? "ELITE DOWN" : "ELIMINATED"}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* nameplate: who this is, and how dangerous, before you read the bar */}
+      <div
+        className="relative z-10 mt-1 flex w-28 items-center justify-between gap-1 px-1"
+        style={{ background: "#07060cdd", borderTop: `2px solid ${isBoss ? "#ff5cf0" : isElite ? "#ffb020" : "#3b4256"}` }}
+      >
+        <span
+          className="text-pixel truncate text-[6.5px]"
+          style={{ color: isBoss ? "#ff5cf0" : isElite ? "#ffb020" : "#cbd5e1" }}
+        >
+          {enemy.name}
+        </span>
+        {(isBoss || isElite) && (
+          <span
+            className="text-pixel shrink-0 px-0.5 text-[6px] text-black"
+            style={{ background: isBoss ? "#ff5cf0" : "#ffb020" }}
+          >
+            {isBoss ? "BOSS" : "ELITE"}
+          </span>
+        )}
+      </div>
+
+
+      <div className="w-28">
         <Bar
           value={enemy.hp}
           max={enemy.maxHp}
-          color="linear-gradient(90deg,#ff3b3b,#ff7a45)"
-          height={20}
+          color={
+            isBoss
+              ? "linear-gradient(90deg,#ff2b8f,#ff7a45)"
+              : isElite
+                ? "linear-gradient(90deg,#ff7a45,#ffb020)"
+                : "linear-gradient(90deg,#ff3b3b,#ff7a45)"
+          }
+          height={isBoss ? 22 : 20}
           label={`${enemy.hp}/${enemy.maxHp}`}
         />
       </div>
@@ -796,9 +1012,10 @@ function EnemyView({
           .filter((f) => f.target === enemyUid)
           .slice(-4)
           .map((f) => (
-            <FloatText key={f.id} text={f.text} kind={f.kind} />
+            <FloatText key={f.id} text={f.text} kind={f.kind} of={maxHp} />
           ))}
       </AnimatePresence>
+
     </motion.button>
   );
 }
@@ -815,30 +1032,56 @@ function Badge({ text, color }: { text: string; color: string }) {
   );
 }
 
-function FloatText({ text, kind }: { text: string; kind: string }) {
+/**
+ * Damage numbers carry their own weight class. `of` is the target's max HP, so a
+ * 12 into a trash mob reads big while a 12 into a boss stays quiet.
+ */
+function FloatText({ text, kind, of }: { text: string; kind: string; of?: number }) {
+  const n = Math.abs(parseInt(text.replace(/[^0-9-]/g, ""), 10)) || 0;
+  const share = of ? n / Math.max(1, of) : 0;
+  const tier = kind !== "dmg" ? 0 : share >= 0.4 || n >= 40 ? 2 : share >= 0.18 || n >= 18 ? 1 : 0;
+
   const color =
-    kind === "heal"
-      ? "#54d98c"
-      : kind === "block"
-        ? "#54a8ff"
-        : kind === "buff"
-          ? "#ffcc4d"
-          : kind === "ult"
-            ? "#c47bff"
-            : "#ff5555";
+    tier === 2
+      ? "#fff3b0"
+      : tier === 1
+        ? "#ff9f43"
+        : kind === "heal"
+          ? "#54d98c"
+          : kind === "block"
+            ? "#54a8ff"
+            : kind === "buff"
+              ? "#ffcc4d"
+              : kind === "ult"
+                ? "#c47bff"
+                : "#ff5555";
+
+  const size = tier === 2 ? 26 : tier === 1 ? 18 : 13;
   return (
     <motion.div
-      initial={{ y: 0, opacity: 1, scale: 0.7 }}
-      animate={{ y: -44, opacity: 0, scale: 1.3 }}
+      initial={{ y: 0, opacity: 1, scale: tier === 2 ? 0.4 : 0.7 }}
+      animate={{
+        y: tier === 2 ? -58 : -44,
+        opacity: 0,
+        scale: tier === 2 ? [1.6, 1.25, 1.4] : tier === 1 ? 1.4 : 1.3,
+      }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.85 }}
-      className="text-pixel pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 whitespace-nowrap text-[13px]"
-      style={{ color, textShadow: "2px 2px 0 #000" }}
+      transition={{ duration: tier === 2 ? 1.15 : tier === 1 ? 0.95 : 0.85 }}
+      className="text-pixel pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 whitespace-nowrap"
+      style={{
+        color,
+        fontSize: size,
+        textShadow:
+          tier > 0
+            ? "2px 2px 0 #000, 0 0 10px #ff7a45"
+            : "2px 2px 0 #000",
+      }}
     >
-      {text}
+      {tier === 2 ? `${text}!` : text}
     </motion.div>
   );
 }
+
 
 function PileChip({ label, value, color }: { label: string; value: number; color: string }) {
   return (
