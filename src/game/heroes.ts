@@ -43,7 +43,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 66,
     color: "#fcd34d",
     asset: mercyImg,
-    passive: "Her staff never fully powers down, so she mends 1 HP at the start of every turn.",
+    passive: "Her staff never fully powers down, so she mends 2 HP at the start of every turn.",
     startingDeck: [
       "mercy_blaster", "mercy_blaster", "mercy_heal", "mercy_heal",
       "mercy_guardian", "mercy_pacify", "mercy_regen", "mercy_shot",
