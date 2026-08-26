@@ -46,6 +46,9 @@ export const AUGMENTS: Record<string, AugmentDef> = Object.fromEntries([
   A("doom_gauntlet", "doomfist", "Seismic Gauntlet", "拳", "Attack shields hit harder, adding 2 more Block per Attack.", "survival", { block: 12 }),
   A("doom_rising", "doomfist", "Rising Power", "▲", "Pain converts to Strength sooner while the gauntlet is live.", "engine", { strength: 1 }),
   A("doom_meteor", "doomfist", "Meteor Vector", "◆", "Meteor Strike begins at 30 charge and lands with momentum.", "burst", { ult: 30 }),
+  A("bastion_cycler", "bastion", "Config Cycler", "⟳", "Every Configuration change draws a card and welds on Strength.", "engine", { draw: 1, strength: 1 }),
+  A("bastion_ironclad", "bastion", "Ironclad Servos", "▣", "Locking into SENTRY plates 5 Block.", "survival", { block: 10 }),
+  A("bastion_artillery", "bastion", "Artillery Uplink", "◎", "Configuration: Artillery starts 30 charge ahead and lands heavier.", "burst", { ult: 30 }),
 ].map((x) => [x.id, x]));
 
 export function augmentPoolFor(hero: string, owned: string[]): AugmentDef[] {

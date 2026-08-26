@@ -137,6 +137,8 @@ export interface GameState {
     upgrades: Record<string, number>;
     /** leaderboard display name, asked for once */
     playerName: string;
+    /** hero ids that have killed at least one boss (Bastion mastery unlock) */
+    bossHeroes: string[];
   };
   // run
   inRun: boolean;
@@ -231,7 +233,7 @@ export const MAX_RELICS = 10;
 
 
 function defaultMeta() {
-  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "" };
+  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "", bossHeroes: [] as string[] };
 }
 
 let floatId = 1;
@@ -245,6 +247,7 @@ function loadMetaFromStorage() {
     const m = { ...defaultMeta(), ...JSON.parse(raw) };
     if (!m.upgrades || typeof m.upgrades !== "object") m.upgrades = {};
     if (!Array.isArray(m.unlockedHeroes)) m.unlockedHeroes = [...STARTER_HEROES];
+    if (!Array.isArray(m.bossHeroes)) m.bossHeroes = [];
     // starters are always available (new starter heroes reach old saves too)
     m.unlockedHeroes = Array.from(new Set([...STARTER_HEROES, ...m.unlockedHeroes]));
     if (!Array.isArray(m.unlockedRelics)) m.unlockedRelics = [...DEFAULT_UNLOCKED_RELIC_IDS];
@@ -306,6 +309,7 @@ const HERO_PRESSURE: Record<string, number> = {
   genji: 1.18,
   junkrat: 0.8,
   doomfist: 0.92,
+  bastion: 0.98,
 };
 
 const HERO_AGGRO: Record<string, number> = {
@@ -2181,6 +2185,11 @@ function handleCombatWin(set: any, get: () => GameState) {
     clutch: s.runStats.clutch || (c.hp > 0 && c.hp <= Math.max(5, Math.ceil(c.maxHp * 0.08))),
   };
   set({ runStats });
+  if (c.isBoss && !s.meta.bossHeroes.includes(s.heroId)) {
+    const meta = { ...s.meta, bossHeroes: [...s.meta.bossHeroes, s.heroId] };
+    set({ meta });
+    saveMeta(meta);
+  }
   // bank hp
   let hp = c.hp;
   let gold = s.gold;
