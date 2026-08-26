@@ -5,7 +5,7 @@
  * thousands of runs and mine the results for balance/stability data.
  * Shared by playtest.test.ts (small smoke run) and the mass-sim harness.
  */
-import { useGame, computeScore, type GameState } from "./store";
+import { useGame, computeScore, effectiveCost, type GameState } from "./store";
 import { STARTER_HEROES, UNLOCKABLE_HEROES } from "./heroes";
 import { ALL_RELIC_IDS } from "./relics";
 import { AUGMENTS } from "./progression";
@@ -177,6 +177,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       res.creditsEarned = computeScore(s.floorsCleared, s.act, s.gold, res.won);
       res.augments = [...s.augments];
       res.contractsCompleted = s.contractsCompleted;
+      res.bossKills = res.won ? 4 : s.act;
       if (!res.won) res.deathNode = lastNodeType;
       return res;
     }
@@ -280,7 +281,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         }
 
         const playable = c.hand.filter(
-          (card) => card.cost <= c.energy && card.type !== c.hackedType,
+          (card) => effectiveCost(card, c) <= c.energy && card.type !== c.hackedType,
         );
         if (playable.length > 0) {
           const setup = playable.find(
