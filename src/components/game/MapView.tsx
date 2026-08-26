@@ -169,6 +169,19 @@ export function MapView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId, map]);
 
+  // Keep an inspected node clear of the inspector sheet.
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el || selected == null) return;
+    const n = byId.get(selected);
+    if (!n) return;
+    const top = posOf(n).topPx;
+    const wanted = top - el.clientHeight * 0.38;
+    if (Math.abs(el.scrollTop - wanted) > 40)
+      el.scrollTo({ top: Math.max(0, wanted), behavior: "smooth" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
+
   const bossDef = BOSSES[ACT_BOSSES[act] ?? ""] ?? null;
   const floorsDone = map.filter((n) => n.visited).length;
   const selectedNode = selected != null ? byId.get(selected) : null;
