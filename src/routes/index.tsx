@@ -44,6 +44,12 @@ function Index() {
   const [codexOpen, setCodexOpen] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
   const unlockCost = 150;
+  const BASTION_COST = 200;
+  const bossHeroes = meta.bossHeroes ?? [];
+  const bastionReady = bossHeroes.length >= 3;
+  const costFor = (id: string) => (id === "bastion" ? BASTION_COST : unlockCost);
+  const canUnlock = (id: string) =>
+    meta.credits >= costFor(id) && (id !== "bastion" || bastionReady);
 
   const all = [...STARTER_HEROES, ...UNLOCKABLE_HEROES];
   const locked = (id: string) => !meta.unlockedHeroes.includes(id);
@@ -55,8 +61,8 @@ function Index() {
   }
 
   function unlock(id: string) {
-    if (meta.credits < unlockCost) return;
-    const next = { ...meta, credits: meta.credits - unlockCost, unlockedHeroes: [...meta.unlockedHeroes, id] };
+    if (!canUnlock(id)) return;
+    const next = { ...meta, credits: meta.credits - costFor(id), unlockedHeroes: [...meta.unlockedHeroes, id] };
     try {
       window.localStorage.setItem("overtung_meta_v1", JSON.stringify(next));
     } catch { /* ignore */ }
@@ -111,8 +117,8 @@ function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45 + all.indexOf(id) * 0.07, type: "spring", stiffness: 260, damping: 18 }}
                 whileTap={{ scale: 0.95 }}
-                {...(isLocked ? {} : { whileHover: { y: -4, scale: 1.06 } })}
-                onClick={() => !isLocked && setSelected(id)}
+                whileHover={{ y: -4, scale: 1.06 }}
+                onClick={() => setSelected(id)}
                 className={`group relative flex flex-col items-center gap-0.5 p-1 transition-colors ${
                   isLocked
                     ? "border-2 border-border/60 bg-card/40"
@@ -141,7 +147,7 @@ function Index() {
                 {isLocked ? (
                   <span className="text-pixel flex items-center gap-0.5 text-[6px] text-primary">
                     <Lock size={7} strokeWidth={3} />
-                    {unlockCost}
+                    {costFor(id)}
                   </span>
                 ) : (
                   <span
@@ -157,9 +163,17 @@ function Index() {
         </div>
 
         {locked(selected) ? (
-          <div className="mt-4">
-            <PixelButton onClick={() => unlock(selected)} disabled={meta.credits < unlockCost} color="secondary">
-              Unlock for {unlockCost} ⬢
+          <div className="mt-4 flex flex-col items-center gap-2">
+            {selected === "bastion" && (
+              <div
+                className="w-full border-2 border-border bg-card/70 p-2 text-center text-[13px] text-muted-foreground"
+                style={{ fontFamily: "var(--font-pixel-body)" }}
+              >
+                Mastery lock. Kill a boss with 3 different heroes. ({Math.min(3, bossHeroes.length)}/3)
+              </div>
+            )}
+            <PixelButton onClick={() => unlock(selected)} disabled={!canUnlock(selected)} color="secondary">
+              Unlock for {costFor(selected)} ⬢
             </PixelButton>
           </div>
         ) : (
@@ -201,6 +215,15 @@ function Index() {
           </PixelButton>
           <PixelButton onClick={() => setBoardOpen(true)} color="secondary" className="col-span-2 w-full">
             ★ LEADERBOARD
+          </PixelButton>
+          <PixelButton
+            onClick={() => {
+              if (typeof window !== "undefined") window.location.reload();
+            }}
+            color="secondary"
+            className="col-span-2 w-full"
+          >
+            ⟳ CHECK FOR UPDATES
           </PixelButton>
         </div>
         {archiveOpen && <ArchiveScreen onClose={() => setArchiveOpen(false)} />}

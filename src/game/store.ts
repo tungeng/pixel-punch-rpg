@@ -85,6 +85,10 @@ export interface Combat {
   firstCardDiscount: boolean;
   /** Reinhardt: persistent Armor that soaks damage after Block and never expires. */
   armor: number;
+  /** Bastion: current Configuration. Null for every other hero. */
+  stance: import("./types").Stance | null;
+  /** Bastion: Configuration changes made this combat. */
+  stanceSwaps: number;
   /** Reinhardt: retaliation damage dealt back to attackers this turn. */
   thorns: number;
   /** Chrono Duplicator: the first card of the combat has already been echoed. */
@@ -133,6 +137,8 @@ export interface GameState {
     upgrades: Record<string, number>;
     /** leaderboard display name, asked for once */
     playerName: string;
+    /** hero ids that have killed at least one boss (Bastion mastery unlock) */
+    bossHeroes?: string[];
   };
   // run
   inRun: boolean;
@@ -227,7 +233,7 @@ export const MAX_RELICS = 10;
 
 
 function defaultMeta() {
-  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "" };
+  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "", bossHeroes: [] as string[] };
 }
 
 let floatId = 1;
@@ -241,6 +247,7 @@ function loadMetaFromStorage() {
     const m = { ...defaultMeta(), ...JSON.parse(raw) };
     if (!m.upgrades || typeof m.upgrades !== "object") m.upgrades = {};
     if (!Array.isArray(m.unlockedHeroes)) m.unlockedHeroes = [...STARTER_HEROES];
+    if (!Array.isArray(m.bossHeroes)) m.bossHeroes = [];
     // starters are always available (new starter heroes reach old saves too)
     m.unlockedHeroes = Array.from(new Set([...STARTER_HEROES, ...m.unlockedHeroes]));
     if (!Array.isArray(m.unlockedRelics)) m.unlockedRelics = [...DEFAULT_UNLOCKED_RELIC_IDS];
@@ -302,6 +309,7 @@ const HERO_PRESSURE: Record<string, number> = {
   genji: 1.18,
   junkrat: 0.8,
   doomfist: 0.92,
+  bastion: 0.98,
 };
 
 const HERO_AGGRO: Record<string, number> = {
@@ -372,6 +380,8 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
   if (c.vulnerable > 0) dmg = Math.floor(dmg * 1.5);
   const inMult = c.mutator ? MUTATORS[c.mutator]?.inMult ?? 1 : 1;
   if (inMult !== 1) dmg = Math.ceil(dmg * inMult);
+  // Bastion: SENTRY bolts him down. He hits more, he gets hit harder.
+  if (c.stance === "sentry") dmg = Math.ceil(dmg * 1.15);
   dmg = Math.max(0, dmg);
   let remaining = dmg;
   if (c.block > 0) {
@@ -406,7 +416,8 @@ export function cardDealsDamage(card: CardInstance): boolean {
     !!card.consumeRegenDamage ||
     !!card.damagePerArmor ||
     !!card.armorBurst ||
-    !!card.damageEqualToBlock
+    !!card.damageEqualToBlock ||
+    !!card.damagePerStanceSwap
   );
 }
 
@@ -436,6 +447,9 @@ export function scaledDamage(card: CardInstance, c: Combat, roll?: number): numb
   if (card.damagePerArmor) dmg += Math.floor(c.armor / card.damagePerArmor);
   if (card.armorBurst) dmg += c.armor * card.armorBurst;
   if (card.doubleIfArmor && c.armor >= card.doubleIfArmor) dmg *= 2;
+  if (card.damagePerStanceSwap) dmg += card.damagePerStanceSwap * c.stanceSwaps;
+  // Bastion: TANK trades all defense for raw output.
+  if (c.stance === "tank" && card.type === "attack" && dmg > 0) dmg = Math.floor(dmg * 1.5);
   return dmg;
 }
 
@@ -447,6 +461,10 @@ export function scaledBlock(card: CardInstance, c: Combat): number {
   if (card.blockPerExhaust) b += card.blockPerExhaust * c.exhaustPile.length;
   if (card.blockPerPoisonedEnemy)
     b += card.blockPerPoisonedEnemy * c.enemies.filter((e) => !e.isDead && e.poison > 0).length;
+  if (card.blockPerStanceSwap) b += card.blockPerStanceSwap * c.stanceSwaps;
+  // Bastion: RECON keeps the plating loose, TANK welds the vents shut.
+  if (c.stance === "recon" && card.type === "skill" && b > 0) b += 3;
+  if (c.stance === "tank" && b > 0) b = Math.floor(b * 0.5);
   return b;
 }
 
@@ -457,6 +475,7 @@ export function cardSynergyActive(card: CardInstance, c: Combat): boolean {
   if (card.comboCards !== undefined && c.cardsPlayedThisTurn >= card.comboCards) return true;
   if (card.damagePerCardPlayed && c.cardsPlayedThisTurn > 0) return true;
   if (card.damagePerDiscard && c.discardPile.length > 0) return true;
+  if ((card.damagePerStanceSwap || card.blockPerStanceSwap) && c.stanceSwaps > 0) return true;
   if (card.damagePerMissingHp && c.hp < c.maxHp) return true;
   if (card.damagePerBlock && c.block >= card.damagePerBlock) return true;
   if (card.blockPerAttackPlayed && c.attacksPlayedThisTurn > 0) return true;
@@ -785,6 +804,8 @@ export const useGame = create<GameState>((set, get) => ({
       regen: 0,
       poisonBoost: 0,
       armor: 0,
+      stance: s.heroId === "bastion" ? "sentry" : null,
+      stanceSwaps: 0,
       ragePaid: 0,
       thorns: 0,
       hackedType: null,
@@ -1274,6 +1295,7 @@ export const useGame = create<GameState>((set, get) => ({
     }
     c.hackEnergy = false;
     c.hackDraw = false;
+    if (c.stance === "recon") drawN += 1;
     drawCards(c, drawN);
     // passive heals
     if (s.heroId === "mercy") {
@@ -1877,11 +1899,43 @@ function resolveCard(
     }
   }
 
+  // ---- Bastion: Configuration changes ----
+  if (card.setStance || card.stanceCycle) {
+    const order: Array<"recon" | "sentry" | "tank"> = ["recon", "sentry", "tank"];
+    const next = card.setStance
+      ? card.setStance
+      : order[(order.indexOf((c.stance ?? "recon") as "recon") + 1) % 3]!;
+    if (next !== c.stance) {
+      c.stance = next;
+      c.stanceSwaps += 1;
+      pushFloat(c, next.toUpperCase(), "buff", "player");
+      pushLog(c, `Bastion reconfigures into ${next.toUpperCase()}.`);
+      // Passive engine: every Configuration change bolts on lasting power.
+      const gainedCfg = gainStrength(c, 2, relics);
+      pushFloat(c, `+${gainedCfg} STR`, "buff", "player");
+      if (s.augments.includes("bastion_cycler")) {
+        const tier = s.augmentTiers["bastion_cycler"] ?? 1;
+        drawCards(c, 1);
+        const gained = gainStrength(c, tier, relics);
+        pushFloat(c, `+${gained} STR`, "buff", "player");
+      }
+      if (s.augments.includes("bastion_ironclad") && next === "sentry") {
+        const tier = s.augmentTiers["bastion_ironclad"] ?? 1;
+        c.block += 5 * tier;
+        pushFloat(c, `+${5 * tier}`, "block", "player");
+      }
+    } else {
+      pushLog(c, `Bastion holds ${next.toUpperCase()}.`);
+    }
+  }
+
   // deal damage
   if (scaled > 0) {
     let hits = card.hits ?? 1;
     if (card.hitsPerAttack) hits = 1 + Math.max(0, c.attacksPlayedThisTurn - (isAttack ? 1 : 0));
     if (hitRoll !== undefined) hits = hitRoll;
+    // Bastion: SENTRY adds a burst to every Attack.
+    if (c.stance === "sentry" && isAttack) hits += 1;
     let bonus = 0;
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
     // Genji: Strike Chain. Each Attack after the first this turn escalates.
@@ -1915,7 +1969,8 @@ function resolveCard(
         (card.damagePerPoison ? card.damagePerPoison * t.poison : 0);
       for (let h = 0; h < hits; h++) {
         if (t.isDead) break;
-        const dealt = applyEnemyDamage(c, t, totalBase + debuffBonus, charge, powerCell, card.ignoreBlock);
+        const tankPierce = c.stance === "tank" && isAttack;
+        const dealt = applyEnemyDamage(c, t, totalBase + debuffBonus, charge, powerCell, card.ignoreBlock || tankPierce);
         pushFloat(c, `${dealt}`, "dmg", t.uid);
         // Doomfist: executions feed permanent Strength
         if (t.isDead && card.goldOnKill) {
@@ -2133,6 +2188,11 @@ function handleCombatWin(set: any, get: () => GameState) {
     clutch: s.runStats.clutch || (c.hp > 0 && c.hp <= Math.max(5, Math.ceil(c.maxHp * 0.08))),
   };
   set({ runStats });
+  if (c.isBoss && !(s.meta.bossHeroes ?? []).includes(s.heroId)) {
+    const meta = { ...s.meta, bossHeroes: [...(s.meta.bossHeroes ?? []), s.heroId] };
+    set({ meta });
+    saveMeta(meta);
+  }
   // bank hp
   let hp = c.hp;
   let gold = s.gold;
