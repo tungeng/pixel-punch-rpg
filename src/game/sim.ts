@@ -37,6 +37,10 @@ export interface RunResult {
   maxDamageInTurn: number;
   creditsEarned: number;
   augments: string[];
+  augmentsOffered: string[];
+  cardsOffered: Record<string, number>;
+  cardsPicked: Record<string, number>;
+  finalDeck: Record<string, number>;
   contractsCompleted: number;
   rewardsSkipped: number;
   treasureBreaches: number;
@@ -55,7 +59,7 @@ interface BotOpts {
   /** unlock everything (default) or use specific meta */
   meta?: GameState["meta"];
   fullUnlock?: boolean;
-  policy?: "balanced" | "lean" | "greedy" | "risk";
+  policy?: "balanced" | "lean" | "greedy" | "risk" | "explore";
 }
 
 function seedRoll(seed: string, salt: number): number {
@@ -131,6 +135,10 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
     maxDamageInTurn: 0,
     creditsEarned: 0,
     augments: [],
+    augmentsOffered: [],
+    cardsOffered: {},
+    cardsPicked: {},
+    finalDeck: {},
     contractsCompleted: 0,
     rewardsSkipped: 0,
     treasureBreaches: 0,
@@ -180,6 +188,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       res.hpPct = s.hp / s.maxHp;
       res.creditsEarned = computeScore(s.floorsCleared, s.act, s.gold, res.won);
       res.augments = [...s.augments];
+      for (const cd of s.deck) res.finalDeck[cd.id] = (res.finalDeck[cd.id] ?? 0) + 1;
       res.contractsCompleted = s.contractsCompleted;
       res.bossKills = res.won ? 4 : s.act;
       if (!res.won) res.deathNode = lastNodeType;
@@ -203,6 +212,13 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
           : opts.policy === "lean"
             ? ["engine", "survival", "tempo", "burst"]
             : ["engine", "tempo", "survival", "burst"];
+        for (const a of s.augmentChoices) res.augmentsOffered.push(a);
+        if (opts.policy === "explore") {
+          const pick = s.augmentChoices[Math.floor(Math.random() * s.augmentChoices.length)];
+          if (pick) s.chooseAugment(pick);
+          else s.toMap();
+          break;
+        }
         const choice = [...s.augmentChoices].sort((a, b) => {
           const aa = AUGMENTS[a];
           const bb = AUGMENTS[b];
@@ -336,6 +352,19 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       }
       case "reward": {
         const choices = s.rewardChoices;
+        for (const cd of choices) res.cardsOffered[cd.id] = (res.cardsOffered[cd.id] ?? 0) + 1;
+        if (opts.policy === "explore" && choices.length > 0) {
+          if (Math.random() < 0.15) {
+            res.rewardsSkipped++;
+            s.skipReward();
+          } else {
+            const pick = choices[Math.floor(Math.random() * choices.length)]!;
+            res.cardsPicked[pick.id] = (res.cardsPicked[pick.id] ?? 0) + 1;
+            s.pickRewardCard(pick.id);
+            res.cardsAdded++;
+          }
+          break;
+        }
         if (choices.length > 0) {
           const counts: Record<string, number> = {};
           for (const cd of s.deck) counts[cd.id] = (counts[cd.id] ?? 0) + 1;
@@ -351,6 +380,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
             const after = g().deck.filter((c) => c.upgraded).length;
             if (after > before) res.cardsUpgraded++;
           } else {
+            res.cardsPicked[best.card.id] = (res.cardsPicked[best.card.id] ?? 0) + 1;
             s.pickRewardCard(best.card.id);
             res.cardsAdded++;
           }
