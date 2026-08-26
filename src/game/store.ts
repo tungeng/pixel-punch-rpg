@@ -1041,7 +1041,7 @@ export const useGame = create<GameState>((set, get) => ({
         if (e.isDead) continue;
         e.strength += surge;
       }
-      pushFloat(c, "FRACTURE SURGE", "buff");
+      pushFloat(c, "SURGE", "buff", "player");
       pushLog(c, `The fracture surges. Enemies gain ${surge} Strength.`);
     }
     // advance enemy intents
