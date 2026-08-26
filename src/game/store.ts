@@ -23,6 +23,7 @@ import { AUGMENTS, augmentPoolFor, makeContract, type ContractState } from "./pr
 export type Phase =
   | "map"
   | "relic_choice"
+  | "protocol_choice"
   | "augment_choice"
   | "combat"
   | "reward"
@@ -167,6 +168,8 @@ export interface GameState {
     bossHeroes?: string[];
     /** lifetime accomplishments shown on the Statistics screen */
     stats?: MetaStats;
+    /** hero the player picked for their next run (persists outside runs) */
+    selectedHeroId?: string;
   };
   // run
   inRun: boolean;
@@ -218,6 +221,8 @@ export interface GameState {
   startRun: (heroId: string, seedLabel?: string) => void;
   rerun: () => void;
   chooseStartingRelic: (relicId: string, index?: number) => void;
+  chooseStartingMutator: (mutatorId: string | null) => void;
+  selectHero: (heroId: string) => void;
   chooseAugment: (augmentId: string) => void;
   enterNode: (nodeId: number) => void;
   startCombat: (nodeType: NodeType, rng: Rng) => void;
@@ -261,7 +266,7 @@ export const MAX_RELICS = 10;
 
 
 function defaultMeta() {
-  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "", bossHeroes: [] as string[], stats: emptyStats() };
+  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "", bossHeroes: [] as string[], stats: emptyStats(), selectedHeroId: STARTER_HEROES[0]! };
 }
 
 let floatId = 1;
@@ -661,7 +666,6 @@ export const useGame = create<GameState>((set, get) => ({
     // Protocols never depend on relic unlocks, so a brand new player still gets
     // a real opening decision (and a run identity) on their very first breach.
     const startingMutators = rng.shuffle([...MUTATOR_IDS]).slice(0, 3);
-    while (startingRelicChoices.length < startingMutators.length) startingRelicChoices.push("");
     set({
       inRun: true,
       seed,
@@ -694,23 +698,43 @@ export const useGame = create<GameState>((set, get) => ({
     });
   },
 
-  chooseStartingRelic: (relicId, index) => {
+  chooseStartingRelic: (relicId) => {
     const s = get();
-    const idx = index ?? s.startingRelicChoices.indexOf(relicId);
     const relics = relicId ? [relicId] : [];
-    const mutator = s.startingMutators[idx] ?? null;
-    const maxHp = Math.max(20, maxHpFor(s.heroId, relics, s.act, s.meta.upgrades) + (mutator ? MUTATORS[mutator]?.hpMod ?? 0 : 0));
+    const maxHp = Math.max(20, maxHpFor(s.heroId, relics, s.act, s.meta.upgrades));
     set({
       relics,
-      mutator,
       maxHp,
       hp: maxHp,
       startingRelicChoices: [],
-      startingMutators: [],
-      phase: "map",
-      lastEvent: `${relicId ? RELICS[relicId]!.name + " equipped. " : ""}${mutator ? MUTATORS[mutator]!.name + " online." : ""}`.trim(),
+      phase: "protocol_choice",
+      lastEvent: relicId ? `${RELICS[relicId]!.name} equipped.` : "No relic taken.",
       lastEventAt: Date.now(),
     });
+  },
+
+  chooseStartingMutator: (mutatorId) => {
+    const s = get();
+    const mutator = mutatorId && MUTATORS[mutatorId] ? mutatorId : null;
+    const maxHp = Math.max(20, maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades) + (mutator ? (MUTATORS[mutator]!.hpMod ?? 0) : 0));
+    set({
+      mutator,
+      maxHp,
+      hp: maxHp,
+      startingMutators: [],
+      phase: "map",
+      lastEvent: mutator ? `${MUTATORS[mutator]!.name} online.` : "Clean breach. No protocol distortion.",
+      lastEventAt: Date.now(),
+    });
+  },
+
+  selectHero: (heroId) => {
+    const s = get();
+    if (!HEROES[heroId] || !s.meta.unlockedHeroes.includes(heroId)) return;
+    if (s.meta.selectedHeroId === heroId) return;
+    const meta = { ...s.meta, selectedHeroId: heroId };
+    saveMeta(meta);
+    set({ meta });
   },
 
   chooseAugment: (augmentId) => {

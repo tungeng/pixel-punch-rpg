@@ -31,7 +31,8 @@ const ROSTER = [...STARTER_HEROES, ...UNLOCKABLE_HEROES];
 
 function HeroRoster() {
   const meta = useGame((s) => s.meta);
-  const [open, setOpen] = useState<string>(ROSTER[0]!);
+  const selectHero = useGame((s) => s.selectHero);
+  const [open, setOpen] = useState<string>(meta.selectedHeroId ?? ROSTER[0]!);
   const stats = meta.stats?.heroes ?? {};
   const hero = HEROES[open]!;
   const record = stats[open] ?? { runs: 0, wins: 0, bestScore: 0, bestFloor: 0 };
@@ -53,6 +54,7 @@ function HeroRoster() {
         !isLocked ? (
           <Link
             to="/play"
+            onClick={() => selectHero(hero.id)}
             className="press text-pixel block border-4 border-[oklch(0.1_0.02_285)] px-3 py-4 text-center text-[11px] shadow-[4px_4px_0_0_oklch(0.1_0.02_265)]"
             style={{ background: hero.color, color: "oklch(0.12 0.03 285)" }}
           >

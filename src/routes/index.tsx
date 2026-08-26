@@ -56,7 +56,9 @@ function MainMenu() {
   const firstLaunch = meta.totalRuns === 0;
 
   // The hero the player is "carrying": the live run, else their last run, else the roster head.
-  const currentId = inRun ? runHeroId : (lastRun?.heroId ?? runHeroId ?? ROSTER[0]!);
+  const currentId = inRun
+    ? runHeroId
+    : (meta.selectedHeroId ?? lastRun?.heroId ?? runHeroId ?? ROSTER[0]!);
   const hero = HEROES[currentId] ?? HEROES[ROSTER[0]!]!;
   const hStat = stats?.heroes?.[hero.id];
   const heroWins = hStat?.wins ?? 0;

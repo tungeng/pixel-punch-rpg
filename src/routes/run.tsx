@@ -13,6 +13,7 @@ import {
   DeathScreen,
   VictoryScreen,
   RelicChoiceScreen,
+  ProtocolChoiceScreen,
   AugmentChoiceScreen,
 } from "@/components/game/MetaScreens";
 import { CabinetShell } from "@/components/game/CabinetShell";
@@ -67,6 +68,7 @@ function RunRoute() {
             className="absolute inset-0"
           >
             {phase === "relic_choice" && <RelicChoiceScreen />}
+            {phase === "protocol_choice" && <ProtocolChoiceScreen />}
             {phase === "augment_choice" && <AugmentChoiceScreen />}
             {phase === "map" && <MapView />}
             {phase === "combat" && <CombatScreen />}

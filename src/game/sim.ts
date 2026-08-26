@@ -253,12 +253,22 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       case "relic_choice": {
         const choices = s.startingRelicChoices;
         if (choices.length === 0) {
-          s.toMap();
+          s.chooseStartingRelic("");
         } else {
           const idx = Math.floor(seedRoll(seed, 11) * choices.length);
-          s.chooseStartingRelic(choices[idx]!, idx);
-          res.mutator = useGame.getState().mutator;
+          s.chooseStartingRelic(choices[idx]!);
         }
+        break;
+      }
+      case "protocol_choice": {
+        const protos = s.startingMutators;
+        if (protos.length === 0) {
+          s.chooseStartingMutator(null);
+        } else {
+          const idx = Math.floor(seedRoll(seed, 12) * protos.length);
+          s.chooseStartingMutator(protos[idx]!);
+        }
+        res.mutator = useGame.getState().mutator;
         break;
       }
       case "augment_choice": {

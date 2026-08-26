@@ -524,22 +524,20 @@ export function Hud() {
 
 export function RelicChoiceScreen() {
   const choices = useGame((s) => s.startingRelicChoices);
-  const protocols = useGame((s) => s.startingMutators);
   const choose = useGame((s) => s.chooseStartingRelic);
   return (
-    <Screen title="BREACH PROTOCOL" tone="#ffcc4d" scroll>
+    <Screen title="BREACH RELIC" tone="#ffcc4d" scroll>
       <div
         className="mb-4 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/75"
         style={{ fontFamily: "var(--font-pixel-body)" }}
       >
-One artifact and one distortion make it through with you. They come as a pair, so pick the run you want to play.
+        Step 1 of 2. One artifact makes it through with you. Choose it, or go in empty-handed.
       </div>
       <div className="flex w-full max-w-[440px] flex-col gap-3 pb-6">
         {choices.map((id, i) => {
           const relic = RELICS[id];
-          const proto = protocols[i] ? MUTATORS[protocols[i]!] : null;
-          if (!relic && !proto) return null;
-          const tierColor = relic ? RELIC_TIER_COLOR[relic.tier ?? "common"] ?? "#cbd5e1" : proto!.color;
+          if (!relic) return null;
+          const tierColor = RELIC_TIER_COLOR[relic.tier ?? "common"] ?? "#cbd5e1";
           return (
             <motion.button
               key={id}
@@ -549,53 +547,104 @@ One artifact and one distortion make it through with you. They come as a pair, s
               whileTap={{ scale: 0.97 }}
               onClick={() => choose(id, i)}
               className={`flex items-center gap-3 bg-[#0b0a12] p-3 text-left ${
-                relic && isExaltedTier(relic.tier) ? "relic-exalted" : ""
-              } ${relic?.tier === "mythic" ? "relic-mythic" : ""}`}
+                isExaltedTier(relic.tier) ? "relic-exalted" : ""
+              } ${relic.tier === "mythic" ? "relic-mythic" : ""}`}
               style={
                 {
                   border: `3px solid ${tierColor}`,
-                  boxShadow: `0 0 16px -6px ${relic?.color ?? tierColor}`,
+                  boxShadow: `0 0 16px -6px ${relic.color ?? tierColor}`,
                   "--tier-color": tierColor,
                 } as unknown as MotionStyle
               }
             >
-              {relic ? <RelicIcon id={id} /> : null}
+              <RelicIcon id={id} />
               <div className="min-w-0 flex-1">
-                {relic && (
-                  <>
-                    <div className="mb-1 flex items-center justify-between gap-2">
-                      <span className="text-pixel text-[9px]" style={{ color: relic.color }}>
-                        {relic.name}
-                      </span>
-                      <span className="text-pixel text-[6px]" style={{ color: tierColor }}>
-                        {(relic.tier ?? "common").toUpperCase()}
-                      </span>
-                    </div>
-                    <div
-                      className="text-[14px] leading-[15px] text-foreground/80"
-                      style={{ fontFamily: "var(--font-pixel-body)" }}
-                    >
-                      {relic.text}
-                    </div>
-                  </>
-                )}
-                {protocols[i] && MUTATORS[protocols[i]!] && (
-                  <div
-                    className="mt-2 border-t-2 border-dashed pt-1"
-                    style={{ borderColor: `${MUTATORS[protocols[i]!]!.color}66` }}
-                  >
-                    <span className="text-pixel text-[7px]" style={{ color: MUTATORS[protocols[i]!]!.color }}>
-                      {MUTATORS[protocols[i]!]!.name}
-                    </span>
-                    <div className="text-[14px] leading-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
-                      {MUTATORS[protocols[i]!]!.text}
-                    </div>
-                  </div>
-                )}
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="text-pixel text-[9px]" style={{ color: relic.color }}>
+                    {relic.name}
+                  </span>
+                  <span className="text-pixel text-[6px]" style={{ color: tierColor }}>
+                    {(relic.tier ?? "common").toUpperCase()}
+                  </span>
+                </div>
+                <div
+                  className="text-[14px] leading-[15px] text-foreground/80"
+                  style={{ fontFamily: "var(--font-pixel-body)" }}
+                >
+                  {relic.text}
+                </div>
               </div>
             </motion.button>
           );
         })}
+        <motion.button
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: choices.length * 0.08 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => choose("")}
+          className="border-2 border-border bg-[#0b0a12] p-2.5 text-center"
+        >
+          <span className="text-pixel text-[8px] text-muted-foreground">TAKE NOTHING →</span>
+        </motion.button>
+      </div>
+    </Screen>
+  );
+}
+
+export function ProtocolChoiceScreen() {
+  const protocols = useGame((s) => s.startingMutators);
+  const choose = useGame((s) => s.chooseStartingMutator);
+  return (
+    <Screen title="BREACH PROTOCOL" tone="#e05cff" scroll>
+      <div
+        className="mb-4 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/75"
+        style={{ fontFamily: "var(--font-pixel-body)" }}
+      >
+        Step 2 of 2. The fracture offers one distortion. It shapes the whole run, so read the fine print.
+      </div>
+      <div className="flex w-full max-w-[440px] flex-col gap-3 pb-6">
+        {protocols.map((id, i) => {
+          const proto = MUTATORS[id];
+          if (!proto) return null;
+          return (
+            <motion.button
+              key={id}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => choose(id)}
+              className="bg-[#0b0a12] p-3 text-left"
+              style={{ border: `3px solid ${proto.color}`, boxShadow: `0 0 16px -6px ${proto.color}` }}
+            >
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="text-pixel text-[9px]" style={{ color: proto.color }}>
+                  {proto.name}
+                </span>
+                <span className="text-pixel text-[6px]" style={{ color: proto.color }}>
+                  PROTOCOL
+                </span>
+              </div>
+              <div
+                className="text-[14px] leading-[15px] text-foreground/80"
+                style={{ fontFamily: "var(--font-pixel-body)" }}
+              >
+                {proto.text}
+              </div>
+            </motion.button>
+          );
+        })}
+        <motion.button
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: protocols.length * 0.08 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => choose(null)}
+          className="border-2 border-border bg-[#0b0a12] p-2.5 text-center"
+        >
+          <span className="text-pixel text-[8px] text-muted-foreground">RUN CLEAN →</span>
+        </motion.button>
       </div>
     </Screen>
   );
