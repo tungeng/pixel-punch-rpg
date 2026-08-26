@@ -140,7 +140,6 @@ export const NEUTRAL_POOL = [
   "n_heal",
   "n_focus",
   "n_power",
-  ...Object.keys(NEUTRAL_EXPANSION),
 ];
 
 export function makeCard(defId: string, upgraded = false): CardInstance {
