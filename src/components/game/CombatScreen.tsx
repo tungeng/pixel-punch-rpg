@@ -9,6 +9,7 @@ import type { CardInstance } from "@/game/types";
 import { RelicTray } from "./RelicTray";
 import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
 import { UltimateAnnounce } from "./UltimateAnnounce";
+import { KeywordTips } from "./KeywordTips";
 
 /**
  * Picks which of the hero's three signature attack animations to play:
