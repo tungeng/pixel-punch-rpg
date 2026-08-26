@@ -1178,11 +1178,13 @@ export const useGame = create<GameState>((set, get) => ({
     const owned = new Set(s.relics);
     const unlocked = new Set(s.meta.unlockedRelics);
     const avail = ALL_RELIC_IDS.filter((r) => unlocked.has(r) && !owned.has(r) && isDropEligible(r));
-    if (avail.length === 0) {
-      set({ phase: "map" });
+    if (avail.length === 0 || s.relics.length >= MAX_RELICS) {
+      // full satchel: the cache pays out in gold instead
+      set({ phase: "map", gold: s.gold + 60 });
       markNodeVisited(set, get);
       return;
     }
+
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
     // caches usually hold a relic; otherwise they pay out a card choice
     if (!rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
