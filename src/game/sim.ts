@@ -5,7 +5,7 @@
  * thousands of runs and mine the results for balance/stability data.
  * Shared by playtest.test.ts (small smoke run) and the mass-sim harness.
  */
-import { useGame, computeScore, effectiveCost, type GameState } from "./store";
+import { useGame, cardPrice, computeScore, effectiveCost, relicPrice, type GameState } from "./store";
 import { STARTER_HEROES, UNLOCKABLE_HEROES } from "./heroes";
 import { ALL_RELIC_IDS } from "./relics";
 import { AUGMENTS } from "./progression";
@@ -331,7 +331,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
             .map((card) => ({ card, score: cardScore(card, s.heroId, counts, s.deck.length, opts.policy ?? "balanced") }))
             .sort((a, b) => b.score - a.score);
           const best = scored[0]!;
-          const skipThreshold = opts.policy === "greedy" ? -999 : opts.policy === "lean" ? 22 : s.deck.length > 30 ? 24 : 15;
+          const skipThreshold = opts.policy === "greedy" ? -999 : opts.policy === "lean" ? 17 : s.deck.length > 30 ? 18 : 10;
           if (best.score < skipThreshold) {
             res.rewardsSkipped++;
             const before = s.deck.filter((c) => c.upgraded).length;
@@ -353,7 +353,9 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
           res.restHeals++;
           s.restHeal();
         } else {
-          const bloat = s.deck.find((c) => c.id === "n_strike" || c.id === "n_block");
+          const counts: Record<string, number> = {};
+          for (const card of s.deck) counts[card.id] = (counts[card.id] ?? 0) + 1;
+          const bloat = s.deck.find((c) => c.rarity === "starter" && (counts[c.id] ?? 0) > 1);
           const up = s.deck.find((c) => !c.upgraded);
           if (bloat && s.deck.length > 10) {
             s.restRecycle(bloat.uid);
@@ -371,8 +373,10 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       }
       case "shop": {
         const goldBefore = s.gold;
-        const relicIdx = s.shopRelics.findIndex((r) => !!r);
-        const bloat = s.deck.find((c) => c.id === "n_strike" || c.id === "n_block");
+        const relicIdx = s.shopRelics.findIndex((r) => !!r && relicPrice(r) <= s.gold);
+        const counts: Record<string, number> = {};
+        for (const card of s.deck) counts[card.id] = (counts[card.id] ?? 0) + 1;
+        const bloat = s.deck.find((c) => c.rarity === "starter" && (counts[c.id] ?? 0) > 1);
         if (relicIdx >= 0) s.buyRelic(relicIdx);
         else if (bloat && s.gold >= 120 && s.deck.length > 14) {
           s.buyRemove(bloat.uid);
@@ -381,7 +385,9 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         else if (s.shopCards.length > 0 && s.gold >= 160) {
           const counts: Record<string, number> = {};
           for (const cd of s.deck) counts[cd.id] = (counts[cd.id] ?? 0) + 1;
-          const scored = s.shopCards.map((card, i) => ({ i, score: cardScore(card, s.heroId, counts, s.deck.length, opts.policy ?? "balanced") }));
+          const scored = s.shopCards
+            .map((card, i) => ({ i, card, score: cardScore(card, s.heroId, counts, s.deck.length, opts.policy ?? "balanced") }))
+            .filter(({ card }) => cardPrice(card) <= s.gold);
           scored.sort((a, b) => b.score - a.score);
           const buy = scored[0];
           if (buy && buy.score > 20) {
