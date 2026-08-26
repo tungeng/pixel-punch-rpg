@@ -1752,6 +1752,7 @@ function resolveCard(
   c.cardsPlayedThisTurn += 1;
   const isAttack = card.type === "attack";
   if (isAttack) c.attacksPlayedThisTurn += 1;
+  if (isAttack && !isUlt) c.attacksThisCombat = (c.attacksThisCombat ?? 0) + 1;
 
   // doomfist passive
     if (s.heroId === "doomfist" && isAttack && !isUlt) {
@@ -1994,6 +1995,22 @@ function resolveCard(
           c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
             c.enemies.find((e) => !e.isDead && !e.untargetable)!,
         ].filter(Boolean);
+    // Doomfist: Cataclysm. Every third swing rolls through the whole line.
+    if (
+      isAttack &&
+      !card.aoe &&
+      s.heroId === "doomfist" &&
+      s.augments.includes("doom_meteor") &&
+      (c.attacksThisCombat ?? 0) % 3 === 0
+    ) {
+      const quake = Math.max(1, Math.floor(totalBase / 2));
+      for (const e of c.enemies) {
+        if (e.isDead || e.untargetable || targets.includes(e)) continue;
+        applyEnemyDamage(c, e, quake, charge, powerCell, false);
+        pushFloat(c, `${quake}`, "dmg", e.uid);
+      }
+      pushLog(c, "Cataclysm ripples through the line.");
+    }
     for (const t of targets) {
       if (!t) continue;
       // Junkrat: blasts hit harder on softened targets
