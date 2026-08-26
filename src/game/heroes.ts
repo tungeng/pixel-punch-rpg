@@ -228,8 +228,8 @@ export const HEROES: Record<string, HeroDef> = {
       "Reconfiguring. RECON draws an extra card each turn and plates 3 Block per Skill. SENTRY adds a hit to every Attack but takes 20% more damage. TANK swings for 50% more and ignores enemy Block, yet bolts down too hard to gain any Block.",
     startingDeck: [
       "bastion_rounds", "bastion_rounds", "bastion_rounds", "bastion_plating",
-      "bastion_plating", "bastion_suppress", "bastion_repair", "bastion_recon",
-      "bastion_sentry", "bastion_assaultmode",
+      "bastion_plating", "bastion_suppress", "bastion_repair", "bastion_rounds",
+      "bastion_recon", "bastion_sentry",
     ],
     cardPool: [
       "bastion_grenade", "bastion_recalibrate", "bastion_ricochet", "bastion_assault",

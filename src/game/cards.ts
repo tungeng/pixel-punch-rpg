@@ -38,7 +38,7 @@ export const CARDS: Record<string, CardDef> = {
   // ---------------- GENJI (combo) ----------------
   genji_shuriken: { id: "genji_shuriken", name: "Shuriken", type: "attack", cost: 0, hero: "genji", rarity: "starter", damage: 3, text: "Deal 3 damage.", up: { damage: 5 } },
   genji_swift: { id: "genji_swift", name: "Swift Strike", type: "attack", cost: 1, hero: "genji", rarity: "starter", damage: 6, bonusIfAttack: 3, text: "Deal 6 damage. +3 if you played an Attack this turn.", up: { damage: 9, bonusIfAttack: 5 } },
-  genji_deflect: { id: "genji_deflect", name: "Deflect", type: "skill", cost: 1, hero: "genji", rarity: "starter", block: 8, text: "Gain 8 Block.", up: { block: 11 } },
+  genji_deflect: { id: "genji_deflect", name: "Deflect", type: "skill", cost: 1, hero: "genji", rarity: "starter", block: 10, text: "Gain 10 Block.", up: { block: 11 } },
   genji_fang: { id: "genji_fang", name: "Dragon Fang", type: "attack", cost: 1, hero: "genji", rarity: "common", damage: 7, draw: 1, text: "Deal 5 damage. Draw 1 card.", up: { damage: 8 } },
   genji_agility: { id: "genji_agility", name: "Cyber Agility", type: "skill", cost: 0, hero: "genji", rarity: "common", block: 4, comboCards: 2, comboEnergy: 1, text: "Gain 4 Block. If you played 2+ cards this turn, gain 1 Energy.", up: { block: 7 } },
   genji_spirit: { id: "genji_spirit", name: "Spirit Dragon", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 3, hitsPerAttack: true, text: "Deal 3 damage, once more for each Attack already played this turn.", up: { damage: 5 } },
@@ -96,13 +96,13 @@ export const CARDS: Record<string, CardDef> = {
 
 
   // ---------------- BASTION (Configuration stances) ----------------
-  bastion_rounds: { id: "bastion_rounds", name: "Configured Rounds", type: "attack", cost: 1, hero: "bastion", rarity: "starter", damage: 7, text: "Deal 7 damage.", up: { damage: 10 } },
+  bastion_rounds: { id: "bastion_rounds", name: "Configured Rounds", type: "attack", cost: 1, hero: "bastion", rarity: "starter", damage: 9, text: "Deal 9 damage.", up: { damage: 13 } },
   bastion_plating: { id: "bastion_plating", name: "Ironclad Plating", type: "skill", cost: 1, hero: "bastion", rarity: "starter", block: 8, text: "Gain 8 Block.", up: { block: 12 } },
-  bastion_recon: { id: "bastion_recon", name: "Configuration: Recon", type: "skill", cost: 0, hero: "bastion", rarity: "starter", setStance: "recon", draw: 1, text: "Switch to RECON. Draw 1 card.", up: { draw: 2 } },
-  bastion_sentry: { id: "bastion_sentry", name: "Configuration: Sentry", type: "skill", cost: 0, hero: "bastion", rarity: "starter", setStance: "sentry", block: 4, text: "Switch to SENTRY. Gain 4 Block.", up: { block: 8 } },
-  bastion_assaultmode: { id: "bastion_assaultmode", name: "Configuration: Tank", type: "skill", cost: 0, hero: "bastion", rarity: "starter", setStance: "tank", text: "Switch to TANK.", up: { cost: 0, strength: 1 } },
+  bastion_recon: { id: "bastion_recon", name: "Configuration: Recon", type: "skill", cost: 0, hero: "bastion", rarity: "starter", setStance: "recon", draw: 2, text: "Switch to RECON. Draw 2 cards.", up: { draw: 2 } },
+  bastion_sentry: { id: "bastion_sentry", name: "Configuration: Sentry", type: "skill", cost: 0, hero: "bastion", rarity: "starter", setStance: "sentry", block: 6, text: "Switch to SENTRY. Gain 6 Block.", up: { block: 8 } },
+  bastion_assaultmode: { id: "bastion_assaultmode", name: "Configuration: Tank", type: "skill", cost: 0, hero: "bastion", rarity: "starter", setStance: "tank", strength: 2, text: "Switch to TANK. Gain 2 Strength.", up: { cost: 0, strength: 1 } },
   bastion_repair: { id: "bastion_repair", name: "Self-Repair", type: "skill", cost: 1, hero: "bastion", rarity: "starter", heal: 9, text: "Restore 9 HP.", up: { heal: 14 } },
-  bastion_suppress: { id: "bastion_suppress", name: "Suppressing Fire", type: "attack", cost: 1, hero: "bastion", rarity: "starter", damage: 4, aoe: true, text: "Deal 4 damage to ALL enemies.", up: { damage: 7 } },
+  bastion_suppress: { id: "bastion_suppress", name: "Suppressing Fire", type: "attack", cost: 1, hero: "bastion", rarity: "starter", damage: 6, aoe: true, text: "Deal 6 damage to ALL enemies.", up: { damage: 9 } },
   bastion_grenade: { id: "bastion_grenade", name: "A-36 Grenade", type: "attack", cost: 1, hero: "bastion", rarity: "common", damage: 9, vulnerable: 2, text: "Deal 9 damage. Apply 2 Vulnerable.", up: { damage: 12, vulnerable: 3 } },
   bastion_recalibrate: { id: "bastion_recalibrate", name: "Recalibrate", type: "skill", cost: 1, hero: "bastion", rarity: "common", stanceCycle: true, draw: 2, energyGain: 1, text: "Rotate Configuration. Draw 2. Gain 1 Energy.", up: { draw: 3 } },
   bastion_ricochet: { id: "bastion_ricochet", name: "Ricochet", type: "attack", cost: 2, hero: "bastion", rarity: "uncommon", damage: 8, aoe: true, text: "Deal 8 damage to ALL enemies.", up: { damage: 12 } },
