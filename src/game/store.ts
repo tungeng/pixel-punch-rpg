@@ -1419,10 +1419,17 @@ function resolveCard(
     pushFloat(c, "+4", "block", "player");
   }
 
-  // strength gain
-  if (card.strength) {
-    const gained = gainStrength(c, card.strength, relics);
+  // strength gain (Last Stand pays out far harder while you are bleeding)
+  const lowHpNow = c.hp * 2 <= c.maxHp;
+  const strengthAmount =
+    lowHpNow && card.lowHpStrength ? Math.max(card.lowHpStrength, card.strength ?? 0) : card.strength;
+  if (strengthAmount) {
+    const gained = gainStrength(c, strengthAmount, relics);
     pushFloat(c, `+${gained} STR`, "buff", "player");
+  }
+  if (lowHpNow && card.lowHpBlock) {
+    c.block += card.lowHpBlock;
+    pushFloat(c, `+${card.lowHpBlock}`, "block", "player");
   }
   // block (may scale with Attacks played this turn, for Doomfist)
   const blockGain = scaledBlock(card, c);
@@ -1444,6 +1451,28 @@ function resolveCard(
     }
   }
 
+  // Pawn Shop: pay the toll before the payoff
+  if (card.goldCost && !isUlt) {
+    set({ gold: Math.max(0, get().gold - card.goldCost) });
+    pushFloat(c, `-${card.goldCost}G`, "debuff", "player");
+    pushLog(c, `${card.name} buys back ${card.goldCost} gold worth of scrap.`);
+  }
+  // Second Wind: cash your Block in for health
+  if (card.blockToHealRatio && c.block > 0) {
+    const heal = Math.floor(c.block / card.blockToHealRatio);
+    c.block = 0;
+    const healed = Math.min(heal, c.maxHp - c.hp);
+    if (healed > 0) {
+      c.hp += healed;
+      pushFloat(c, `+${healed}`, "heal", "player");
+    }
+    pushLog(c, `${card.name} burns your guard for ${healed} HP.`);
+  }
+  // Mirror Ward: arm the next Attack
+  if (card.nextAttackBonusPct) {
+    c.nextAttackPct += card.nextAttackBonusPct;
+    pushFloat(c, `+${card.nextAttackBonusPct}%`, "buff", "player");
+  }
   // energy gain
   if (card.energyGain) c.energy += card.energyGain;
   // draw
@@ -1513,7 +1542,16 @@ function resolveCard(
     if (hitRoll !== undefined) hits = hitRoll;
     let bonus = 0;
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
-    const totalBase = scaled + bonus;
+    let totalBase = scaled + bonus;
+    if (card.doubleIfHandEmpty && c.hand.length === 0) {
+      totalBase *= 2;
+      pushLog(c, `${card.name} goes all in.`);
+    }
+    if (c.nextAttackPct > 0) {
+      totalBase = Math.floor(totalBase * (1 + c.nextAttackPct / 100));
+      pushFloat(c, "MIRRORED", "buff", "player");
+      c.nextAttackPct = 0;
+    }
     const targets: EnemyInstance[] = card.aoe
       ? c.enemies.filter((e) => !e.isDead && !e.untargetable)
       : [
@@ -1531,6 +1569,11 @@ function resolveCard(
         const dealt = applyEnemyDamage(c, t, totalBase + debuffBonus, charge, powerCell, card.ignoreBlock);
         pushFloat(c, `${dealt}`, "dmg", t.uid);
         // Doomfist: executions feed permanent Strength
+        if (t.isDead && card.goldOnKill) {
+          set({ gold: get().gold + card.goldOnKill });
+          pushFloat(c, `+${card.goldOnKill}G`, "buff", "player");
+          pushLog(c, `${card.name} strips ${card.goldOnKill} gold off ${t.name}.`);
+        }
         if (t.isDead && card.strengthOnKill) {
           const gained = gainStrength(c, card.strengthOnKill, relics);
           pushFloat(c, `+${gained} STR`, "buff", "player");
