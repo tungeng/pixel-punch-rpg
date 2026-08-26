@@ -51,7 +51,7 @@ export function RelicCodexScreen({ onClose }: { onClose: () => void }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.02, 0.4) }}
-                whileTap={isUnlocked ? undefined : { scale: 0.98 }}
+                whileTap={{ scale: isUnlocked ? 1 : 0.98 }}
                 disabled={isUnlocked || !affordable}
                 onClick={() => !isUnlocked && affordable && unlockRelic(id)}
                 className="flex items-center gap-3 border-2 p-2 text-left disabled:cursor-default"
