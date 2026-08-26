@@ -135,10 +135,11 @@ function MainMenu() {
               <Link
                 to="/settings"
                 aria-label="Settings"
-                className="press text-pixel border-2 border-border bg-card px-2 py-1.5 text-[9px] text-muted-foreground hover:border-primary/60 hover:text-foreground"
+                className="press text-pixel grid min-h-[36px] min-w-[36px] place-items-center border-2 border-border bg-card px-2 text-[9px] text-muted-foreground hover:border-primary/60 hover:text-foreground"
               >
                 ⚙
               </Link>
+
             </div>
           </div>
           <p
@@ -248,10 +249,11 @@ function MainMenu() {
             </p>
             <Link
               to="/play"
-              className="press text-pixel shrink-0 border-2 border-border bg-card px-2 py-1.5 text-[7px] text-muted-foreground hover:border-primary/60 hover:text-foreground"
+              className="press text-pixel grid min-h-[36px] shrink-0 place-items-center border-2 border-border bg-card px-2.5 text-[7px] text-muted-foreground hover:border-primary/60 hover:text-foreground"
             >
               {inRun ? "NEW RUN" : "SWITCH HERO"}
             </Link>
+
           </div>
 
           {/* --- what's worth earning next --- */}

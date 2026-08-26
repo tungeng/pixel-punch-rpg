@@ -60,15 +60,20 @@ export function Bar({
       />
       {label && (
         <div
-          className="text-pixel absolute inset-0 flex items-center justify-center text-[9px] text-white"
+          className="absolute inset-0 flex items-center justify-center text-white"
           style={{
-            textShadow:
-              "1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000, 0 0 4px #000",
+            fontFamily: "var(--font-pixel-body)",
+            fontSize: Math.max(12, height - 4),
+            lineHeight: 1,
+            letterSpacing: "0.06em",
+            textShadow: "1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000",
           }}
         >
+
           {label}
         </div>
       )}
+
     </div>
   );
 }

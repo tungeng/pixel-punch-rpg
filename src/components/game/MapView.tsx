@@ -550,13 +550,15 @@ function NodeButton({
         )}
       </div>
       <span
-        className="text-pixel mt-1 whitespace-nowrap text-[6px]"
+        className={`text-pixel whitespace-nowrap px-1 text-[6px] ${isSelected ? "mt-2.5" : "mt-1"}`}
         style={{
           color: canEnter ? cfg.color : onPreview ? `${cfg.color}cc` : "rgba(200,205,225,0.35)",
+          background: "rgba(7,6,12,0.85)",
         }}
       >
         {node.type === "boss" ? bossName.toUpperCase() : cfg.label}
       </span>
+
       {canEnter && !isSelected && (
         <motion.span
           animate={{ y: [0, -3, 0], opacity: [0.6, 1, 0.6] }}

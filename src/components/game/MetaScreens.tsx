@@ -157,7 +157,7 @@ export function RestScreen() {
   return (
     <Screen title="SAFEHOUSE" tone="#54d98c">
       <div className="mb-3 w-full max-w-[280px]">
-        <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={14} />
+        <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={18} />
       </div>
       <div className="mb-4 text-center text-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
         Nobody shooting at you for once. Stitch yourself up, or put an edge on one card.
@@ -621,7 +621,7 @@ export function Hud() {
           <span className={contract.complete ? "text-primary" : ""}>▣ {contract.name} {contract.progress}/{contract.goal}</span>
           {augments.length > 0 && <span className="text-accent">⚡{augments.length}</span>}
         </div>
-        <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={12} />
+        <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={18} />
         <div className="mt-0.5 flex items-center justify-between text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
           <span>F{floors} · ACT {act + 1}/{ACT_COUNT} · 🂠{deckCount}</span>
           <RelicTray size={18} align="right" />
