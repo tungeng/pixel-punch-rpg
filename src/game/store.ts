@@ -538,6 +538,12 @@ export const useGame = create<GameState>((set, get) => ({
 
   loadMeta: () => set({ meta: loadMetaFromStorage() }),
 
+  /** Straight back into the breach with the same hero. No hub round trip. */
+  rerun: () => {
+    const heroId = get().lastRun?.heroId ?? get().heroId;
+    get().startRun(heroId);
+  },
+
   startRun: (heroId, seedLabel) => {
     const label = seedLabel && seedLabel.trim() ? seedLabel.trim() : Math.floor(Math.random() * 999999).toString();
     const seed = hashSeed(label);
@@ -2115,6 +2121,15 @@ function resolveCard(
 function handleCombatWin(set: any, get: () => GameState) {
   const s = get();
   const c = s.combat!;
+  // highlight reel: the beats a player would actually retell afterwards
+  const hpPct = c.maxHp > 0 ? Math.round((c.hp / c.maxHp) * 100) : 100;
+  const runStats = {
+    bestHit: Math.max(s.runStats.bestHit, c.bestHit),
+    lowestHp: Math.min(s.runStats.lowestHp, hpPct),
+    bossKills: s.runStats.bossKills + (c.isBoss ? 1 : 0),
+    clutch: s.runStats.clutch || (c.hp > 0 && c.hp <= Math.max(5, Math.ceil(c.maxHp * 0.08))),
+  };
+  set({ runStats });
   // bank hp
   let hp = c.hp;
   let gold = s.gold;
@@ -2129,6 +2144,8 @@ function handleCombatWin(set: any, get: () => GameState) {
 
   if (has("lucky_coin")) g = Math.floor(g * 1.75);
   if (has("salvage_claw")) g += 20;
+  const goldMult = s.mutator ? MUTATORS[s.mutator]?.goldMult ?? 1 : 1;
+  g = Math.floor(g * goldMult);
   gold += g;
   const floorsCleared = s.floorsCleared + 1;
   const actFloors = s.actFloors + 1;
@@ -2257,7 +2274,7 @@ function handleCombatWin(set: any, get: () => GameState) {
       meta,
       banner,
       bossOutro: BOSSES[c.enemies[0]?.defId ?? ""]?.deathLine ?? null,
-      lastRun: { heroId: s.heroId, score, floorsCleared, act: s.act + 1, fullClear: true },
+      lastRun: { heroId: s.heroId, score, floorsCleared, act: s.act + 1, fullClear: true, highlight: runHighlight({ ...s, floorsCleared }), mutator: s.mutator },
       scoreSubmitted: false,
     });
     return;
@@ -2284,6 +2301,18 @@ function handleCombatWin(set: any, get: () => GameState) {
 }
 
 
+/** One line the player would repeat to a friend. Ranked by how loud the beat is. */
+function runHighlight(s: GameState): string {
+  const st = s.runStats;
+  if (st.bestHit >= 60) return `You hit something for ${st.bestHit} in a single card.`;
+  if (st.clutch) return "You closed out a fight on fumes and kept walking.";
+  if (st.bossKills >= 3) return `${st.bossKills} bosses down in one timeline.`;
+  if (st.bestHit >= 35) return `Biggest hit of the run: ${st.bestHit} damage.`;
+  if (st.bossKills >= 1) return "You put a boss in the ground before it got you.";
+  if (st.lowestHp <= 15) return `You held a fight at ${st.lowestHp}% HP.`;
+  return `Deepest push: floor ${s.floorsCleared}.`;
+}
+
 function handleDeath(set: any, get: () => GameState) {
   const s = get();
   const credits = Math.floor((s.floorsCleared * 8 + s.gold * 0.2) * upgradeCreditMult(s.meta.upgrades));
@@ -2299,7 +2328,7 @@ function handleDeath(set: any, get: () => GameState) {
     phase: "dead",
     combat: null,
     meta,
-    lastRun: { heroId: s.heroId, score, floorsCleared: s.floorsCleared, act: s.act, fullClear: false },
+    lastRun: { heroId: s.heroId, score, floorsCleared: s.floorsCleared, act: s.act, fullClear: false, highlight: runHighlight(s), mutator: s.mutator },
     scoreSubmitted: false,
   });
 }
