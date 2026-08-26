@@ -35,7 +35,10 @@
   /* Deliberate narrative hues: STABLE timeline vs CORRUPTED rift */
   --color-stable: var(--stable);
   --color-corrupt: var(--corrupt);
+  /* Prestige hue, reserved for records and rankings */
+  --color-gold: var(--gold);
 }
+
 
 :root {
   --radius: 0.25rem;
