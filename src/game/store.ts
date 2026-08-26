@@ -283,9 +283,9 @@ const HERO_PRESSURE: Record<string, number> = {
   moira: 1.02,
   reinhardt: 0.98,
   tracer: 0.95,
-  genji: 0.95,
-  junkrat: 0.98,
-  doomfist: 0.92,
+  genji: 0.86,
+  junkrat: 0.9,
+  doomfist: 0.88,
 };
 
 const HERO_AGGRO: Record<string, number> = {
@@ -649,7 +649,7 @@ export const useGame = create<GameState>((set, get) => ({
     // was filler punctuated by a wall. Each encounter class now has its own
     // depth: skirmishes are real attrition, elites are puzzles, bosses stay
     // long but hit less brutally per turn.
-    const DEPTH = nodeType === "boss" ? 1.15 : nodeType === "elite" ? 2.75 : 2.95;
+    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.95 : 1.08) : nodeType === "elite" ? 2.65 : 2.85;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
