@@ -41,12 +41,13 @@ describe.skipIf(RUNS <= 0)("mass sim", () => {
               ...ALL_RELIC_IDS.slice(0, Math.floor(ALL_RELIC_IDS.length * progress)),
             ]));
 
-      const hero = unlockedHeroes[i % unlockedHeroes.length]!;
+      const forced = process.env["SIM_HERO"];
+      const hero = forced ?? unlockedHeroes[i % unlockedHeroes.length]!;
       
       results.push(simulateRun(hero, `${TAG}-${i}`, {
         policy: POLICY,
         meta: {
-            unlockedHeroes,
+            unlockedHeroes: forced ? Array.from(new Set([...unlockedHeroes, forced])) : unlockedHeroes,
             unlockedRelics,
             credits: 0,
             bestFloor: 0,
