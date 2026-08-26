@@ -39,6 +39,15 @@ export const RELICS: Record<string, RelicDef> = {
   combat_visor: { id: "combat_visor", name: "Tactical Visor", text: "Draw +2 cards each turn, but -15 Max HP.", icon: "🥽", color: "#38f8c0", tier: "rare", startsLocked: true },
   execution_chip: { id: "execution_chip", name: "Death Blossom Chip", text: "Start each combat with 3 Strength.", icon: "💀", color: "#ff6b3d", tier: "rare" },
   chrono_engine: { id: "chrono_engine", name: "Chronal Accelerator", text: "Start each combat with 20 Block and 1 extra card.", icon: "⏱️", color: "#8b5cf6", tier: "rare", startsLocked: true },
+
+  // ---------- legendary ----------
+  singularity_anchor: { id: "singularity_anchor", name: "Singularity Anchor", text: "Whenever you gain Strength, gain it twice.", icon: "🌑", color: "#ff7a18", tier: "legendary", startsLocked: true },
+  chrono_duplicator: { id: "chrono_duplicator", name: "Chrono Duplicator", text: "The first card you play each combat is played twice.", icon: "🔁", color: "#ff9d3c", tier: "legendary", startsLocked: true },
+  overclocked_core: { id: "overclocked_core", name: "Overclocked Core", text: "+2 max Energy, but take 1 damage at the start of your turn.", icon: "🔥", color: "#ff4d2e", tier: "legendary", startsLocked: true },
+
+  // ---------- mythic (Codex unlock only) ----------
+  null_sector_core: { id: "null_sector_core", name: "Null Sector Core", text: "Once per combat, your Ultimate costs no charge.", icon: "🜲", color: "#e879f9", tier: "mythic", startsLocked: true },
+  timeline_fracture: { id: "timeline_fracture", name: "Timeline Fracture", text: "At the start of each combat, choose one: 40 Block, 15 damage to all enemies, or draw 3 cards.", icon: "🪞", color: "#c084fc", tier: "mythic", startsLocked: true },
 };
 
 export const ALL_RELIC_IDS = Object.keys(RELICS);
@@ -46,10 +55,19 @@ export const ALL_RELIC_IDS = Object.keys(RELICS);
 /** Relics available from the very first run. The rest are unlocked in the Relic Codex. */
 export const DEFAULT_UNLOCKED_RELIC_IDS = ALL_RELIC_IDS.filter((id) => !RELICS[id]?.startsLocked);
 
+/** Tiers that never appear in random drops, shops or caches. Codex unlock only. */
+export const CODEX_ONLY_TIERS = ["mythic"];
+
+export function isDropEligible(id: string): boolean {
+  return !CODEX_ONLY_TIERS.includes(RELICS[id]?.tier ?? "common");
+}
+
 export const RELIC_UNLOCK_COST: Record<string, number> = {
   common: 120,
   uncommon: 260,
   rare: 450,
+  legendary: 800,
+  mythic: 1600,
 };
 
 /** Permanent (meta) unlock price in Chrono Cores. */
@@ -61,16 +79,32 @@ export const RELIC_TIER_COLOR: Record<string, string> = {
   common: "#cbd5e1",
   uncommon: "#54d98c",
   rare: "#ffcc4d",
+  legendary: "#ff6a1f",
+  mythic: "#f472ff",
 };
 
-/** Weighted relic roll. Rarer tiers show up less often. */
+/** Tiers that get the animated, glowing card treatment. */
+export function isExaltedTier(tier?: string): boolean {
+  return tier === "legendary" || tier === "mythic";
+}
+
+/** Weighted relic roll. Rarer tiers show up less often. Mythics never roll. */
 export function pickRelicId(pool: string[], roll: number): string | undefined {
-  if (pool.length === 0) return undefined;
-  const byTier = (t: string) => pool.filter((id) => (RELICS[id]?.tier ?? "common") === t);
-  const order = roll < 0.55 ? ["common", "uncommon", "rare"] : roll < 0.87 ? ["uncommon", "rare", "common"] : ["rare", "uncommon", "common"];
+  const eligible = pool.filter(isDropEligible);
+  if (eligible.length === 0) return undefined;
+  const byTier = (t: string) => eligible.filter((id) => (RELICS[id]?.tier ?? "common") === t);
+  const order =
+    roll < 0.55
+      ? ["common", "uncommon", "rare"]
+      : roll < 0.87
+        ? ["uncommon", "rare", "common"]
+        : roll > 0.985
+          ? ["legendary", "rare", "uncommon", "common"]
+          : ["rare", "uncommon", "common"];
   for (const t of order) {
     const group = byTier(t);
     if (group.length > 0) return group[Math.floor(roll * 997) % group.length];
   }
-  return pool[0];
+  return eligible[0];
 }
+
