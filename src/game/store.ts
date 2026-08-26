@@ -69,6 +69,10 @@ export interface Combat {
   ultUsedThisCombat: boolean;
   damageTakenThisCombat: number;
   ragePaid: number;
+  /** Tracer: Recall Protocol has already rewound this combat. */
+  recallUsed?: boolean;
+  /** Doomfist: Attacks thrown this combat (Cataclysm). */
+  attacksThisCombat?: number;
   overclock: { blockPerEnergy: number; damagePerEnergy: number } | null;
   /** Heal-over-time stacks on the player (Moira). */
   regen: number;
@@ -302,13 +306,13 @@ function drawCountFor(heroId: string, relics: string[]): number {
  * so their damage window still closes fights.
  */
 const HERO_PRESSURE: Record<string, number> = {
-  mercy: 0.84,
-  moira: 0.9,
+  mercy: 0.74,
+  moira: 1.2,
   reinhardt: 0.9,
   tracer: 1.06,
-  genji: 1.18,
-  junkrat: 0.8,
-  doomfist: 0.92,
+  genji: 1.32,
+  junkrat: 0.74,
+  doomfist: 1.1,
   bastion: 0.98,
 };
 
@@ -397,6 +401,23 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
   }
   c.hp -= remaining;
   c.damageTakenThisCombat += remaining;
+  // Tracer: Recall Protocol rewinds her out of a lethal spiral, once per fight.
+  const gs = get();
+  if (
+    gs.heroId === "tracer" &&
+    gs.augments.includes("tracer_accelerant") &&
+    !c.recallUsed &&
+    c.hp > 0 &&
+    c.hp < c.maxHp * 0.4
+  ) {
+    c.recallUsed = true;
+    const t = gs.augmentTiers["tracer_accelerant"] ?? 1;
+    const healed = Math.min(12 * t, c.maxHp - c.hp);
+    c.hp += healed;
+    drawCards(c, 2);
+    pushFloat(c, `RECALL +${healed}`, "heal", "player");
+    pushLog(c, "Recall Protocol rewinds Tracer out of danger.");
+  }
   // thorn mail
   return remaining;
 }
@@ -718,7 +739,7 @@ export const useGame = create<GameState>((set, get) => ({
     // was filler punctuated by a wall. Each encounter class now has its own
     // depth: skirmishes are real attrition, elites are puzzles, bosses stay
     // long but hit less brutally per turn.
-    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.82 : 0.9) : nodeType === "elite" ? 2.82 : 2.92;
+    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.82 : 0.9) : nodeType === "elite" ? 3.02 : 3.16;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
@@ -1197,6 +1218,12 @@ export const useGame = create<GameState>((set, get) => ({
     // Aegis Loop keeps half your Block instead of wiping it
     c.block = relics.includes("aegis_loop") ? Math.floor(c.block / 2) : 0;
     c.thorns = 0;
+    if (s.heroId === "reinhardt" && s.augments.includes("rein_honor") && c.armor > 0) {
+      const bite = Math.ceil((c.armor / 4) * (s.augmentTiers["rein_honor"] ?? 1));
+      c.thorns += bite;
+      pushFloat(c, `RETALIATE ${bite}`, "buff", "player");
+    }
+    c.recallUsed = c.recallUsed ?? false;
     // ---- per-turn relic ticks ----
     if (relics.includes("dragon_ember")) {
       gainStrength(c, 1, relics);
@@ -1473,7 +1500,7 @@ export const useGame = create<GameState>((set, get) => ({
       set({ hp: Math.max(1, s.hp - damage), lastEvent: `Cache forced open. Took ${damage} damage.`, lastEventAt: Date.now() });
     }
     // caches usually hold a relic; otherwise they pay out a card choice
-    if (mode !== "breach" && !rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
+    if (mode !== "breach" && !rng.chance(Math.max(0.55, upgradeCacheRelicChance()))) {
 
       // scanner missed: cache yields a card reward instead
       // Hero cards carry the run's identity, so they are offered twice as often as
@@ -1725,6 +1752,7 @@ function resolveCard(
   c.cardsPlayedThisTurn += 1;
   const isAttack = card.type === "attack";
   if (isAttack) c.attacksPlayedThisTurn += 1;
+  if (isAttack && !isUlt) c.attacksThisCombat = (c.attacksThisCombat ?? 0) + 1;
 
   // doomfist passive
     if (s.heroId === "doomfist" && isAttack && !isUlt) {
@@ -1783,13 +1811,10 @@ function resolveCard(
           c.nextAttackPct += 25;
           pushFloat(c, "BLUE BEAM", "buff", "player");
         }
-        if (s.heroId === "mercy" && s.augments.includes("mercy_valkyrie")) {
-          charge.v += 8;
-          pushFloat(c, "+8 ULT", "ult", "player");
-        }
       }
     const wasted = amount - healed;
-    if (card.overheal && wasted > 0) {
+    const triage = s.heroId === "mercy" && s.augments.includes("mercy_valkyrie");
+    if ((card.overheal || triage) && wasted > 0) {
       c.block += wasted;
       pushFloat(c, `+${wasted}`, "block", "player");
     }
@@ -1919,6 +1944,14 @@ function resolveCard(
         const gained = gainStrength(c, tier, relics);
         pushFloat(c, `+${gained} STR`, "buff", "player");
       }
+      if (s.augments.includes("bastion_artillery")) {
+        const shell = 6 * (s.augmentTiers["bastion_artillery"] ?? 1);
+        for (const e of c.enemies) {
+          if (e.isDead || e.untargetable) continue;
+          applyEnemyDamage(c, e, shell, charge, relics.includes("power_core"), true);
+        }
+        pushLog(c, "Siege Uplink shells the line.");
+      }
       if (s.augments.includes("bastion_ironclad") && next === "sentry") {
         const tier = s.augmentTiers["bastion_ironclad"] ?? 1;
         c.block += 5 * tier;
@@ -1943,8 +1976,9 @@ function resolveCard(
       bonus += 4 * Math.max(0, c.attacksPlayedThisTurn - 1);
     }
     let totalBase = scaled + bonus;
-    if (s.heroId === "junkrat" && s.augments.includes("junkrat_hairtrigger") && (card.randomDamage || card.randomHits)) {
-      totalBase += 3;
+    if (s.heroId === "junkrat" && s.augments.includes("junkrat_hairtrigger") && card.randomDamage) {
+      const [lo, hi] = card.randomDamage;
+      totalBase = Math.max(totalBase, Math.ceil((lo + hi) / 2));
     }
     if (card.doubleIfHandEmpty && c.hand.length === 0) {
       totalBase *= 2;
@@ -1961,6 +1995,22 @@ function resolveCard(
           c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
             c.enemies.find((e) => !e.isDead && !e.untargetable)!,
         ].filter(Boolean);
+    // Doomfist: Cataclysm. Every third swing rolls through the whole line.
+    if (
+      isAttack &&
+      !card.aoe &&
+      s.heroId === "doomfist" &&
+      s.augments.includes("doom_meteor") &&
+      (c.attacksThisCombat ?? 0) % 3 === 0
+    ) {
+      const quake = Math.max(1, Math.floor(totalBase / 2));
+      for (const e of c.enemies) {
+        if (e.isDead || e.untargetable || targets.includes(e)) continue;
+        applyEnemyDamage(c, e, quake, charge, powerCell, false);
+        pushFloat(c, `${quake}`, "dmg", e.uid);
+      }
+      pushLog(c, "Cataclysm ripples through the line.");
+    }
     for (const t of targets) {
       if (!t) continue;
       // Junkrat: blasts hit harder on softened targets
@@ -2018,6 +2068,14 @@ function resolveCard(
       pushFloat(c, `+${stacks} PSN`, "debuff", t.uid);
     }
     if (targets.length > 0) c.poisonBoost = 0;
+    if (targets.length > 0 && s.heroId === "moira" && s.augments.includes("moira_coalescence")) {
+      const seep = 2 * (s.augmentTiers["moira_coalescence"] ?? 1);
+      for (const e of c.enemies) {
+        if (e.isDead || e.untargetable || targets.includes(e)) continue;
+        e.poison += seep;
+        pushFloat(c, `+${seep} PSN`, "debuff", e.uid);
+      }
+    }
     if (targets.length > 0 && s.heroId === "moira" && s.augments.includes("moira_reservoir")) {
       c.regen += 1;
       pushFloat(c, "+1 REG", "heal", "player");
