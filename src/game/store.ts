@@ -276,7 +276,7 @@ function drawCountFor(heroId: string, relics: string[]): number {
 const HERO_PRESSURE: Record<string, number> = {
   mercy: 1.12,
   moira: 1.06,
-  reinhardt: 0.8,
+  reinhardt: 0.72,
   tracer: 0.76,
   genji: 0.62,
   junkrat: 0.68,
