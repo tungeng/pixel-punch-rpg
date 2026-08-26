@@ -37,7 +37,7 @@ export function EventFeedback() {
           <motion.button
             type="button"
             onClick={clearBanner}
-            className="fixed inset-0 z-[120] flex flex-col items-center justify-center"
+            className="absolute inset-0 z-[120] flex flex-col items-center justify-center"
             style={{ background: "rgba(4,6,14,0.82)" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -86,7 +86,7 @@ export function EventFeedback() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.18 }}
-            className="pointer-events-none fixed left-1/2 top-[104px] z-[110] w-[min(420px,88vw)] -translate-x-1/2 border-2 px-3 py-2 text-center"
+            className="pointer-events-none absolute left-1/2 top-2 z-[110] w-[min(420px,88vw)] -translate-x-1/2 border-2 px-3 py-2 text-center"
             style={{
               borderColor: "#5ff2e0",
               background: "rgba(6,10,20,0.94)",

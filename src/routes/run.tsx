@@ -78,8 +78,8 @@ function RunRoute() {
             {phase === "victory" && <VictoryScreen />}
           </motion.div>
         </AnimatePresence>
+        <EventFeedback />
       </div>
-      <EventFeedback />
     </div>
     </CabinetShell>
   );
