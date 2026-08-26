@@ -92,10 +92,19 @@ export function RewardScreen() {
 export function AugmentChoiceScreen() {
   const ids = useGame((s) => s.augmentChoices);
   const choose = useGame((s) => s.chooseAugment);
+  const relics = useGame((s) => s.relics.length);
+  const deck = useGame((s) => s.deck);
+  const contract = useGame((s) => s.contractsCompleted);
+  const upgraded = deck.filter((card) => card.upgraded).length;
   return (
     <Screen title="HERO EVOLUTION" tone="#ff7a45" scroll>
       <div className="mb-5 text-center text-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
         The last boss left a combat protocol exposed. Install one.
+      </div>
+      <div className="text-pixel mb-4 grid w-full max-w-[360px] grid-cols-3 border-2 border-primary/30 bg-background/70 text-center text-[7px]">
+        <span className="border-r-2 border-primary/20 px-1 py-2">RELICS<br /><b className="text-primary">{relics}</b></span>
+        <span className="border-r-2 border-primary/20 px-1 py-2">DECK<br /><b className="text-primary">{deck.length} · +{upgraded}</b></span>
+        <span className="px-1 py-2">CONTRACTS<br /><b className="text-primary">{contract}</b></span>
       </div>
       <div className="grid w-full max-w-[360px] gap-3">
         {ids.map((id, i) => {
