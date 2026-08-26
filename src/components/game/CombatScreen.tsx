@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { CardView } from "./CardView";
 import { Bar } from "./Bar";
 import { PixelButton } from "./PixelButton";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CardInstance } from "@/game/types";
 import { RelicTray } from "./RelicTray";
 import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
