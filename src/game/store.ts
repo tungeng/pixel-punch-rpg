@@ -1935,8 +1935,9 @@ export function cardPrice(card: CardInstance): number {
 /** Shop price for a relic, scaled by tier. */
 export function relicPrice(relicId: string): number {
   const tier = RELICS[relicId]?.tier ?? "common";
-  return tier === "mythic" ? 520 : tier === "legendary" ? 340 : tier === "rare" ? 190 : tier === "uncommon" ? 145 : 110;
+  return tier === "mythic" ? 600 : tier === "legendary" ? 420 : tier === "rare" ? 250 : tier === "uncommon" ? 185 : 140;
 }
+
 
 
 export { HEROES, RELICS, CARDS, tracerImg };
