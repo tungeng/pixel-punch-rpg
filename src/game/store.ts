@@ -1970,7 +1970,7 @@ function handleCombatWin(set: any, get: () => GameState) {
   if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 6);
   if (has("blood_pact")) hp = Math.min(s.maxHp, hp + Math.ceil(s.maxHp * 0.08));
   // gold reward
-  const baseGold = c.nodeType === "boss" ? 55 : c.nodeType === "elite" ? 32 : 15;
+  const baseGold = c.nodeType === "boss" ? 45 : c.nodeType === "elite" ? 26 : 12;
   let g = baseGold + new Rng(s.seed ^ (s.floorsCleared * 7)).int(0, 10);
 
   if (has("lucky_coin")) g = Math.floor(g * 1.75);
@@ -1980,7 +1980,7 @@ function handleCombatWin(set: any, get: () => GameState) {
   const actFloors = s.actFloors + 1;
   const qualifies =
     (s.contract.id === "clean_sweep" && c.hp >= c.maxHp * 0.75) ||
-    (s.contract.id === "shock_assault" && c.turn <= 2) ||
+    (s.contract.id === "shock_assault" && c.turn <= 3) ||
     (s.contract.id === "iron_line" && c.block + c.armor > 0);
   let contract = s.contract;
   let contractsCompleted = s.contractsCompleted;
