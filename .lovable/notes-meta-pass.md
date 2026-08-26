@@ -29,3 +29,10 @@ Relic tiers/codex, Reinhardt armor system, combat feedback layer.
 
 ## Still worth redesign later
 Hero common cards are structurally dominated in 3-card rewards, Mercy's kit, risk-policy routing payoff.
+
+## Production review pass (App Store quality)
+- Simulator FTUE cohort was fictional (0 unlocked relics). Fixed to mirror a real new save; true first-session win rate is 50-51%.
+- Hero fairness was the worst real defect: FTUE spread was Genji .80 / Mercy .22. Retuned HERO_PRESSURE + HERO_AGGRO; now .42-.56 (FTUE) and .54-.63 (veteran) across 26k runs, zero errors.
+- Difficulty was a boss wall (83% of deaths). Raised trash/elite depth, lowered boss depth: deaths now 75/17/9 boss/elite/normal.
+- Protocol spread .49-.69 after Blood Pact nerf (-32 max HP).
+- Polish: first-run primer, real store metadata + canonical, END button signals dead turns, removed 839K unused source asset.
