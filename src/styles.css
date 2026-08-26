@@ -46,6 +46,7 @@
   /* Fracture palette: void slate ground, stable chronal cyan, corrupted rift magenta */
   --stable: oklch(0.82 0.15 190);
   --corrupt: oklch(0.66 0.26 328);
+  --gold: oklch(0.83 0.16 86);
 
   --background: oklch(0.13 0.025 285);
   --foreground: oklch(0.95 0.01 220);
@@ -69,6 +70,7 @@
 .dark {
   --stable: oklch(0.82 0.15 190);
   --corrupt: oklch(0.66 0.26 328);
+  --gold: oklch(0.83 0.16 86);
   --background: oklch(0.13 0.025 285);
   --foreground: oklch(0.95 0.01 220);
   --card: oklch(0.18 0.035 285);
@@ -458,4 +460,153 @@
   animation:
     exalted-pulse 1.4s steps(12, end) infinite,
     mythic-hue 6s steps(12, end) infinite;
+}
+
+
+/* =========================================================
+   Premium front-end chrome
+   Every menu screen sets --screen-accent, and the shared
+   utilities below read it so each screen has its own identity
+   without inventing a new visual language per page.
+   ========================================================= */
+
+@utility screen-accent-fallback {
+  --screen-accent: var(--primary);
+}
+
+/* Top-of-screen colour wash. Hard stepped bands, never a blur. */
+.screen-wash {
+  background-image:
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--screen-accent, var(--primary)) 20%, transparent) 0 2px,
+      color-mix(in oklab, var(--screen-accent, var(--primary)) 11%, transparent) 2px 64px,
+      color-mix(in oklab, var(--screen-accent, var(--primary)) 5%, transparent) 64px 132px,
+      transparent 132px
+    ),
+    linear-gradient(to right, color-mix(in oklab, var(--stable) 6%, transparent) 2px, transparent 2px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--stable) 6%, transparent) 2px, transparent 2px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+}
+
+/* Corner registration marks. Reads as machined hardware, costs one element. */
+.panel-ticks {
+  position: relative;
+}
+.panel-ticks::before,
+.panel-ticks::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  border-color: var(--screen-accent, var(--primary));
+}
+.panel-ticks::before {
+  top: -2px;
+  left: -2px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+.panel-ticks::after {
+  right: -2px;
+  bottom: -2px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+}
+
+/* Tactile press. Steps keep it pixel-honest instead of squishy. */
+.press {
+  transition:
+    transform 0.08s steps(2, end),
+    border-color 0.14s ease-out,
+    background-color 0.14s ease-out;
+}
+.press:active {
+  transform: translateY(2px);
+}
+.tile-lift {
+  transition:
+    transform 0.14s steps(3, end),
+    border-color 0.14s ease-out,
+    background-color 0.14s ease-out;
+}
+@media (hover: hover) {
+  .tile-lift:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Accent hairline used under headers and between sections. */
+.accent-rule {
+  height: 2px;
+  background-image: linear-gradient(
+    90deg,
+    var(--screen-accent, var(--primary)) 0 24px,
+    color-mix(in oklab, var(--screen-accent, var(--primary)) 35%, transparent) 24px 40%,
+    transparent 100%
+  );
+}
+
+/* Stepped light cone behind a featured sprite. */
+.plinth {
+  position: relative;
+}
+.plinth::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 78%;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to top,
+    color-mix(in oklab, var(--screen-accent, var(--primary)) 26%, transparent) 0 6px,
+    color-mix(in oklab, var(--screen-accent, var(--primary)) 14%, transparent) 6px 34%,
+    color-mix(in oklab, var(--screen-accent, var(--primary)) 6%, transparent) 34% 70%,
+    transparent 70%
+  );
+  clip-path: polygon(18% 100%, 82% 100%, 66% 0, 34% 0);
+}
+
+/* Slow parallax drift for menu backdrops. */
+@keyframes drift-step {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 32px 32px, -32px 32px; }
+}
+.menu-drift {
+  background-image:
+    repeating-linear-gradient(90deg, color-mix(in oklab, var(--corrupt) 10%, transparent) 0 2px, transparent 2px 32px),
+    repeating-linear-gradient(0deg, color-mix(in oklab, var(--stable) 8%, transparent) 0 2px, transparent 2px 32px);
+  image-rendering: pixelated;
+  animation: drift-step 14s steps(16, end) infinite;
+}
+
+/* Value counters and record rows land with a short blink. */
+@keyframes value-land {
+  0% { opacity: 0.35; transform: translateY(3px); }
+  60% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; }
+}
+.value-land {
+  animation: value-land 0.32s steps(4, end) 1;
+}
+
+/* Accessibility: honour the system motion preference everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  .idle-bob,
+  .idle-bob-slow,
+  .cta-throb,
+  .title-flicker,
+  .menu-drift,
+  .rift-bg,
+  .node-pulse,
+  .value-land,
+  .relic-exalted,
+  .relic-mythic {
+    animation: none !important;
+  }
+  .sheen::after,
+  .relic-exalted::after {
+    display: none;
+  }
 }
