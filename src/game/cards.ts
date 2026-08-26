@@ -124,7 +124,7 @@ export const NEUTRAL_EXPANSION: Record<string, CardDef> = {
   n_scavenge: { id: "n_scavenge", name: "Scavenge", type: "attack", cost: 1, rarity: "common", damage: 4, goldOnKill: 15, text: "Deal 4 damage. If this kills the enemy, gain 15 gold.", up: { damage: 7 } },
   n_mirror_ward: { id: "n_mirror_ward", name: "Mirror Ward", type: "skill", cost: 1, rarity: "uncommon", block: 5, nextAttackBonusPct: 50, text: "Gain 5 Block. Your next Attack this turn deals +50% damage.", up: { block: 8 } },
   n_last_stand: { id: "n_last_stand", name: "Last Stand", type: "skill", cost: 1, rarity: "rare", strength: 1, lowHpStrength: 3, lowHpBlock: 10, exhaust: true, text: "Below half HP: gain 3 Strength and 10 Block. Otherwise gain 1 Strength. Exhaust.", up: { strength: 2 } },
-  n_pawn_shop: { id: "n_pawn_shop", name: "Pawn Shop", type: "skill", cost: 0, rarity: "uncommon", goldCost: 45, draw: 2, energyGain: 1, exhaust: true, text: "Spend 45 gold. Draw 2 cards and gain 1 Energy. Exhaust.", up: { draw: 3 } },
+  n_pawn_shop: { id: "n_pawn_shop", name: "Pawn Shop", type: "skill", cost: 0, rarity: "uncommon", goldCost: 70, draw: 2, energyGain: 1, exhaust: true, text: "Spend 70 gold. Draw 2 cards and gain 1 Energy. Exhaust.", up: { draw: 3 } },
   n_bloodletting: { id: "n_bloodletting", name: "Bloodletting", type: "attack", cost: 0, rarity: "uncommon", damage: 8, selfDamage: 5, text: "Take 5 damage. Deal 8 damage.", up: { damage: 11 } },
 
   n_salvage_rites: { id: "n_salvage_rites", name: "Salvage Rites", type: "skill", cost: 1, rarity: "uncommon", blockPerExhaust: 4, text: "Gain 4 Block for each card in your exhaust pile.", up: { block: 4 } },

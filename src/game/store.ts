@@ -268,6 +268,34 @@ function drawCountFor(heroId: string, relics: string[]): number {
   return d;
 }
 
+/**
+ * Per-hero encounter pressure. Sustain kits gain value every extra turn a fight
+ * runs, so they face deeper enemy HP pools; burst kits get a shallower curve
+ * so their damage window still closes fights.
+ */
+const HERO_PRESSURE: Record<string, number> = {
+  mercy: 1.15,
+  moira: 1.1,
+  reinhardt: 0.88,
+  tracer: 0.95,
+  genji: 0.82,
+  junkrat: 0.85,
+  doomfist: 0.85,
+};
+
+/**
+ * Sustain kits shrug off bigger HP bars, so they are answered with harder
+ * hits instead. Bruisers who bank Armor or Strength get a touch of relief.
+ */
+const HERO_AGGRO: Record<string, number> = {
+  mercy: 4,
+  moira: 2,
+  reinhardt: -1,
+  junkrat: -1,
+  doomfist: -1,
+};
+
+
 function maxHpFor(heroId: string, relics: string[], act = 0, upgrades?: Record<string, number>): number {
   let h = getHero(heroId).maxHp;
   if (relics.includes("gold_heart")) h += 30;
@@ -599,15 +627,26 @@ export const useGame = create<GameState>((set, get) => ({
     const upgradedCount = s.deck.filter((card) => card.upgraded).length;
     const leanDeckBonus = s.deck.length < 24 ? (24 - s.deck.length) * 0.012 : 0;
     const bossEase = nodeType === "boss" ? 0.95 : 1;
-    const sustainPressure = s.heroId === "mercy" ? 1.16 : 1;
-    const hpScale = (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) * bossEase * sustainPressure;
+    // Longer fights reward sustain and punish burst, so each hero meets a
+    // difficulty curve tuned to how their kit ages across a combat.
+    const heroPressure = HERO_PRESSURE[s.heroId] ?? 1;
+    // Fights are meant to be read, not deleted. Enemies carry a deeper HP pool so
+    // a combat plays out over several turns of real decisions.
+    const DEPTH = 1.6;
+    const hpScale =
+      DEPTH *
+      (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
+      bossEase *
+      heroPressure;
+    // ...and hit softer per turn, so length creates tension instead of coin-flips.
     const strBonus =
-      Math.floor(floor / 3) +
-      Math.round(s.act * 2) +
-      Math.floor(relicCount / 3) +
-      Math.floor(augmentCount / 2) +
-      (nodeType === "elite" ? 3 + s.act : 0) +
-      (nodeType === "boss" ? 2 + s.act : 0);
+      Math.floor(floor / 4) +
+      Math.round(s.act * 1.4) +
+      Math.floor(relicCount / 4) +
+      Math.floor(augmentCount / 3) +
+      (nodeType === "elite" ? 2 + s.act : 0) +
+      (nodeType === "boss" ? 1 + s.act : 0) +
+      (HERO_AGGRO[s.heroId] ?? 0);
 
 
     for (const e of enemies) {
@@ -1962,7 +2001,7 @@ function handleCombatWin(set: any, get: () => GameState) {
   if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 6);
   if (has("blood_pact")) hp = Math.min(s.maxHp, hp + Math.ceil(s.maxHp * 0.08));
   // gold reward
-  const baseGold = c.nodeType === "boss" ? 55 : c.nodeType === "elite" ? 32 : 15;
+  const baseGold = c.nodeType === "boss" ? 45 : c.nodeType === "elite" ? 26 : 12;
   let g = baseGold + new Rng(s.seed ^ (s.floorsCleared * 7)).int(0, 10);
 
   if (has("lucky_coin")) g = Math.floor(g * 1.75);
@@ -1972,7 +2011,7 @@ function handleCombatWin(set: any, get: () => GameState) {
   const actFloors = s.actFloors + 1;
   const qualifies =
     (s.contract.id === "clean_sweep" && c.hp >= c.maxHp * 0.75) ||
-    (s.contract.id === "shock_assault" && c.turn <= 2) ||
+    (s.contract.id === "shock_assault" && c.turn <= 3) ||
     (s.contract.id === "iron_line" && c.block + c.armor > 0);
   let contract = s.contract;
   let contractsCompleted = s.contractsCompleted;

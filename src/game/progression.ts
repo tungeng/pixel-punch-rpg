@@ -63,7 +63,7 @@ export interface ContractState {
 
 const CONTRACTS: Omit<ContractState, "progress" | "complete">[] = [
   { id: "clean_sweep", name: "CLEAN SWEEP", text: "Win 2 fights at 75% HP or higher.", goal: 2 },
-  { id: "shock_assault", name: "SHOCK ASSAULT", text: "Win 2 fights in 2 turns or less.", goal: 2 },
+  { id: "shock_assault", name: "SHOCK ASSAULT", text: "Win 2 fights in 3 turns or less.", goal: 2 },
   { id: "iron_line", name: "IRON LINE", text: "Win 2 fights with Block or Armor remaining.", goal: 2 },
 ];
 
