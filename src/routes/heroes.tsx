@@ -145,7 +145,7 @@ function HeroRoster() {
               className={`press tile-lift relative flex flex-col items-center gap-0.5 border-2 p-1 ${
                 sel ? "bg-card" : "border-border bg-card/50"
               }`}
-              style={sel ? { borderColor: h.color } : undefined}
+              style={sel ? { borderColor: h.color } : {}}
             >
               <img
                 src={h.asset}

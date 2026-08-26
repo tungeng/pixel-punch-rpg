@@ -121,7 +121,7 @@ function Stats() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.04, duration: 0.22 }}
                 className="flex items-center gap-2 border-2 border-border bg-card p-2"
-                style={i === 0 ? { borderColor: GOLD } : undefined}
+                style={i === 0 ? { borderColor: GOLD } : {}}
               >
                 <span
                   className="text-pixel w-4 shrink-0 text-center text-[9px]"
