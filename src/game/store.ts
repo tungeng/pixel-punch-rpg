@@ -317,11 +317,11 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
     c.block -= absorbed;
     remaining -= absorbed;
   }
-  // Reinhardt: Armor soaks what Block could not, and carries between turns
+  // Reinhardt: Crusader Armor halves what gets past Block and barely chips away.
   if (remaining > 0 && c.armor > 0) {
-    const soaked = Math.min(c.armor, remaining);
-    c.armor -= soaked;
-    remaining -= soaked;
+    const reduced = Math.min(remaining, Math.ceil(remaining / 2) + Math.floor(c.armor / 8));
+    remaining -= reduced;
+    c.armor = Math.max(0, c.armor - 1);
   }
   c.hp -= remaining;
   c.damageTakenThisCombat += remaining;
