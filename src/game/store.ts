@@ -599,7 +599,7 @@ export const useGame = create<GameState>((set, get) => ({
     const upgradedCount = s.deck.filter((card) => card.upgraded).length;
     const leanDeckBonus = s.deck.length < 24 ? (24 - s.deck.length) * 0.012 : 0;
     const bossEase = nodeType === "boss" ? 0.95 : 1;
-    const sustainPressure = s.heroId === "mercy" ? 1.08 : 1;
+    const sustainPressure = s.heroId === "mercy" ? 1.16 : 1;
     const hpScale = (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) * bossEase * sustainPressure;
     const strBonus =
       Math.floor(floor / 3) +

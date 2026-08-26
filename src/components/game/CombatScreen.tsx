@@ -68,6 +68,7 @@ export function CombatScreen() {
   const combat = useGame((s) => s.combat);
   const heroId = useGame((s) => s.heroId);
   const gold = useGame((s) => s.gold);
+  const hasNullSectorCore = useGame((s) => s.relics.includes("null_sector_core"));
   const playCard = useGame((s) => s.playCard);
   const selectTarget = useGame((s) => s.selectTarget);
   const cancelTarget = useGame((s) => s.cancelTarget);
@@ -129,6 +130,7 @@ export function CombatScreen() {
   if (!combat) return null;
   const hero = HEROES[heroId]!;
   const targeting = !!combat.targetingCardUid;
+  const ultimateReady = combat.ultCharge >= 100 || (hasNullSectorCore && !combat.freeUltUsed);
   const hand = combat.hand;
   const mid = (hand.length - 1) / 2;
   // fit the fan inside the portrait viewport by scaling it down instead of
@@ -405,15 +407,15 @@ export function CombatScreen() {
           />
         </div>
         <motion.div
-          animate={combat.ultCharge >= 100 ? { scale: [1, 1.07, 1] } : { scale: 1 }}
-          transition={{ repeat: combat.ultCharge >= 100 ? Infinity : 0, duration: 1 }}
+          animate={ultimateReady ? { scale: [1, 1.07, 1] } : { scale: 1 }}
+          transition={{ repeat: ultimateReady ? Infinity : 0, duration: 1 }}
         >
           <PixelButton
             onClick={() => {
               if (ultAnnounce) return;
               setUltAnnounce(true);
             }}
-            disabled={combat.ultCharge < 100 || ultAnnounce}
+            disabled={!ultimateReady || ultAnnounce}
             color="danger"
             className="px-3 py-2"
           >
