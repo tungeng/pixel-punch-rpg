@@ -573,7 +573,7 @@ export const useGame = create<GameState>((set, get) => ({
       hp: maxHp,
       startingRelicChoices: [],
       phase: "map",
-      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.desc}`,
+      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.text}`,
       lastEventAt: Date.now(),
     });
   },
@@ -585,7 +585,7 @@ export const useGame = create<GameState>((set, get) => ({
       augments: [...s.augments, augmentId],
       augmentChoices: [],
       phase: s.pendingRelic ? "treasure" : "map",
-      lastEvent: `Augment installed: ${AUGMENTS[augmentId]!.name}. ${AUGMENTS[augmentId]!.desc}`,
+      lastEvent: `Augment installed: ${AUGMENTS[augmentId]!.name}. ${AUGMENTS[augmentId]!.text}`,
       lastEventAt: Date.now(),
     });
   },
@@ -1395,7 +1395,7 @@ export const useGame = create<GameState>((set, get) => ({
       phase: "map",
       maxHp,
       hp: Math.min(s.hp, maxHp),
-      lastEvent: gained ? `${gained.name} equipped. ${gained.desc}` : "",
+      lastEvent: gained ? `${gained.name} equipped. ${gained.text}` : "",
       lastEventAt: Date.now(),
     });
     markNodeVisited(set, get);
@@ -1433,7 +1433,7 @@ export const useGame = create<GameState>((set, get) => ({
       hp: Math.min(s.hp, newMax),
       maxHp: newMax,
       shopRelics: s.shopRelics.map((r, i) => (i === index ? "" : r)),
-      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.desc}`,
+      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.text}`,
       lastEventAt: Date.now(),
     });
 
