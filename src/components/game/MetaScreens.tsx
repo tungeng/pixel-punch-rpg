@@ -1,14 +1,14 @@
 import { ACT_COUNT } from "@/game/enemies";
 import { useGame, cardPrice, relicPrice } from "@/game/store";
 import { HEROES } from "@/game/heroes";
-import { RELICS, RELIC_TIER_COLOR } from "@/game/relics";
+import { RELICS, RELIC_TIER_COLOR, isExaltedTier } from "@/game/relics";
 import { CardView } from "./CardView";
 import { ScoreSubmit } from "./ScoreSubmit";
 import { PixelButton } from "./PixelButton";
 import { Bar } from "./Bar";
 import { motion } from "motion/react";
 import { RelicTray } from "./RelicTray";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 export function RewardScreen() {
   const choices = useGame((s) => s.rewardChoices);
@@ -33,8 +33,16 @@ export function RewardScreen() {
           initial={{ scale: 0.4, rotate: -14, opacity: 0 }}
           animate={{ scale: 1, rotate: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 240, damping: 13 }}
-          className="mb-4 flex w-full max-w-[320px] items-center gap-3 bg-black/50 p-2"
-          style={{ border: `3px solid ${relic.color}`, boxShadow: `0 0 24px -6px ${relic.color}` }}
+          className={`mb-4 flex w-full max-w-[320px] items-center gap-3 bg-black/50 p-2 ${
+            isExaltedTier(relic.tier) ? "relic-exalted" : ""
+          } ${relic.tier === "mythic" ? "relic-mythic" : ""}`}
+          style={
+            {
+              border: `3px solid ${relic.color}`,
+              boxShadow: `0 0 24px -6px ${relic.color}`,
+              "--tier-color": RELIC_TIER_COLOR[relic.tier ?? "common"],
+            } as CSSProperties
+          }
         >
           <div className="breathe-glow shrink-0">
             <RelicIcon id={relic.id} />
@@ -121,7 +129,10 @@ export function TreasureScreen() {
           initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
           animate={{ scale: 1, rotate: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 14 }}
-          className="mb-4 flex flex-col items-center gap-3"
+          className={`mb-4 flex flex-col items-center gap-3 p-3 ${
+            isExaltedTier(relic?.tier) ? "relic-exalted" : ""
+          } ${relic?.tier === "mythic" ? "relic-mythic" : ""}`}
+          style={{ "--tier-color": RELIC_TIER_COLOR[relic?.tier ?? "common"] } as CSSProperties}
         >
           <div className="scale-[1.8]">
             <RelicIcon id={pending} />
@@ -203,8 +214,15 @@ export function ShopScreen() {
               whileHover={{ y: -4 }}
               onClick={() => buyRelic(i)}
               disabled={gold < relicPrice(r)}
-              className="flex w-32 flex-col items-center gap-1 bg-black/40 p-2 disabled:opacity-40"
-              style={{ border: `2px solid ${RELICS[r]?.color ?? "#07060c"}` }}
+              className={`flex w-32 flex-col items-center gap-1 bg-black/40 p-2 disabled:opacity-40 ${
+                isExaltedTier(RELICS[r]?.tier) ? "relic-exalted" : ""
+              } ${RELICS[r]?.tier === "mythic" ? "relic-mythic" : ""}`}
+              style={
+                {
+                  border: `2px solid ${RELICS[r]?.color ?? "#07060c"}`,
+                  "--tier-color": RELIC_TIER_COLOR[RELICS[r]?.tier ?? "common"],
+                } as CSSProperties
+              }
             >
               <RelicIcon id={r} />
               <span className="text-pixel text-center text-[8px] leading-[11px]" style={{ color: RELICS[r]?.color }}>
@@ -406,8 +424,16 @@ export function RelicChoiceScreen() {
               transition={{ delay: i * 0.08 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => choose(id)}
-              className="flex items-center gap-3 bg-[#0b0a12] p-3 text-left"
-              style={{ border: `3px solid ${tierColor}`, boxShadow: `0 0 16px -6px ${relic.color}` }}
+              className={`flex items-center gap-3 bg-[#0b0a12] p-3 text-left ${
+                isExaltedTier(relic.tier) ? "relic-exalted" : ""
+              } ${relic.tier === "mythic" ? "relic-mythic" : ""}`}
+              style={
+                {
+                  border: `3px solid ${tierColor}`,
+                  boxShadow: `0 0 16px -6px ${relic.color}`,
+                  "--tier-color": tierColor,
+                } as CSSProperties
+              }
             >
               <RelicIcon id={id} />
               <div className="min-w-0 flex-1">
