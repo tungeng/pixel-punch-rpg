@@ -207,7 +207,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
           const card =
             defense ?? setup ?? playable.find((x) => x.type === "attack") ?? playable[0]!;
           playsThisTurn++;
-          res.cardsPlayed[card.defId] = (res.cardsPlayed[card.defId] ?? 0) + 1;
+          res.cardsPlayed[card.id] = (res.cardsPlayed[card.id] ?? 0) + 1;
           s.playCard(card.uid);
         } else {
           res.wastedEnergy += c.energy;
@@ -221,7 +221,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         if (choices.length > 0) {
           // prefer a card the deck doesn't already have a lot of
           const counts: Record<string, number> = {};
-          for (const cd of s.deck) counts[cd.defId] = (counts[cd.defId] ?? 0) + 1;
+          for (const cd of s.deck) counts[cd.id] = (counts[cd.id] ?? 0) + 1;
           const sorted = [...choices].sort(
             (a, b) => (counts[a.id] ?? 0) - (counts[b.id] ?? 0),
           );
