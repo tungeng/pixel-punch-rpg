@@ -1389,7 +1389,15 @@ export const useGame = create<GameState>((set, get) => ({
   confirmRelic: () => {
     const s = get();
     const maxHp = maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades);
-    set({ pendingRelic: null, phase: "map", maxHp, hp: Math.min(s.hp, maxHp) });
+    const gained = s.pendingRelic ? RELICS[s.pendingRelic] : null;
+    set({
+      pendingRelic: null,
+      phase: "map",
+      maxHp,
+      hp: Math.min(s.hp, maxHp),
+      lastEvent: gained ? `${gained.name} equipped. ${gained.desc}` : "",
+      lastEventAt: Date.now(),
+    });
     markNodeVisited(set, get);
   },
 
@@ -2093,6 +2101,20 @@ function handleCombatWin(set: any, get: () => GameState) {
       : null;
   const relics = droppedRelic ? [...s.relics, droppedRelic] : s.relics;
 
+  // Every fight ends with a readable summary of what the win actually gave you.
+  const bannerLines: string[] = [
+    `Cleared in ${c.turn} turn${c.turn === 1 ? "" : "s"}`,
+    `+${g} gold`,
+  ];
+  if (hp > c.hp) bannerLines.push(`+${hp - c.hp} HP recovered`);
+  if (droppedRelic) bannerLines.push(`Relic found: ${RELICS[droppedRelic]!.name}`);
+  if (contract.complete && !s.contract.complete) bannerLines.push(`Contract complete: ${contract.name}`);
+  const banner = {
+    title: c.nodeType === "boss" ? "BOSS DOWN" : c.nodeType === "elite" ? "ELITE PURGED" : "AREA CLEAR",
+    lines: bannerLines,
+    tone: (c.nodeType === "boss" ? "boss" : "win") as "boss" | "win",
+  };
+
 
   // boss -> next act or victory
   if (c.nodeType === "boss") {
@@ -2122,6 +2144,7 @@ function handleCombatWin(set: any, get: () => GameState) {
         rewardChoices: choices,
         rewardGold: g,
         combat: null,
+        banner,
         bossOutro: BOSSES[c.enemies[0]?.defId ?? ""]?.deathLine ?? null,
       });
       return;
@@ -2141,6 +2164,7 @@ function handleCombatWin(set: any, get: () => GameState) {
       phase: "victory",
       combat: null,
       meta,
+      banner,
       bossOutro: BOSSES[c.enemies[0]?.defId ?? ""]?.deathLine ?? null,
       lastRun: { heroId: s.heroId, score, floorsCleared, act: s.act + 1, fullClear: true },
       scoreSubmitted: false,
@@ -2164,6 +2188,7 @@ function handleCombatWin(set: any, get: () => GameState) {
     rewardChoices: choices,
     rewardGold: g,
     combat: null,
+    banner,
   });
 }
 
