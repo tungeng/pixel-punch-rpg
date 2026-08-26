@@ -39,6 +39,9 @@ function simulateRun(hero: string, seed: string): RunResult {
 
   let steps = 0;
   let turns = 0;
+  // Guard against the greedy bot cycling free draw cards forever on one turn.
+  let playsThisTurn = 0;
+  let lastTurnKey = "";
   const MAX_STEPS = 8000;
 
   while (steps++ < MAX_STEPS) {
@@ -106,6 +109,18 @@ function simulateRun(hero: string, seed: string): RunResult {
           break;
         }
 
+        const turnKey = `${c.turn}_${c.enemies.map((e) => e.uid).join("")}`;
+        if (turnKey !== lastTurnKey) {
+          lastTurnKey = turnKey;
+          playsThisTurn = 0;
+        }
+        if (playsThisTurn > 60) {
+          playsThisTurn = 0;
+          turns++;
+          s.endTurn();
+          break;
+        }
+
         const playable = c.hand.filter(
           (card) => card.cost <= c.energy && card.type !== c.hackedType,
         );
@@ -136,6 +151,7 @@ function simulateRun(hero: string, seed: string): RunResult {
             : undefined;
           const card =
             defense ?? setup ?? playable.find((x) => x.type === "attack") ?? playable[0]!;
+          playsThisTurn++;
           s.playCard(card.uid);
         } else {
           turns++;
