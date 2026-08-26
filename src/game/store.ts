@@ -274,13 +274,13 @@ function drawCountFor(heroId: string, relics: string[]): number {
  * so their damage window still closes fights.
  */
 const HERO_PRESSURE: Record<string, number> = {
-  mercy: 1.15,
-  moira: 1.1,
-  reinhardt: 0.88,
-  tracer: 0.95,
-  genji: 0.82,
-  junkrat: 0.85,
-  doomfist: 0.85,
+  mercy: 1.12,
+  moira: 1.06,
+  reinhardt: 0.82,
+  tracer: 0.8,
+  genji: 0.7,
+  junkrat: 0.74,
+  doomfist: 0.82,
 };
 
 /**
@@ -632,7 +632,7 @@ export const useGame = create<GameState>((set, get) => ({
     const heroPressure = HERO_PRESSURE[s.heroId] ?? 1;
     // Fights are meant to be read, not deleted. Enemies carry a deeper HP pool so
     // a combat plays out over several turns of real decisions.
-    const DEPTH = 1.6;
+    const DEPTH = 1.72;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
