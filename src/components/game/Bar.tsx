@@ -60,7 +60,7 @@ export function Bar({
       />
       {label && (
         <div
-          className="text-pixel absolute inset-0 flex items-center justify-center text-[9px] text-white"
+          className="text-pixel absolute inset-0 flex items-center justify-center text-[11px] leading-none text-white"
           style={{
             textShadow: "1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000",
           }}
