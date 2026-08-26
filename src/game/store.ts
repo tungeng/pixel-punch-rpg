@@ -794,10 +794,10 @@ export const useGame = create<GameState>((set, get) => ({
     // was filler punctuated by a wall. Each encounter class now has its own
     // depth: skirmishes are real attrition, elites are puzzles, bosses stay
     // long but hit less brutally per turn.
-    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.82 : 0.9) : nodeType === "elite" ? 3.02 : 3.16;
+    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.80 : 0.88) : nodeType === "elite" ? 3.26 : 3.38;
     const hpScale =
       DEPTH *
-      (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
+      (1 + s.act * 0.63 + floor * 0.115 + relicCount * 0.048 + augmentCount * 0.085 + upgradedCount * 0.012 + leanDeckBonus) *
       heroPressure;
     // ...and hit softer per turn, so length creates tension instead of coin-flips.
     const pace = nodeType === "boss" ? 0.7 : nodeType === "elite" ? 0.8 : 0.55;
@@ -809,7 +809,7 @@ export const useGame = create<GameState>((set, get) => ({
           Math.floor(relicCount / 4) +
           Math.floor(augmentCount / 3) +
           (nodeType === "elite" ? 2 + s.act : 0) +
-          (nodeType === "boss" ? 1 + Math.round(s.act * 0.6) : 0) +
+          (nodeType === "boss" ? Math.round(s.act * 0.5) : 0) +
           (HERO_AGGRO[s.heroId] ?? 0)) *
           pace,
       ),
@@ -908,7 +908,7 @@ export const useGame = create<GameState>((set, get) => ({
       combat.energy += a.energy + (t > 2 ? 1 : 0);
       combat.ultCharge += a.ult * t;
       if (a.draw > 0) drawCards(combat, a.draw * t);
-      if (id === "rein_crusader") combat.armor += 12 * t;
+      if (id === "rein_crusader") combat.armor += 9 * t;
     }
     combat.ultCharge = Math.min(100, combat.ultCharge);
     // elite modifier: curse enemies hex you the moment the fight opens
@@ -1249,7 +1249,7 @@ export const useGame = create<GameState>((set, get) => ({
     c.turn += 1;
     // Doomfist: The Rising Uppercut. Pain fuels permanent Strength.
     if (s.heroId === "doomfist") {
-      const rageThreshold = s.augments.includes("doom_rising") ? Math.max(4, 10 - 2 * (s.augmentTiers["doom_rising"] ?? 1)) : 12;
+      const rageThreshold = s.augments.includes("doom_rising") ? Math.max(3, 8 - 2 * (s.augmentTiers["doom_rising"] ?? 1)) : 12;
       const owed = Math.floor(c.damageTakenThisCombat / rageThreshold) - (c.ragePaid ?? 0);
       if (owed > 0) {
         c.ragePaid = (c.ragePaid ?? 0) + owed;
@@ -1274,7 +1274,7 @@ export const useGame = create<GameState>((set, get) => ({
     c.block = relics.includes("aegis_loop") ? Math.floor(c.block / 2) : 0;
     c.thorns = 0;
     if (s.heroId === "reinhardt" && s.augments.includes("rein_honor") && c.armor > 0) {
-      const bite = Math.ceil((c.armor / 4) * (s.augmentTiers["rein_honor"] ?? 1));
+      const bite = Math.ceil((c.armor / 3) * (s.augmentTiers["rein_honor"] ?? 1));
       c.thorns += bite;
       pushFloat(c, `RETALIATE ${bite}`, "buff", "player");
     }
@@ -2033,7 +2033,7 @@ function resolveCard(
     let totalBase = scaled + bonus;
     if (s.heroId === "junkrat" && s.augments.includes("junkrat_hairtrigger") && card.randomDamage) {
       const [lo, hi] = card.randomDamage;
-      totalBase = Math.max(totalBase, Math.ceil((lo + hi) / 2));
+      totalBase = Math.max(totalBase, Math.ceil((lo + hi) / 2) + 2 * (s.augmentTiers["junkrat_hairtrigger"] ?? 1));
     }
     if (card.doubleIfHandEmpty && c.hand.length === 0) {
       totalBase *= 2;
@@ -2056,7 +2056,7 @@ function resolveCard(
       !card.aoe &&
       s.heroId === "doomfist" &&
       s.augments.includes("doom_meteor") &&
-      (c.attacksThisCombat ?? 0) % 3 === 0
+      (c.attacksThisCombat ?? 0) % 2 === 0
     ) {
       const quake = Math.max(1, Math.floor(totalBase / 2));
       for (const e of c.enemies) {
