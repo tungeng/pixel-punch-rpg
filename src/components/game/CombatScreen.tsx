@@ -959,7 +959,10 @@ function EnemyView({
       </AnimatePresence>
 
       {/* nameplate: who this is, and how dangerous, before you read the bar */}
-      <div className="mt-1 flex w-28 items-center justify-between gap-1">
+      <div
+        className="relative z-10 mt-1 flex w-28 items-center justify-between gap-1 px-1"
+        style={{ background: "#07060cdd", borderTop: `2px solid ${isBoss ? "#ff5cf0" : isElite ? "#ffb020" : "#3b4256"}` }}
+      >
         <span
           className="text-pixel truncate text-[6.5px]"
           style={{ color: isBoss ? "#ff5cf0" : isElite ? "#ffb020" : "#cbd5e1" }}
@@ -975,6 +978,7 @@ function EnemyView({
           </span>
         )}
       </div>
+
 
       <div className="w-28">
         <Bar
