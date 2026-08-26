@@ -1394,6 +1394,8 @@ export const useGame = create<GameState>((set, get) => ({
       gold: s.gold - cost,
       deck: [...s.deck, card],
       shopCards: s.shopCards.filter((_, i) => i !== index),
+      lastEvent: `Bought ${card.name} for ${cost} gold.`,
+      lastEventAt: Date.now(),
     });
   },
 
@@ -1413,6 +1415,8 @@ export const useGame = create<GameState>((set, get) => ({
       hp: Math.min(s.hp, newMax),
       maxHp: newMax,
       shopRelics: s.shopRelics.map((r, i) => (i === index ? "" : r)),
+      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.desc}`,
+      lastEventAt: Date.now(),
     });
 
   },
@@ -1421,7 +1425,13 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     if (s.gold < 75) return;
     if (s.deck.length <= 5) return; // never let the deck get unplayably small
-    set({ gold: s.gold - 75, deck: s.deck.filter((c) => c.uid !== cardUid) });
+    const gone = s.deck.find((c) => c.uid === cardUid);
+    set({
+      gold: s.gold - 75,
+      deck: s.deck.filter((c) => c.uid !== cardUid),
+      lastEvent: gone ? `${gone.name} removed from your deck.` : "Card removed.",
+      lastEventAt: Date.now(),
+    });
   },
 
   leaveShop: () => {
