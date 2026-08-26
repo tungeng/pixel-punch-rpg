@@ -245,6 +245,8 @@ export interface RelicDef {
   icon: string;
   color: string;
   tier?: "common" | "uncommon" | "rare";
+  /** Locked at the start of the game; must be bought in the Relic Codex. */
+  startsLocked?: boolean;
 }
 
 
