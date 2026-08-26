@@ -7,6 +7,7 @@
  *
  * Run: bunx vitest run src/game/playtest.test.ts
  */
+import { ALL_RELIC_IDS } from "./relics";
 import { describe, expect, it } from "vitest";
 import { useGame } from "./store";
 import { STARTER_HEROES, UNLOCKABLE_HEROES } from "./heroes";
@@ -26,6 +27,7 @@ function simulateRun(hero: string, seed: string): RunResult {
   useGame.setState({
     meta: {
       unlockedHeroes: ALL_HEROES,
+      unlockedRelics: [...ALL_RELIC_IDS],
       credits: 0,
       bestFloor: 0,
       totalRuns: 0,

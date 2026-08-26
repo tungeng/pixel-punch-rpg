@@ -17,31 +17,45 @@ export const RELICS: Record<string, RelicDef> = {
   regen_drone: { id: "regen_drone", name: "Repair Pack", text: "Heal 2 HP at the start of each turn.", icon: "🧰", color: "#06b6d4", tier: "common" },
   static_shell: { id: "static_shell", name: "Crystalline Aegis", text: "Gain 3 Block each time you're hit.", icon: "🧊", color: "#7dd3fc", tier: "common" },
   salvage_claw: { id: "salvage_claw", name: "Torbjörn's Scrap Claw", text: "+20 gold after every combat.", icon: "🔧", color: "#a3a3a3", tier: "common" },
-  war_banner: { id: "war_banner", name: "Sonic Amplifier", text: "Enemies start each combat with 2 Vulnerable.", icon: "🎶", color: "#fb7185", tier: "common" },
+  war_banner: { id: "war_banner", name: "Sonic Amplifier", text: "Enemies start each combat with 2 Vulnerable.", icon: "🎶", color: "#fb7185", tier: "common", startsLocked: true },
 
   // ---------- uncommon ----------
-  power_cell: { id: "power_cell", name: "Ultimate Accelerator", text: "Ultimate charges 60% faster.", icon: "🔋", color: "#a855f7", tier: "uncommon" },
+  power_cell: { id: "power_cell", name: "Ultimate Accelerator", text: "Ultimate charges 60% faster.", icon: "🔋", color: "#a855f7", tier: "uncommon", startsLocked: true },
   hex_emitter: { id: "hex_emitter", name: "Sombra's Virus", text: "Enemies start each combat with 2 Weak.", icon: "🕷️", color: "#c084fc", tier: "uncommon" },
   ult_battery: { id: "ult_battery", name: "Nano Canister", text: "Start each combat with 30% Ultimate charge.", icon: "🎇", color: "#f472b6", tier: "uncommon" },
-  dragon_ember: { id: "dragon_ember", name: "Dragonstrike Ember", text: "Gain 1 Strength at the start of every turn.", icon: "🐉", color: "#f97316", tier: "uncommon" },
-  volt_capacitor: { id: "volt_capacitor", name: "Tesla Cannon", text: "Deal 5 damage to a random enemy each turn.", icon: "🌩️", color: "#facc15", tier: "uncommon" },
-  aegis_loop: { id: "aegis_loop", name: "Photon Projector", text: "Keep half your Block between turns.", icon: "♾️", color: "#34d399", tier: "uncommon" },
-  haste_module: { id: "haste_module", name: "Pulse Booster", text: "The first card you play each turn costs 1 less.", icon: "💨", color: "#22d3ee", tier: "uncommon" },
+  dragon_ember: { id: "dragon_ember", name: "Dragonstrike Ember", text: "Gain 1 Strength at the start of every turn.", icon: "🐉", color: "#f97316", tier: "uncommon", startsLocked: true },
+  volt_capacitor: { id: "volt_capacitor", name: "Tesla Cannon", text: "Deal 5 damage to a random enemy each turn.", icon: "🌩️", color: "#facc15", tier: "uncommon", startsLocked: true },
+  aegis_loop: { id: "aegis_loop", name: "Photon Projector", text: "Keep half your Block between turns.", icon: "♾️", color: "#34d399", tier: "uncommon", startsLocked: true },
+  haste_module: { id: "haste_module", name: "Pulse Booster", text: "The first card you play each turn costs 1 less.", icon: "💨", color: "#22d3ee", tier: "uncommon", startsLocked: true },
   phoenix_core: { id: "phoenix_core", name: "Immortality Field", text: "Heal 3 HP whenever a card is exhausted.", icon: "🔆", color: "#fdba74", tier: "uncommon" },
   blood_pact: { id: "blood_pact", name: "Vampiric Gauntlet", text: "Heal 8% of Max HP after each combat.", icon: "🩸", color: "#b91c1c", tier: "uncommon" },
   codex_shard: { id: "codex_shard", name: "Athena Uplink", text: "Card rewards offer 4 choices instead of 3.", icon: "📘", color: "#60a5fa", tier: "uncommon" },
-  relic_scanner: { id: "relic_scanner", name: "Translocator Beacon", text: "Elites and bosses always drop a relic.", icon: "📡", color: "#2dd4bf", tier: "uncommon" },
+  relic_scanner: { id: "relic_scanner", name: "Translocator Beacon", text: "Elites and bosses always drop a relic.", icon: "📡", color: "#2dd4bf", tier: "uncommon", startsLocked: true },
 
   // ---------- rare ----------
-  soul_stone: { id: "soul_stone", name: "Resurrect Protocol", text: "Revive once at 50% HP when you die.", icon: "🕊️", color: "#6366f1", tier: "rare" },
-  reactor_surge: { id: "reactor_surge", name: "Zero-Point Reactor", text: "+2 Energy on every other turn.", icon: "☢️", color: "#fde047", tier: "rare" },
+  soul_stone: { id: "soul_stone", name: "Resurrect Protocol", text: "Revive once at 50% HP when you die.", icon: "🕊️", color: "#6366f1", tier: "rare", startsLocked: true },
+  reactor_surge: { id: "reactor_surge", name: "Zero-Point Reactor", text: "+2 Energy on every other turn.", icon: "☢️", color: "#fde047", tier: "rare", startsLocked: true },
   titan_plating: { id: "titan_plating", name: "Crusader Plating", text: "+55 Max HP, but -1 max Energy.", icon: "🏗️", color: "#94a3b8", tier: "rare" },
-  combat_visor: { id: "combat_visor", name: "Tactical Visor", text: "Draw +2 cards each turn, but -15 Max HP.", icon: "🥽", color: "#38f8c0", tier: "rare" },
+  combat_visor: { id: "combat_visor", name: "Tactical Visor", text: "Draw +2 cards each turn, but -15 Max HP.", icon: "🥽", color: "#38f8c0", tier: "rare", startsLocked: true },
   execution_chip: { id: "execution_chip", name: "Death Blossom Chip", text: "Start each combat with 3 Strength.", icon: "💀", color: "#ff6b3d", tier: "rare" },
-  chrono_engine: { id: "chrono_engine", name: "Chronal Accelerator", text: "Start each combat with 20 Block and 1 extra card.", icon: "⏱️", color: "#8b5cf6", tier: "rare" },
+  chrono_engine: { id: "chrono_engine", name: "Chronal Accelerator", text: "Start each combat with 20 Block and 1 extra card.", icon: "⏱️", color: "#8b5cf6", tier: "rare", startsLocked: true },
 };
 
 export const ALL_RELIC_IDS = Object.keys(RELICS);
+
+/** Relics available from the very first run — the rest are unlocked in the Relic Codex. */
+export const DEFAULT_UNLOCKED_RELIC_IDS = ALL_RELIC_IDS.filter((id) => !RELICS[id]?.startsLocked);
+
+export const RELIC_UNLOCK_COST: Record<string, number> = {
+  common: 120,
+  uncommon: 260,
+  rare: 450,
+};
+
+/** Permanent (meta) unlock price in Chrono Cores. */
+export function relicUnlockCost(id: string): number {
+  return RELIC_UNLOCK_COST[RELICS[id]?.tier ?? "common"] ?? 120;
+}
 
 export const RELIC_TIER_COLOR: Record<string, string> = {
   common: "#cbd5e1",
