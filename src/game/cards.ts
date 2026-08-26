@@ -38,7 +38,7 @@ export const CARDS: Record<string, CardDef> = {
   // ---------------- GENJI (combo) ----------------
   genji_shuriken: { id: "genji_shuriken", name: "Shuriken", type: "attack", cost: 0, hero: "genji", rarity: "starter", damage: 3, text: "Deal 3 damage.", up: { damage: 5 } },
   genji_swift: { id: "genji_swift", name: "Swift Strike", type: "attack", cost: 1, hero: "genji", rarity: "starter", damage: 6, bonusIfAttack: 3, text: "Deal 6 damage. +3 if you played an Attack this turn.", up: { damage: 9, bonusIfAttack: 5 } },
-  genji_deflect: { id: "genji_deflect", name: "Deflect", type: "skill", cost: 1, hero: "genji", rarity: "starter", block: 6, text: "Gain 6 Block.", up: { block: 9 } },
+  genji_deflect: { id: "genji_deflect", name: "Deflect", type: "skill", cost: 1, hero: "genji", rarity: "starter", block: 8, text: "Gain 8 Block.", up: { block: 11 } },
   genji_fang: { id: "genji_fang", name: "Dragon Fang", type: "attack", cost: 1, hero: "genji", rarity: "common", damage: 5, draw: 1, text: "Deal 5 damage. Draw 1 card.", up: { damage: 8 } },
   genji_agility: { id: "genji_agility", name: "Cyber Agility", type: "skill", cost: 1, hero: "genji", rarity: "common", block: 5, comboCards: 2, comboEnergy: 1, text: "Gain 5 Block. If you played 2+ cards this turn, gain 1 Energy.", up: { block: 8 } },
   genji_spirit: { id: "genji_spirit", name: "Spirit Dragon", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 3, hitsPerAttack: true, text: "Deal 3 damage, once more for each Attack already played this turn.", up: { damage: 5 } },

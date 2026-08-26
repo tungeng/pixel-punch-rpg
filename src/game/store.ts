@@ -964,7 +964,7 @@ export const useGame = create<GameState>((set, get) => ({
     c.turn += 1;
     // Doomfist: The Rising Uppercut. Pain fuels permanent Strength.
     if (s.heroId === "doomfist") {
-      const owed = Math.floor(c.damageTakenThisCombat / 6) - (c.ragePaid ?? 0);
+      const owed = Math.floor(c.damageTakenThisCombat / 8) - (c.ragePaid ?? 0);
       if (owed > 0) {
         c.ragePaid = (c.ragePaid ?? 0) + owed;
         const gained = gainStrength(c, owed, relics);
