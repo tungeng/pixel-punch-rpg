@@ -5,6 +5,7 @@ import { Heart, Zap, Star, Lock } from "lucide-react";
 import { useGame } from "@/game/store";
 import { HEROES, STARTER_HEROES, UNLOCKABLE_HEROES } from "@/game/heroes";
 import { PixelButton } from "@/components/game/PixelButton";
+import { HeroUnlockCeremony } from "@/components/game/UnlockCeremony";
 import { MenuShell, SectionTitle, Readout } from "@/components/game/MenuShell";
 
 export const Route = createFileRoute("/play")({
@@ -36,6 +37,8 @@ function PlaySetup() {
   const meta = useGame((s) => s.meta);
   const inRun = useGame((s) => s.inRun);
   const startRun = useGame((s) => s.startRun);
+  const unlockHero = useGame((s) => s.unlockHero);
+  const [celebrating, setCelebrating] = useState<string | null>(null);
   const selectHero = useGame((s) => s.selectHero);
   const [selected, setSelected] = useState<string>(() => meta.selectedHeroId ?? "tracer");
   const [seed, setSeed] = useState("");
@@ -55,22 +58,17 @@ function PlaySetup() {
 
   function unlock(id: string) {
     if (!canUnlock(id)) return;
-    const next = {
-      ...meta,
-      credits: meta.credits - costFor(id),
-      unlockedHeroes: [...meta.unlockedHeroes, id],
-    };
-    try {
-      window.localStorage.setItem("overtung_meta_v1", JSON.stringify(next));
-    } catch {
-      /* ignore */
+    if (unlockHero(id, costFor(id))) {
+      setSelected(id);
+      setCelebrating(id);
     }
-    useGame.setState({ meta: next });
   }
 
   const heroSel = HEROES[selected]!;
 
   return (
+    <>
+    <HeroUnlockCeremony heroId={celebrating} onClose={() => setCelebrating(null)} />
     <MenuShell
       title="RUN SETUP"
       glyph="▶"
@@ -219,6 +217,7 @@ function PlaySetup() {
       )}
 
     </MenuShell>
+    </>
   );
 }
 
