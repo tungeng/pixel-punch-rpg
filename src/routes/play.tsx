@@ -205,8 +205,16 @@ function PlaySetup() {
             className="mt-2 text-[13px] text-muted-foreground"
             style={{ fontFamily: "var(--font-pixel-body)" }}
           >
-            Step 2 of 2. Breach when you are ready.
+            Step 2 of 2. Breach when you are ready. Your pick is saved, so you can leave and come back.
           </p>
+          {inRun && (
+            <p
+              className="mt-1 text-[13px] text-destructive"
+              style={{ fontFamily: "var(--font-pixel-body)" }}
+            >
+              Warning: breaching now abandons your active run.
+            </p>
+          )}
         </>
       )}
 
