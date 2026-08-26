@@ -641,27 +641,35 @@ export const useGame = create<GameState>((set, get) => ({
     const augmentCount = s.augments.length;
     const upgradedCount = s.deck.filter((card) => card.upgraded).length;
     const leanDeckBonus = s.deck.length < 24 ? (24 - s.deck.length) * 0.012 : 0;
-    const bossEase = nodeType === "boss" ? 0.95 : 1;
     // Longer fights reward sustain and punish burst, so each hero meets a
     // difficulty curve tuned to how their kit ages across a combat.
     const heroPressure = HERO_PRESSURE[s.heroId] ?? 1;
-    // Fights are meant to be read, not deleted. Enemies carry a deeper HP pool so
-    // a combat plays out over several turns of real decisions.
-    const DEPTH = 1.78;
+    // Difficulty should live across the whole route, not in one boss spike.
+    // Trash used to die in under two turns while bosses ran seven, so the run
+    // was filler punctuated by a wall. Each encounter class now has its own
+    // depth: skirmishes are real attrition, elites are puzzles, bosses stay
+    // long but hit less brutally per turn.
+    const DEPTH = nodeType === "boss" ? 1.5 : nodeType === "elite" ? 3.15 : 3.4;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
-      bossEase *
       heroPressure;
     // ...and hit softer per turn, so length creates tension instead of coin-flips.
-    const strBonus =
-      Math.floor(floor / 4) +
-      Math.round(s.act * 1.1) +
-      Math.floor(relicCount / 4) +
-      Math.floor(augmentCount / 3) +
-      (nodeType === "elite" ? 2 + s.act : 0) +
-      (nodeType === "boss" ? 1 + s.act : 0) +
-      (HERO_AGGRO[s.heroId] ?? 0);
+    const pace = nodeType === "boss" ? 0.85 : nodeType === "elite" ? 0.9 : 0.62;
+    const strBonus = Math.max(
+      0,
+      Math.round(
+        (Math.floor(floor / 4) +
+          Math.round(s.act * 1.1) +
+          Math.floor(relicCount / 4) +
+          Math.floor(augmentCount / 3) +
+          (nodeType === "elite" ? 2 + s.act : 0) +
+          (nodeType === "boss" ? 1 + Math.round(s.act * 0.6) : 0) +
+          (HERO_AGGRO[s.heroId] ?? 0)) *
+          pace,
+      ),
+    );
+
 
 
     for (const e of enemies) {
