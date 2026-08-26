@@ -331,7 +331,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
             .map((card) => ({ card, score: cardScore(card, s.heroId, counts, s.deck.length, opts.policy ?? "balanced") }))
             .sort((a, b) => b.score - a.score);
           const best = scored[0]!;
-          const skipThreshold = opts.policy === "greedy" ? -999 : opts.policy === "lean" ? 18 : s.deck.length > 30 ? 20 : 12;
+          const skipThreshold = opts.policy === "greedy" ? -999 : opts.policy === "lean" ? 22 : s.deck.length > 30 ? 24 : 15;
           if (best.score < skipThreshold) {
             res.rewardsSkipped++;
             const before = s.deck.filter((c) => c.upgraded).length;

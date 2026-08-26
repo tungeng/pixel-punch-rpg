@@ -591,18 +591,20 @@ export const useGame = create<GameState>((set, get) => ({
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
       }
     }
-    // Difficulty curve: the breach hardens the deeper you fall, and it adapts
-    // to how much relic power you're carrying, so a stacked run still bites.
-    // Difficulty is anchored to the act and how deep you are inside it, so a
-    // longer act does not spiral, and relic power is only softly answered.
+    // Difficulty is anchored to the act, then answers actual build power.
+    // Augments, upgraded lean decks and relics should feel exciting, not free.
     const floor = s.actFloors;
     const relicCount = s.relics.length;
+    const augmentCount = s.augments.length;
+    const upgradedCount = s.deck.filter((card) => card.upgraded).length;
+    const leanDeckBonus = s.deck.length < 24 ? (24 - s.deck.length) * 0.012 : 0;
     const bossEase = nodeType === "boss" ? 0.86 : 1;
-    const hpScale = (1 + s.act * 0.5 + floor * 0.09 + relicCount * 0.05) * bossEase;
+    const hpScale = (1 + s.act * 0.52 + floor * 0.1 + relicCount * 0.055 + augmentCount * 0.07 + upgradedCount * 0.008 + leanDeckBonus) * bossEase;
     const strBonus =
       Math.floor(floor / 3) +
-      Math.round(s.act * 1.6) +
+      Math.round(s.act * 1.75) +
       Math.floor(relicCount / 3) +
+      Math.floor(augmentCount / 2) +
       (nodeType === "elite" ? 3 + s.act : 0);
 
 
@@ -1238,14 +1240,16 @@ export const useGame = create<GameState>((set, get) => ({
 
   skipReward: () => {
     const s = get();
-    const candidates = s.deck.filter((c) => !c.upgraded);
+    const stabilizeRoll = Math.abs((s.seed + s.floorsCleared * 17) % 100);
+    const candidates = stabilizeRoll < 45 ? s.deck.filter((c) => !c.upgraded) : [];
     const chosen = candidates.length > 0
-      ? candidates[Math.abs((s.seed + s.floorsCleared * 17) % candidates.length)]
+      ? candidates[Math.abs((s.seed + s.floorsCleared * 31) % candidates.length)]
       : undefined;
     const deck = chosen
       ? s.deck.map((c) => (c.uid === chosen.uid ? makeCard(c.id, true) : c))
       : s.deck;
-    set({ deck, phase: "map", pendingRelic: null, lastEvent: chosen ? `${chosen.name} stabilized.` : "Deck already stabilized." });
+    const bonusGold = chosen ? 0 : 18;
+    set({ deck, gold: s.gold + bonusGold, phase: "map", pendingRelic: null, lastEvent: chosen ? `${chosen.name} stabilized.` : "+18 gold recovered." });
     markNodeVisited(set, get);
   },
 

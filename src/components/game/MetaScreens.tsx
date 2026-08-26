@@ -79,8 +79,11 @@ export function RewardScreen() {
           </motion.div>
         ))}
       </div>
-      <div className="mt-6 flex justify-center pb-4">
-        <PixelButton onClick={skip} color="ghost">Skip</PixelButton>
+      <div className="mt-6 flex flex-col items-center gap-1 pb-4">
+        <PixelButton onClick={skip} color="ghost">Stabilize deck</PixelButton>
+        <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
+          upgrades a card or recovers 18 gold
+        </span>
       </div>
     </Screen>
   );
@@ -371,7 +374,7 @@ function Screen({
       } px-4`}
       style={{
         background:
-          `radial-gradient(ellipse at 50% 0%, ${tone}22, transparent 60%), #0b0a12`,
+          `linear-gradient(135deg, ${tone}18 0 12%, transparent 12% 22%, ${tone}10 22% 30%, transparent 30%), #0b0a12`,
       }}
     >
       <div className="vignette pointer-events-none absolute inset-0" />

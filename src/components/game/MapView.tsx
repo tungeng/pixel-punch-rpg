@@ -41,6 +41,8 @@ export function MapView() {
   const currentId = useGame((s) => s.currentNodeId);
   const enterNode = useGame((s) => s.enterNode);
   const act = useGame((s) => s.act);
+  const contract = useGame((s) => s.contract);
+  const augments = useGame((s) => s.augments.length);
   const scroller = useRef<HTMLDivElement>(null);
 
   const maxCol = map.reduce((m, n) => Math.max(m, n.col), 0);
@@ -102,6 +104,13 @@ export function MapView() {
               {v.glyph} {v.label}
             </span>
           ))}
+        </div>
+        <div className="mt-2 grid grid-cols-[1fr_auto] gap-2 border-t-2 border-primary/15 pt-2">
+          <div className="min-w-0">
+            <div className="text-pixel truncate text-[7px] text-primary">▣ {contract.name} {contract.progress}/{contract.goal}</div>
+            <div className="truncate text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>{contract.text}</div>
+          </div>
+          <div className="text-pixel flex items-center border-2 border-accent/45 px-2 text-[8px] text-accent">⚡{augments}</div>
         </div>
       </div>
 
