@@ -716,7 +716,7 @@ export const useGame = create<GameState>((set, get) => ({
   chooseStartingMutator: (mutatorId) => {
     const s = get();
     const mutator = mutatorId && MUTATORS[mutatorId] ? mutatorId : null;
-    const maxHp = Math.max(20, maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades) + (mutator ? MUTATORS[mutator]!.hpMod : 0));
+    const maxHp = Math.max(20, maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades) + (mutator ? (MUTATORS[mutator]!.hpMod ?? 0) : 0));
     set({
       mutator,
       maxHp,
