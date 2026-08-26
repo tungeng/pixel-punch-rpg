@@ -17,10 +17,12 @@ import tracerImg from "../assets/tracer.png";
 import kingsrowImg from "../assets/bg_kingsrow.jpg";
 import factoryImg from "../assets/bg_factory.jpg";
 import { UPGRADES, tierOf, upgradeBonusMaxHp, upgradeCacheRelicChance, upgradeCreditMult, upgradeStartGold } from "./upgrades";
+import { AUGMENTS, augmentPoolFor, makeContract, type ContractState } from "./progression";
 
 export type Phase =
   | "map"
   | "relic_choice"
+  | "augment_choice"
   | "combat"
   | "reward"
   | "rest"
@@ -138,6 +140,10 @@ export interface GameState {
   floorsCleared: number;
   /** Fights cleared inside the current act. Drives the difficulty curve. */
   actFloors: number;
+  augments: string[];
+  augmentChoices: string[];
+  contract: ContractState;
+  contractsCompleted: number;
   phase: Phase;
   rewardChoices: CardInstance[];
   startingRelicChoices: string[];
@@ -156,6 +162,7 @@ export interface GameState {
   loadMeta: () => void;
   startRun: (heroId: string, seedLabel?: string) => void;
   chooseStartingRelic: (relicId: string) => void;
+  chooseAugment: (augmentId: string) => void;
   enterNode: (nodeId: number) => void;
   startCombat: (nodeType: NodeType, rng: Rng) => void;
   playCard: (uid: string, targetUid?: string) => void;
@@ -452,6 +459,10 @@ export const useGame = create<GameState>((set, get) => ({
   act: 0,
   floorsCleared: 0,
   actFloors: 0,
+  augments: [],
+  augmentChoices: [],
+  contract: makeContract(0),
+  contractsCompleted: 0,
   phase: "map",
   rewardChoices: [],
   startingRelicChoices: [],
@@ -501,6 +512,10 @@ export const useGame = create<GameState>((set, get) => ({
       act: 0,
       floorsCleared: 0,
       actFloors: 0,
+      augments: [],
+      augmentChoices: [],
+      contract: makeContract(seed % 3),
+      contractsCompleted: 0,
       phase: "relic_choice",
       startingRelicChoices: rng.shuffle(startingRelicChoices),
       combat: null,
@@ -513,6 +528,12 @@ export const useGame = create<GameState>((set, get) => ({
     const relics = [relicId];
     const maxHp = maxHpFor(s.heroId, relics, s.act, s.meta.upgrades);
     set({ relics, maxHp, hp: maxHp, startingRelicChoices: [], phase: "map" });
+  },
+
+  chooseAugment: (augmentId) => {
+    const s = get();
+    if (!s.augmentChoices.includes(augmentId) || !AUGMENTS[augmentId]) return;
+    set({ augments: [...s.augments, augmentId], augmentChoices: [], phase: "map" });
   },
 
   enterNode: (nodeId) => {
@@ -643,6 +664,17 @@ export const useGame = create<GameState>((set, get) => ({
       freeUltUsed: false,
       fracturePending: s.relics.includes("timeline_fracture"),
     };
+    for (const id of s.augments) {
+      const a = AUGMENTS[id];
+      if (!a) continue;
+      combat.block += a.block;
+      combat.strength += a.strength;
+      combat.energy += a.energy;
+      combat.ultCharge += a.ult;
+      if (a.draw > 0) drawCards(combat, a.draw);
+      if (id === "rein_crusader") combat.armor += 12;
+    }
+    combat.ultCharge = Math.min(100, combat.ultCharge);
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
       if (e.trait === "curse") {
@@ -1831,6 +1863,21 @@ function handleCombatWin(set: any, get: () => GameState) {
   gold += g;
   const floorsCleared = s.floorsCleared + 1;
   const actFloors = s.actFloors + 1;
+  const qualifies =
+    (s.contract.id === "clean_sweep" && c.hp >= c.maxHp * 0.75) ||
+    (s.contract.id === "shock_assault" && c.turn <= 2) ||
+    (s.contract.id === "iron_line" && c.block + c.armor > 0);
+  let contract = s.contract;
+  let contractsCompleted = s.contractsCompleted;
+  if (!contract.complete && qualifies) {
+    const progress = Math.min(contract.goal, contract.progress + 1);
+    contract = { ...contract, progress, complete: progress >= contract.goal };
+    if (contract.complete) {
+      contractsCompleted += 1;
+      hp = Math.min(s.maxHp, hp + 12);
+      gold += 35;
+    }
+  }
   // card reward
   const rng = rngForRun(s.seed, 9000 + floorsCleared);
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
@@ -1867,6 +1914,8 @@ function handleCombatWin(set: any, get: () => GameState) {
       const nextAct = s.act + 1;
       const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
       const nextMaxHp = maxHpFor(s.heroId, relics, nextAct, s.meta.upgrades);
+      const available = augmentPoolFor(s.heroId, s.augments);
+      const augmentChoices = rng.shuffle(available).slice(0, 3).map((a) => a.id);
       set({
         hp: Math.min(nextMaxHp, hp + Math.floor(nextMaxHp * 0.35)),
         maxHp: nextMaxHp,
@@ -1877,7 +1926,11 @@ function handleCombatWin(set: any, get: () => GameState) {
         act: nextAct,
         map: newMap,
         currentNodeId: null,
-        phase: droppedRelic ? "treasure" : "map",
+        phase: "augment_choice",
+        augments: s.augments,
+        augmentChoices,
+        contract: makeContract((s.seed + nextAct) % 3),
+        contractsCompleted,
         pendingRelic: droppedRelic,
         rewardChoices: choices,
         rewardGold: g,
@@ -1916,6 +1969,8 @@ function handleCombatWin(set: any, get: () => GameState) {
     relics,
     floorsCleared,
     actFloors,
+    contract,
+    contractsCompleted,
     phase: "reward",
     pendingRelic: droppedRelic,
     rewardChoices: choices,
