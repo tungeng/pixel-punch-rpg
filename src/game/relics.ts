@@ -58,8 +58,10 @@ export const DEFAULT_UNLOCKED_RELIC_IDS = ALL_RELIC_IDS.filter((id) => !RELICS[i
 /** Tiers that never appear in random drops, shops or caches. Codex unlock only. */
 export const CODEX_ONLY_TIERS = ["mythic"];
 
-export function isDropEligible(id: string): boolean {
-  return !CODEX_ONLY_TIERS.includes(RELICS[id]?.tier ?? "common");
+export function isDropEligible(id: string, allowMythic = false): boolean {
+  const tier = RELICS[id]?.tier ?? "common";
+  if (allowMythic && tier === "mythic") return true;
+  return !CODEX_ONLY_TIERS.includes(tier);
 }
 
 export const RELIC_UNLOCK_COST: Record<string, number> = {
@@ -88,9 +90,12 @@ export function isExaltedTier(tier?: string): boolean {
   return tier === "legendary" || tier === "mythic";
 }
 
-/** Weighted relic roll. Rarer tiers show up less often. Mythics never roll. */
-export function pickRelicId(pool: string[], roll: number): string | undefined {
-  const eligible = pool.filter(isDropEligible);
+/**
+ * Weighted relic roll. Rarer tiers show up less often. Mythics only ever roll
+ * from post-combat drops (allowMythic), never from shops or caches.
+ */
+export function pickRelicId(pool: string[], roll: number, allowMythic = false): string | undefined {
+  const eligible = pool.filter((id) => isDropEligible(id, allowMythic));
   if (eligible.length === 0) return undefined;
   const byTier = (t: string) => eligible.filter((id) => (RELICS[id]?.tier ?? "common") === t);
   const order =
@@ -98,8 +103,10 @@ export function pickRelicId(pool: string[], roll: number): string | undefined {
       ? ["common", "uncommon", "rare"]
       : roll < 0.87
         ? ["uncommon", "rare", "common"]
-        : roll > 0.985
-          ? ["legendary", "rare", "uncommon", "common"]
+        : allowMythic && roll > 0.997
+          ? ["mythic", "legendary", "rare", "uncommon", "common"]
+          : roll > 0.985
+            ? ["legendary", "rare", "uncommon", "common"]
           : ["rare", "uncommon", "common"];
   for (const t of order) {
     const group = byTier(t);

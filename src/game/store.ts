@@ -1734,12 +1734,12 @@ function handleCombatWin(set: any, get: () => GameState) {
   // ---- relic drops: bosses and elites always, normal fights sometimes ----
   const ownedIds = new Set(s.relics);
   const unlockedIds = new Set(s.meta.unlockedRelics);
-  const availRelics = ALL_RELIC_IDS.filter((r) => unlockedIds.has(r) && !ownedIds.has(r) && isDropEligible(r));
+  const availRelics = ALL_RELIC_IDS.filter((r) => unlockedIds.has(r) && !ownedIds.has(r) && isDropEligible(r, true));
   const dropChance =
     c.nodeType === "boss" || c.nodeType === "elite" ? 1 : has("relic_scanner") ? 0.35 : 0.18;
   const droppedRelic =
     availRelics.length > 0 && rng.chance(dropChance)
-      ? (pickRelicId(availRelics, rng.next()) ?? null)
+      ? (pickRelicId(availRelics, rng.next(), true) ?? null)
       : null;
   const relics = droppedRelic ? [...s.relics, droppedRelic] : s.relics;
 
