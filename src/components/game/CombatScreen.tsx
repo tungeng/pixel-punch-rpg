@@ -10,6 +10,7 @@ import { RelicTray } from "./RelicTray";
 import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
 import { UltimateAnnounce } from "./UltimateAnnounce";
 import { KeywordTips } from "./KeywordTips";
+import { BossOutro } from "./BossOutro";
 
 /**
  * Picks which of the hero's three signature attack animations to play:
@@ -197,6 +198,7 @@ export function CombatScreen() {
 
       {/* first-encounter keyword tutorials */}
       <KeywordTips />
+      <BossOutro />
 
       {/* arena — enemies centered in the remaining space */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">

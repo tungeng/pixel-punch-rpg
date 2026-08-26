@@ -3,6 +3,7 @@ import { useGame, cardPrice, relicPrice } from "@/game/store";
 import { HEROES } from "@/game/heroes";
 import { RELICS, RELIC_TIER_COLOR } from "@/game/relics";
 import { CardView } from "./CardView";
+import { ScoreSubmit } from "./ScoreSubmit";
 import { PixelButton } from "./PixelButton";
 import { Bar } from "./Bar";
 import { motion } from "motion/react";
@@ -256,6 +257,7 @@ export function DeathScreen() {
         The timeline snaps back and swallows the version of you that fell here.
         The Chrono Cores you banked survive the reset.
       </div>
+      <ScoreSubmit />
       <PixelButton onClick={abandon} color="primary">Return to hub</PixelButton>
     </Screen>
   );
@@ -277,6 +279,7 @@ export function VictoryScreen() {
         The fracture folds shut. King's Row exhales. Somewhere down the line,
         another you never had to fight at all.
       </div>
+      <ScoreSubmit />
       <PixelButton onClick={abandon} color="primary">Return to hub</PixelButton>
     </Screen>
   );
