@@ -67,29 +67,40 @@ function PlaySetup() {
     useGame.setState({ meta: next });
   }
 
+  const heroSel = HEROES[selected]!;
+
   return (
     <MenuShell
       title="RUN SETUP"
+      glyph="▶"
+      accent={locked(selected) ? "var(--primary)" : heroSel.color}
       crumb="Step 1 of 2 · choose your hero, then breach"
-      aside={
-        <span
-          className="text-[13px] text-muted-foreground"
-          style={{ fontFamily: "var(--font-pixel-body)" }}
-        >
-          ⬢ {meta.credits}
-        </span>
-      }
+      aside={<Readout icon="⬢" value={meta.credits} />}
+      {...(locked(selected)
+        ? {}
+        : {
+            footer: (
+              <PixelButton
+                onClick={breach}
+                color="danger"
+                className="cta-throb sheen press relative w-full overflow-hidden px-8 py-5 text-[17px]"
+              >
+                ▶ BREACH AS {heroSel.name.toUpperCase()}
+              </PixelButton>
+            ),
+          })}
     >
       {inRun && (
         <Link
           to="/run"
-          className="text-pixel mb-4 block border-2 border-accent bg-accent/15 px-3 py-3 text-center text-[9px] text-accent"
+          className="text-pixel press mb-4 block border-2 border-accent bg-accent/15 px-3 py-3 text-center text-[9px] text-accent"
         >
           ▶ RESUME CURRENT RUN
         </Link>
       )}
 
-      <SectionTitle>Select your hero</SectionTitle>
+      <SectionTitle right="tap to inspect">Select your hero</SectionTitle>
+
       <div className="grid w-full grid-cols-3 gap-1.5">
         {ROSTER.map((id, i) => {
           const hero = HEROES[id]!;
