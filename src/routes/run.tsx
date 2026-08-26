@@ -12,6 +12,7 @@ import {
   TreasureScreen,
   DeathScreen,
   VictoryScreen,
+  RelicChoiceScreen,
 } from "@/components/game/MetaScreens";
 import { CabinetShell } from "@/components/game/CabinetShell";
 
@@ -63,6 +64,7 @@ function RunRoute() {
             transition={{ duration: 0.2 }}
             className="absolute inset-0"
           >
+            {phase === "relic_choice" && <RelicChoiceScreen />}
             {phase === "map" && <MapView />}
             {phase === "combat" && <CombatScreen />}
             {phase === "reward" && <RewardScreen />}
