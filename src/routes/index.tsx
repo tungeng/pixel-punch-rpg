@@ -73,7 +73,7 @@ function Index() {
           <br />
           TUNG
         </motion.h1>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-pixel breathe-glow mt-2 text-center text-[8px] text-accent">TUNG. TUNG. TUNG. PIXEL DECK ROGUELIKE</motion.div>
+        
 
 
         <div className="text-pixel mt-6 mb-2 text-[8px] text-muted-foreground">SELECT YOUR HERO</div>
