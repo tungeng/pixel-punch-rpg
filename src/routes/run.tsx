@@ -16,6 +16,7 @@ import {
   AugmentChoiceScreen,
 } from "@/components/game/MetaScreens";
 import { CabinetShell } from "@/components/game/CabinetShell";
+import { EventFeedback } from "@/components/game/EventFeedback";
 
 export const Route = createFileRoute("/run")({
   head: () => ({
@@ -77,6 +78,7 @@ function RunRoute() {
             {phase === "victory" && <VictoryScreen />}
           </motion.div>
         </AnimatePresence>
+        <EventFeedback />
       </div>
     </div>
     </CabinetShell>

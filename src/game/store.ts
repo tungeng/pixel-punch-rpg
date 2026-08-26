@@ -155,6 +155,10 @@ export interface GameState {
   shopRelics: string[];
   combat: Combat | null;
   lastEvent: string;
+  /** monotonically bumped each time lastEvent is set, so repeats still re-fire the toast */
+  lastEventAt: number;
+  /** big centred beat shown over a phase transition (combat cleared, act cleared) */
+  banner: { title: string; lines: string[]; tone: "win" | "boss" | "info" } | null;
   /** boss last words, shown briefly over the transition out of a boss fight */
   bossOutro: string | null;
   /** final record of the run that just ended (score screen + leaderboard) */
@@ -187,6 +191,7 @@ export interface GameState {
   toMap: () => void;
   abandon: () => void;
   clearBossOutro: () => void;
+  clearBanner: () => void;
   setPlayerName: (name: string) => void;
   markScoreSubmitted: () => void;
   buyUpgrade: (id: string) => void;
@@ -274,13 +279,13 @@ function drawCountFor(heroId: string, relics: string[]): number {
  * so their damage window still closes fights.
  */
 const HERO_PRESSURE: Record<string, number> = {
-  mercy: 1.15,
-  moira: 1.1,
-  reinhardt: 0.88,
-  tracer: 0.95,
-  genji: 0.82,
-  junkrat: 0.85,
-  doomfist: 0.85,
+  mercy: 1.12,
+  moira: 1.06,
+  reinhardt: 0.72,
+  tracer: 0.76,
+  genji: 0.62,
+  junkrat: 0.68,
+  doomfist: 0.76,
 };
 
 /**
@@ -503,6 +508,8 @@ export const useGame = create<GameState>((set, get) => ({
   shopRelics: [],
   combat: null,
   lastEvent: "",
+  lastEventAt: 0,
+  banner: null,
   bossOutro: null,
   lastRun: null,
   scoreSubmitted: false,
@@ -551,6 +558,8 @@ export const useGame = create<GameState>((set, get) => ({
       startingRelicChoices: rng.shuffle(startingRelicChoices),
       combat: null,
       lastEvent: "",
+      lastEventAt: 0,
+      banner: null,
     });
   },
 
@@ -558,7 +567,15 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const relics = [relicId];
     const maxHp = maxHpFor(s.heroId, relics, s.act, s.meta.upgrades);
-    set({ relics, maxHp, hp: maxHp, startingRelicChoices: [], phase: "map" });
+    set({
+      relics,
+      maxHp,
+      hp: maxHp,
+      startingRelicChoices: [],
+      phase: "map",
+      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.text}`,
+      lastEventAt: Date.now(),
+    });
   },
 
   chooseAugment: (augmentId) => {
@@ -568,6 +585,8 @@ export const useGame = create<GameState>((set, get) => ({
       augments: [...s.augments, augmentId],
       augmentChoices: [],
       phase: s.pendingRelic ? "treasure" : "map",
+      lastEvent: `Augment installed: ${AUGMENTS[augmentId]!.name}. ${AUGMENTS[augmentId]!.text}`,
+      lastEventAt: Date.now(),
     });
   },
 
@@ -632,7 +651,7 @@ export const useGame = create<GameState>((set, get) => ({
     const heroPressure = HERO_PRESSURE[s.heroId] ?? 1;
     // Fights are meant to be read, not deleted. Enemies carry a deeper HP pool so
     // a combat plays out over several turns of real decisions.
-    const DEPTH = 1.6;
+    const DEPTH = 1.9;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
@@ -641,7 +660,7 @@ export const useGame = create<GameState>((set, get) => ({
     // ...and hit softer per turn, so length creates tension instead of coin-flips.
     const strBonus =
       Math.floor(floor / 4) +
-      Math.round(s.act * 1.4) +
+      Math.round(s.act * 1.1) +
       Math.floor(relicCount / 4) +
       Math.floor(augmentCount / 3) +
       (nodeType === "elite" ? 2 + s.act : 0) +
@@ -1275,7 +1294,7 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const card = makeCard(cardId);
     const deck = [...s.deck, card];
-    set({ deck, phase: "map", pendingRelic: null });
+    set({ deck, phase: "map", pendingRelic: null, lastEvent: `${card.name} added to your deck.`, lastEventAt: Date.now() });
     markNodeVisited(set, get);
   },
 
@@ -1290,7 +1309,10 @@ export const useGame = create<GameState>((set, get) => ({
       ? s.deck.map((c) => (c.uid === chosen.uid ? makeCard(c.id, true) : c))
       : s.deck;
     const bonusGold = chosen ? 0 : 18;
-    set({ deck, gold: s.gold + bonusGold, phase: "map", pendingRelic: null, lastEvent: chosen ? `${chosen.name} stabilized.` : "+18 gold recovered." });
+    set({ deck, gold: s.gold + bonusGold, phase: "map", pendingRelic: null, lastEventAt: Date.now(),
+      lastEvent: chosen
+        ? `Deck stabilized: ${chosen.name} permanently upgraded.`
+        : "No card worth stabilizing. Salvaged 18 gold instead." });
     markNodeVisited(set, get);
   },
 
@@ -1298,14 +1320,16 @@ export const useGame = create<GameState>((set, get) => ({
   restHeal: () => {
     const s = get();
     const heal = Math.floor(s.maxHp * 0.3);
-    set({ hp: Math.min(s.maxHp, s.hp + heal), phase: "map" });
+    const healed = Math.min(s.maxHp, s.hp + heal) - s.hp;
+    set({ hp: Math.min(s.maxHp, s.hp + heal), phase: "map", lastEvent: `Rested. Recovered ${healed} HP.`, lastEventAt: Date.now() });
     markNodeVisited(set, get);
   },
 
   restUpgrade: (cardUid) => {
     const s = get();
+    const target = s.deck.find((c) => c.uid === cardUid);
     const deck = s.deck.map((c) => (c.uid === cardUid && !c.upgraded ? makeCard(c.id, true) : c));
-    set({ deck, phase: "map" });
+    set({ deck, phase: "map", lastEvent: target ? `${target.name} upgraded to ${target.name}+.` : "Card upgraded.", lastEventAt: Date.now() });
     markNodeVisited(set, get);
   },
 
@@ -1314,7 +1338,7 @@ export const useGame = create<GameState>((set, get) => ({
     if (s.deck.length <= 6 || !s.deck.some((c) => c.uid === cardUid)) return;
     const deck = s.deck.filter((c) => c.uid !== cardUid);
     const maxHp = s.maxHp + 4;
-    set({ deck, maxHp, hp: Math.min(maxHp, s.hp + 4), phase: "map", lastEvent: "Card recycled into +4 Max HP." });
+    set({ deck, maxHp, hp: Math.min(maxHp, s.hp + 4), phase: "map", lastEvent: `Card scrapped. Deck is leaner and Max HP is now ${maxHp}.`, lastEventAt: Date.now() });
     markNodeVisited(set, get);
   },
 
@@ -1325,7 +1349,7 @@ export const useGame = create<GameState>((set, get) => ({
     const avail = ALL_RELIC_IDS.filter((r) => unlocked.has(r) && !owned.has(r) && isDropEligible(r));
     if (avail.length === 0 || s.relics.length >= MAX_RELICS) {
       // full satchel: the cache pays out in gold instead
-      set({ phase: "map", gold: s.gold + 60 });
+      set({ phase: "map", gold: s.gold + 60, lastEvent: "Satchel full. Cache converted to 60 gold.", lastEventAt: Date.now() });
       markNodeVisited(set, get);
       return;
     }
@@ -1334,12 +1358,12 @@ export const useGame = create<GameState>((set, get) => ({
     if (mode === "salvage") {
       const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
       const choices = rng.shuffle(pool).slice(0, 3).map((id) => makeCard(id, true));
-      set({ phase: "reward", rewardChoices: choices, rewardGold: 0, lastEvent: "Cache safely salvaged." });
+      set({ phase: "reward", rewardChoices: choices, rewardGold: 0, lastEvent: "Cache salvaged safely. Pick an upgraded card.", lastEventAt: Date.now() });
       return;
     }
     if (mode === "breach") {
       const damage = Math.max(1, Math.floor(s.maxHp * 0.12));
-      set({ hp: Math.max(1, s.hp - damage), lastEvent: `Cache breached for ${damage} HP.` });
+      set({ hp: Math.max(1, s.hp - damage), lastEvent: `Cache forced open. Took ${damage} damage.`, lastEventAt: Date.now() });
     }
     // caches usually hold a relic; otherwise they pay out a card choice
     if (mode !== "breach" && !rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
@@ -1365,7 +1389,15 @@ export const useGame = create<GameState>((set, get) => ({
   confirmRelic: () => {
     const s = get();
     const maxHp = maxHpFor(s.heroId, s.relics, s.act, s.meta.upgrades);
-    set({ pendingRelic: null, phase: "map", maxHp, hp: Math.min(s.hp, maxHp) });
+    const gained = s.pendingRelic ? RELICS[s.pendingRelic] : null;
+    set({
+      pendingRelic: null,
+      phase: "map",
+      maxHp,
+      hp: Math.min(s.hp, maxHp),
+      lastEvent: gained ? `${gained.name} equipped. ${gained.text}` : "",
+      lastEventAt: Date.now(),
+    });
     markNodeVisited(set, get);
   },
 
@@ -1380,6 +1412,8 @@ export const useGame = create<GameState>((set, get) => ({
       gold: s.gold - cost,
       deck: [...s.deck, card],
       shopCards: s.shopCards.filter((_, i) => i !== index),
+      lastEvent: `Bought ${card.name} for ${cost} gold.`,
+      lastEventAt: Date.now(),
     });
   },
 
@@ -1399,6 +1433,8 @@ export const useGame = create<GameState>((set, get) => ({
       hp: Math.min(s.hp, newMax),
       maxHp: newMax,
       shopRelics: s.shopRelics.map((r, i) => (i === index ? "" : r)),
+      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.text}`,
+      lastEventAt: Date.now(),
     });
 
   },
@@ -1407,7 +1443,13 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     if (s.gold < 75) return;
     if (s.deck.length <= 5) return; // never let the deck get unplayably small
-    set({ gold: s.gold - 75, deck: s.deck.filter((c) => c.uid !== cardUid) });
+    const gone = s.deck.find((c) => c.uid === cardUid);
+    set({
+      gold: s.gold - 75,
+      deck: s.deck.filter((c) => c.uid !== cardUid),
+      lastEvent: gone ? `${gone.name} removed from your deck.` : "Card removed.",
+      lastEventAt: Date.now(),
+    });
   },
 
   leaveShop: () => {
@@ -1450,6 +1492,8 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   clearBossOutro: () => set({ bossOutro: null }),
+
+  clearBanner: () => set({ banner: null }),
 
   setPlayerName: (name) => {
     const meta = { ...get().meta, playerName: name.slice(0, 16) };
@@ -2057,6 +2101,20 @@ function handleCombatWin(set: any, get: () => GameState) {
       : null;
   const relics = droppedRelic ? [...s.relics, droppedRelic] : s.relics;
 
+  // Every fight ends with a readable summary of what the win actually gave you.
+  const bannerLines: string[] = [
+    `Cleared in ${c.turn} turn${c.turn === 1 ? "" : "s"}`,
+    `+${g} gold`,
+  ];
+  if (hp > c.hp) bannerLines.push(`+${hp - c.hp} HP recovered`);
+  if (droppedRelic) bannerLines.push(`Relic found: ${RELICS[droppedRelic]!.name}`);
+  if (contract.complete && !s.contract.complete) bannerLines.push(`Contract complete: ${contract.name}`);
+  const banner = {
+    title: c.nodeType === "boss" ? "BOSS DOWN" : c.nodeType === "elite" ? "ELITE PURGED" : "AREA CLEAR",
+    lines: bannerLines,
+    tone: (c.nodeType === "boss" ? "boss" : "win") as "boss" | "win",
+  };
+
 
   // boss -> next act or victory
   if (c.nodeType === "boss") {
@@ -2086,6 +2144,7 @@ function handleCombatWin(set: any, get: () => GameState) {
         rewardChoices: choices,
         rewardGold: g,
         combat: null,
+        banner,
         bossOutro: BOSSES[c.enemies[0]?.defId ?? ""]?.deathLine ?? null,
       });
       return;
@@ -2105,6 +2164,7 @@ function handleCombatWin(set: any, get: () => GameState) {
       phase: "victory",
       combat: null,
       meta,
+      banner,
       bossOutro: BOSSES[c.enemies[0]?.defId ?? ""]?.deathLine ?? null,
       lastRun: { heroId: s.heroId, score, floorsCleared, act: s.act + 1, fullClear: true },
       scoreSubmitted: false,
@@ -2128,6 +2188,7 @@ function handleCombatWin(set: any, get: () => GameState) {
     rewardChoices: choices,
     rewardGold: g,
     combat: null,
+    banner,
   });
 }
 

@@ -335,6 +335,26 @@ export function CombatScreen() {
           </AnimatePresence>
 
           <div className="absolute -right-1 top-0 flex flex-col items-end gap-1">
+            {(() => {
+              const incoming = combat.enemies
+                .filter((e) => !e.isDead)
+                .reduce(
+                  (n, e) =>
+                    n +
+                    (e.intent.type === "attack" || e.intent.type === "attack_block"
+                      ? (e.intent.damage ?? 0) * (e.intent.hits ?? 1)
+                      : 0),
+                  0,
+                );
+              if (incoming <= 0) return null;
+              const net = Math.max(0, incoming - combat.block - combat.armor);
+              return (
+                <Badge
+                  text={net > 0 ? `INCOMING ${incoming} → ${net} HP` : `INCOMING ${incoming} BLOCKED`}
+                  color={net > 0 ? "#ff5c7a" : "#54d98c"}
+                />
+              );
+            })()}
             {combat.block > 0 && <Badge text={`🛡 ${combat.block}`} color="#54a8ff" />}
             {combat.armor > 0 && <Badge text={`⛨ ${combat.armor} ARM`} color="#38bdf8" />}
             {combat.thorns > 0 && <Badge text={`RETALIATE ${combat.thorns}`} color="#f87171" />}

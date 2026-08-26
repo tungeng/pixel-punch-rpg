@@ -80,9 +80,9 @@ export function RewardScreen() {
         ))}
       </div>
       <div className="mt-6 flex flex-col items-center gap-1 pb-4">
-        <PixelButton onClick={skip} color="ghost">Stabilize deck</PixelButton>
-        <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
-          upgrades a card or recovers 18 gold
+        <PixelButton onClick={skip} color="ghost">Skip card: stabilize deck</PixelButton>
+        <span className="max-w-[300px] text-center text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
+          Take no card. Permanently upgrades one card already in your deck, or pays 18 gold if nothing can be upgraded.
         </span>
       </div>
     </Screen>
