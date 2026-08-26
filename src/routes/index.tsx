@@ -6,6 +6,7 @@ import { PixelButton } from "@/components/game/PixelButton";
 import { motion } from "motion/react";
 import { Heart, Zap, Star, Lock } from "lucide-react";
 import { ArchiveScreen } from "@/components/game/ArchiveScreen";
+import { RelicCodexScreen } from "@/components/game/RelicCodexScreen";
 import { CabinetShell } from "@/components/game/CabinetShell";
 
 export const Route = createFileRoute("/")({
@@ -35,6 +36,7 @@ function Index() {
   const [selected, setSelected] = useState<string>("tracer");
   const [seed, setSeed] = useState("");
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [codexOpen, setCodexOpen] = useState(false);
   const unlockCost = 150;
 
   const all = [...STARTER_HEROES, ...UNLOCKABLE_HEROES];
@@ -169,12 +171,16 @@ function Index() {
           <span>Best: F{meta.bestFloor}</span>
           <span>Runs: {meta.totalRuns}</span>
         </div>
-        <div className="mt-3 w-full">
+        <div className="mt-3 grid w-full grid-cols-2 gap-2">
           <PixelButton onClick={() => setArchiveOpen(true)} color="secondary" className="w-full">
             ▤ ARCHIVE
           </PixelButton>
+          <PixelButton onClick={() => setCodexOpen(true)} color="secondary" className="w-full">
+            ✦ CODEX
+          </PixelButton>
         </div>
         {archiveOpen && <ArchiveScreen onClose={() => setArchiveOpen(false)} />}
+        {codexOpen && <RelicCodexScreen onClose={() => setCodexOpen(false)} />}
       </div>
     </div>
     </CabinetShell>
