@@ -40,18 +40,18 @@ export const MUTATORS: Record<string, Mutator> = {
   overload: {
     id: "overload",
     name: "OVERLOAD PROTOCOL",
-    text: "+1 Energy every turn. Every enemy has 25% more HP.",
+    text: "+1 Energy every turn. Every enemy has 18% more HP.",
     color: "#4dd0ff",
     energy: 1,
-    enemyHpMult: 1.25,
+    enemyHpMult: 1.18,
   },
   bloodpact: {
     id: "bloodpact",
     name: "BLOOD PACT",
-    text: "Start every combat with 3 Strength. Lose 18 max HP.",
+    text: "Start every combat with 2 Strength. Lose 26 max HP.",
     color: "#ff3b6b",
-    startStrength: 3,
-    hpMod: -18,
+    startStrength: 2,
+    hpMod: -26,
   },
   bulwark: {
     id: "bulwark",
@@ -66,8 +66,8 @@ export const MUTATORS: Record<string, Mutator> = {
     name: "HEMORRHAGE",
     text: "You deal 30% more damage. You take 25% more damage.",
     color: "#ff7a45",
-    outMult: 1.3,
-    inMult: 1.25,
+    outMult: 1.28,
+    inMult: 1.3,
   },
   scavenger: {
     id: "scavenger",
@@ -90,7 +90,7 @@ export const MUTATORS: Record<string, Mutator> = {
     name: "MARTYR CIRCUIT",
     text: "Ultimate charges 60% faster. Enemies hit 15% harder.",
     color: "#54d98c",
-    ultMult: 1.6,
+    ultMult: 1.5,
     inMult: 1.15,
   },
 };
