@@ -7,14 +7,16 @@ import { Rng } from "./rng";
 
 const ROWS = 8;
 
-// Weighted node pool for a normal (non-boss) column.
+// Weighted node pool for a normal (non-boss) column. Fights are the spine of
+// an act; caches stay scarce so a relic still feels like an event.
 const POOL: NodeType[] = [
-  "combat", "combat", "combat",
-  "elite", "elite",
+  "combat", "combat", "combat", "combat", "combat",
+  "elite",
   "rest",
   "shop",
-  "treasure", "treasure",
+  "treasure",
 ];
+
 
 
 export function generateMap(rng: Rng): MapNode[] {
