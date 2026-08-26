@@ -9,6 +9,7 @@ import type { CardInstance } from "@/game/types";
 import { RelicTray } from "./RelicTray";
 import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
 import { UltimateAnnounce } from "./UltimateAnnounce";
+import { FractureChoice } from "./FractureChoice";
 import { KeywordTips } from "./KeywordTips";
 import { BossOutro } from "./BossOutro";
 
@@ -195,6 +196,9 @@ export function CombatScreen() {
       <div className="absolute left-2 top-2 z-40 w-40">
         <RelicTray size={20} />
       </div>
+
+      {/* Timeline Fracture opening choice */}
+      <FractureChoice />
 
       {/* first-encounter keyword tutorials */}
       <KeywordTips />

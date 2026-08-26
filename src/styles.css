@@ -402,3 +402,57 @@
 #lovable-badge {
   display: none !important;
 }
+
+/* ---- Exalted relic treatment (legendary / mythic) ---- */
+@keyframes exalted-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px var(--tier-color),
+      0 0 10px -2px var(--tier-color),
+      inset 0 0 12px -8px var(--tier-color);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--tier-color),
+      0 0 26px 2px var(--tier-color),
+      inset 0 0 18px -4px var(--tier-color);
+  }
+}
+
+@keyframes exalted-sheen {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+
+@keyframes mythic-hue {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.relic-exalted {
+  position: relative;
+  border-color: var(--tier-color) !important;
+  animation: exalted-pulse 1.8s steps(12, end) infinite;
+  overflow: hidden;
+}
+
+.relic-exalted::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 40%,
+    color-mix(in oklab, var(--tier-color) 45%, transparent) 50%,
+    transparent 60%
+  );
+  animation: exalted-sheen 2.6s steps(20, end) infinite;
+}
+
+.relic-mythic {
+  animation:
+    exalted-pulse 1.4s steps(12, end) infinite,
+    mythic-hue 6s steps(12, end) infinite;
+}

@@ -39,6 +39,9 @@ function simulateRun(hero: string, seed: string): RunResult {
 
   let steps = 0;
   let turns = 0;
+  // Guard against the greedy bot cycling free draw cards forever on one turn.
+  let playsThisTurn = 0;
+  let lastTurnKey = "";
   const MAX_STEPS = 8000;
 
   while (steps++ < MAX_STEPS) {
@@ -89,6 +92,11 @@ function simulateRun(hero: string, seed: string): RunResult {
           c.exhaustPile.length;
         expect(total).toBeGreaterThan(0);
 
+        if (c.fracturePending) {
+          s.chooseFracture("damage");
+          break;
+        }
+
         if (c.targetingCardUid) {
           const alive = c.enemies.filter((e) => !e.isDead);
           if (alive.length === 0) s.cancelTarget();
@@ -98,6 +106,18 @@ function simulateRun(hero: string, seed: string): RunResult {
 
         if (c.ultCharge >= 100 && !c.ultUsedThisCombat) {
           s.useUltimate();
+          break;
+        }
+
+        const turnKey = `${c.turn}_${c.enemies.map((e) => e.uid).join("")}`;
+        if (turnKey !== lastTurnKey) {
+          lastTurnKey = turnKey;
+          playsThisTurn = 0;
+        }
+        if (playsThisTurn > 60) {
+          playsThisTurn = 0;
+          turns++;
+          s.endTurn();
           break;
         }
 
@@ -131,6 +151,7 @@ function simulateRun(hero: string, seed: string): RunResult {
             : undefined;
           const card =
             defense ?? setup ?? playable.find((x) => x.type === "attack") ?? playable[0]!;
+          playsThisTurn++;
           s.playCard(card.uid);
         } else {
           turns++;

@@ -252,7 +252,7 @@ export interface RelicDef {
   text: string;
   icon: string;
   color: string;
-  tier?: "common" | "uncommon" | "rare";
+  tier?: "common" | "uncommon" | "rare" | "legendary" | "mythic";
   /** Locked at the start of the game; must be bought in the Relic Codex. */
   startsLocked?: boolean;
 }

@@ -1,6 +1,7 @@
+import type { MotionStyle } from "motion/react";
 import { motion } from "motion/react";
 import { useGame } from "@/game/store";
-import { ALL_RELIC_IDS, RELICS, RELIC_TIER_COLOR, relicUnlockCost } from "@/game/relics";
+import { ALL_RELIC_IDS, RELICS, RELIC_TIER_COLOR, relicUnlockCost, isExaltedTier } from "@/game/relics";
 import { PixelButton } from "@/components/game/PixelButton";
 
 const TIER_ORDER = ["common", "uncommon", "rare"] as const;
@@ -54,11 +55,16 @@ export function RelicCodexScreen({ onClose }: { onClose: () => void }) {
                 whileTap={{ scale: isUnlocked ? 1 : 0.98 }}
                 disabled={isUnlocked || !affordable}
                 onClick={() => !isUnlocked && affordable && unlockRelic(id)}
-                className="flex items-center gap-3 border-2 p-2 text-left disabled:cursor-default"
-                style={{
-                  borderColor: isUnlocked ? tierColor : "#2a2740",
-                  background: isUnlocked ? "#0b0a12" : "#0a0912",
-                }}
+                className={`flex items-center gap-3 border-2 p-2 text-left disabled:cursor-default ${
+                  isUnlocked && isExaltedTier(tier) ? "relic-exalted" : ""
+                } ${isUnlocked && tier === "mythic" ? "relic-mythic" : ""}`}
+                style={
+                  {
+                    borderColor: isUnlocked ? tierColor : "#2a2740",
+                    background: isUnlocked ? "#0b0a12" : "#0a0912",
+                    "--tier-color": tierColor,
+                  } as unknown as MotionStyle
+                }
               >
                 <div className="relative shrink-0">
                   <div
