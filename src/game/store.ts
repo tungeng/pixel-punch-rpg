@@ -1017,7 +1017,16 @@ export const useGame = create<GameState>((set, get) => ({
     c.hackDraw = false;
     drawCards(c, drawN);
     // passive heals
-    if (s.heroId === "mercy") c.hp = Math.min(c.maxHp, c.hp + 1);
+    if (s.heroId === "mercy") {
+      const before = c.hp;
+      c.hp = Math.min(c.maxHp, c.hp + 2);
+      const healed = c.hp - before;
+      if (healed > 0) {
+        pushFloat(c, `+${healed}`, "heal", "player");
+        pushLog(c, `Mercy's staff mends ${healed} HP.`);
+      }
+    }
+
     if (relics.includes("regen_drone")) {
       const healed = Math.min(c.maxHp - c.hp, 2);
       if (healed > 0) {
