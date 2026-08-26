@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MUTATORS } from "@/game/mutators";
 import { useGame } from "@/game/store";
 import { getStarts } from "@/game/mapgen";
 import { BOSSES, ACT_BOSSES } from "@/game/enemies";
@@ -100,6 +101,8 @@ export function MapView() {
   const enterNode = useGame((s) => s.enterNode);
   const act = useGame((s) => s.act);
   const contract = useGame((s) => s.contract);
+  const mutatorId = useGame((s) => s.mutator);
+  const mutator = mutatorId ? MUTATORS[mutatorId] : null;
   const augments = useGame((s) => s.augments.length);
   const scroller = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<number | null>(null);
@@ -249,6 +252,15 @@ export function MapView() {
               {contract.text}
             </div>
           </div>
+          {mutator && (
+            <div
+              className="text-pixel shrink-0 border-2 px-1.5 py-1 text-[6px]"
+              style={{ color: mutator.color, borderColor: `${mutator.color}66` }}
+              title={mutator.text}
+            >
+              {mutator.name.split(" ")[0]}
+            </div>
+          )}
         </div>
 
         <AnimatePresence>
