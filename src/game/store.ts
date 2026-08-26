@@ -11,7 +11,7 @@ import { Rng, hashSeed, randomSeed } from "./rng";
 import { makeCard, CARDS, NEUTRAL_POOL } from "./cards";
 import { HEROES, UNLOCKABLE_HEROES, STARTER_HEROES } from "./heroes";
 import { ENEMIES, BOSSES, ACT_BOSSES, enemyPoolFor, elitePoolFor } from "./enemies";
-import { RELICS, ALL_RELIC_IDS, pickRelicId } from "./relics";
+import { RELICS, ALL_RELIC_IDS, DEFAULT_UNLOCKED_RELIC_IDS, pickRelicId, relicUnlockCost } from "./relics";
 import { generateMap } from "./mapgen";
 import tracerImg from "../assets/tracer.png";
 import kingsrowImg from "../assets/bg_kingsrow.jpg";
@@ -90,6 +90,8 @@ export interface GameState {
   // meta (persisted)
   meta: {
     unlockedHeroes: string[];
+    /** permanently unlocked relic ids (Relic Codex) */
+    unlockedRelics: string[];
     credits: number;
     bestFloor: number;
     totalRuns: number;
@@ -143,6 +145,7 @@ export interface GameState {
   toMap: () => void;
   abandon: () => void;
   buyUpgrade: (id: string) => void;
+  unlockRelic: (relicId: string) => void;
   addFloat: (f: Omit<Float, "id" | "at">) => void;
   pruneFloats: () => void;
 }
@@ -151,7 +154,7 @@ const META_KEY = "overtung_meta_v1";
 const LEGACY_META_KEY = "chronobreak_meta_v1";
 
 function defaultMeta() {
-  return { unlockedHeroes: [...STARTER_HEROES], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number> };
+  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number> };
 }
 
 let floatId = 1;
@@ -167,6 +170,9 @@ function loadMetaFromStorage() {
     if (!Array.isArray(m.unlockedHeroes)) m.unlockedHeroes = [...STARTER_HEROES];
     // starters are always available (new starter heroes reach old saves too)
     m.unlockedHeroes = Array.from(new Set([...STARTER_HEROES, ...m.unlockedHeroes]));
+    if (!Array.isArray(m.unlockedRelics)) m.unlockedRelics = [...DEFAULT_UNLOCKED_RELIC_IDS];
+    // relics that were never locked are always available
+    m.unlockedRelics = Array.from(new Set([...DEFAULT_UNLOCKED_RELIC_IDS, ...m.unlockedRelics]));
     return m;
   } catch {
     return defaultMeta();
@@ -400,7 +406,9 @@ export const useGame = create<GameState>((set, get) => ({
     const deck = getHero(heroId).startingDeck.map((id) => makeCard(id));
     const rng = rngForRun(seed, 1);
     const map = generateMap(rng);
-    const byTier = (t: string) => ALL_RELIC_IDS.filter((id) => (RELICS[id]?.tier ?? "common") === t);
+    const unlocked = new Set(meta.unlockedRelics);
+    const byTier = (t: string) =>
+      ALL_RELIC_IDS.filter((id) => unlocked.has(id) && (RELICS[id]?.tier ?? "common") === t);
     const startingRelicChoices: string[] = [];
     const uncommons = rng.shuffle(byTier("uncommon"));
     if (uncommons[0]) startingRelicChoices.push(uncommons[0]);
@@ -1011,7 +1019,8 @@ export const useGame = create<GameState>((set, get) => ({
   takeTreasure: () => {
     const s = get();
     const owned = new Set(s.relics);
-    const avail = ALL_RELIC_IDS.filter((r) => !owned.has(r));
+    const unlocked = new Set(s.meta.unlockedRelics);
+    const avail = ALL_RELIC_IDS.filter((r) => unlocked.has(r) && !owned.has(r));
     if (avail.length === 0) {
       set({ phase: "map" });
       markNodeVisited(set, get);
@@ -1104,6 +1113,21 @@ export const useGame = create<GameState>((set, get) => ({
       ...s.meta,
       credits: s.meta.credits - cost,
       upgrades: { ...s.meta.upgrades, [id]: tier + 1 },
+    };
+    saveMeta(meta);
+    set({ meta });
+  },
+
+  unlockRelic: (relicId) => {
+    const s = get();
+    if (!RELICS[relicId]) return;
+    if (s.meta.unlockedRelics.includes(relicId)) return;
+    const cost = relicUnlockCost(relicId);
+    if (s.meta.credits < cost) return;
+    const meta = {
+      ...s.meta,
+      credits: s.meta.credits - cost,
+      unlockedRelics: [...s.meta.unlockedRelics, relicId],
     };
     saveMeta(meta);
     set({ meta });
@@ -1547,7 +1571,8 @@ function handleCombatWin(set: any, get: () => GameState) {
 
   // ---- relic drops: bosses and elites always, normal fights sometimes ----
   const ownedIds = new Set(s.relics);
-  const availRelics = ALL_RELIC_IDS.filter((r) => !ownedIds.has(r));
+  const unlockedIds = new Set(s.meta.unlockedRelics);
+  const availRelics = ALL_RELIC_IDS.filter((r) => unlockedIds.has(r) && !ownedIds.has(r));
   const dropChance =
     c.nodeType === "boss" || c.nodeType === "elite" ? 1 : has("relic_scanner") ? 0.35 : 0.18;
   const droppedRelic =
@@ -1636,7 +1661,8 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
     shopCards.push(makeCard(id, rng.chance(0.25)));
   }
   const owned = new Set(s.relics);
-  let avail = ALL_RELIC_IDS.filter((r) => !owned.has(r));
+  const unlockedShop = new Set(s.meta.unlockedRelics);
+  let avail = ALL_RELIC_IDS.filter((r) => unlockedShop.has(r) && !owned.has(r));
   const shopRelics: string[] = [];
   for (let i = 0; i < 3; i++) {
     const id = pickRelicId(avail, rng.next());
