@@ -381,6 +381,64 @@ export function HeroVfx({ heroId, variant = 0 }: { heroId: string; variant?: num
         </>
       )}
 
+      {/* ---------------- BASTION ---------------- */}
+      {heroId === "bastion" && v === 0 && (
+        <>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 1, x: -120, y: -20 + i * 8 }}
+              animate={{ opacity: [1, 1, 0], x: 90 }}
+              transition={{ duration: 0.28, delay: i * 0.045, ease: "linear" }}
+              className="absolute left-1/2 top-1/2 h-1.5 w-6"
+              style={{ background: "#fde68a", boxShadow: "0 0 8px #facc15" }}
+            />
+          ))}
+        </>
+      )}
+      {heroId === "bastion" && v === 1 && (
+        <>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.2 }}
+            animate={{ opacity: [0, 1, 0], scale: 1.5 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{ background: "radial-gradient(circle, #fb923c, #84cc1600)", boxShadow: "0 0 30px 10px #f9731699" }}
+          />
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 1, x: 0, y: 0 }}
+              animate={{ opacity: 0, x: Math.cos((i / 8) * 6.28) * 70, y: Math.sin((i / 8) * 6.28) * 70 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="absolute left-1/2 top-1/2 h-2 w-2"
+              style={{ background: "#facc15", boxShadow: "0 0 10px #f97316" }}
+            />
+          ))}
+        </>
+      )}
+      {heroId === "bastion" && v === 2 && (
+        <>
+          {[0, 1, 2, 3].map((i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: -140 - i * 30, scaleY: 0.6 }}
+              animate={{ opacity: [0, 1, 0], y: 30, scaleY: 1 }}
+              transition={{ duration: 0.5, delay: i * 0.07, ease: "easeIn" }}
+              className="absolute top-0 h-14 w-3"
+              style={{ left: `${25 + i * 16}%`, background: "linear-gradient(180deg, transparent, #84cc16, #ffffff)" }}
+            />
+          ))}
+          <motion.div
+            initial={{ opacity: 0, scaleX: 0.2 }}
+            animate={{ opacity: [0, 1, 0], scaleX: 1.5 }}
+            transition={{ duration: 0.5, delay: 0.16 }}
+            className="absolute bottom-8 left-1/2 h-5 w-64 -translate-x-1/2"
+            style={{ background: "linear-gradient(90deg, transparent, #fb923c, #ffffff, #fb923c, transparent)" }}
+          />
+        </>
+      )}
+
       {/* ---------------- REINHARDT ---------------- */}
       {heroId === "reinhardt" && v === 0 && (
         <motion.div

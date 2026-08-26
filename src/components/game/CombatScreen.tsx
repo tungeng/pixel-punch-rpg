@@ -364,6 +364,18 @@ export function CombatScreen() {
               );
             })()}
             {combat.block > 0 && <Badge text={`🛡 ${combat.block}`} color="#54a8ff" />}
+            {combat.stance && (
+              <Badge
+                text={
+                  combat.stance === "recon"
+                    ? "▷ RECON +DRAW"
+                    : combat.stance === "sentry"
+                      ? "▣ SENTRY +HIT / +DMG TAKEN"
+                      : "◤ TANK PIERCE / NO BLOCK"
+                }
+                color={combat.stance === "recon" ? "#84cc16" : combat.stance === "sentry" ? "#fbbf24" : "#f87171"}
+              />
+            )}
             {combat.armor > 0 && <Badge text={`⛨ ${combat.armor} ARM`} color="#38bdf8" />}
             {combat.thorns > 0 && <Badge text={`RETALIATE ${combat.thorns}`} color="#f87171" />}
             {combat.strength > 0 && <Badge text={`▲ ${combat.strength}`} color="#ff7a45" />}
