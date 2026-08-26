@@ -86,6 +86,19 @@ export interface Combat {
 }
 
 
+export interface RunRecord {
+  heroId: string;
+  score: number;
+  floorsCleared: number;
+  act: number;
+  fullClear: boolean;
+}
+
+/** Final run score — floors and act carry the most weight, full clears get a big bonus. */
+export function computeScore(floorsCleared: number, act: number, gold: number, fullClear: boolean): number {
+  return floorsCleared * 100 + act * 500 + gold + (fullClear ? 1000 : 0);
+}
+
 export interface GameState {
   // meta (persisted)
   meta: {
@@ -97,6 +110,8 @@ export interface GameState {
     totalRuns: number;
     /** permanent Archive upgrades: upgrade id -> purchased tier */
     upgrades: Record<string, number>;
+    /** leaderboard display name, asked for once */
+    playerName: string;
   };
   // run
   inRun: boolean;
@@ -121,6 +136,11 @@ export interface GameState {
   shopRelics: string[];
   combat: Combat | null;
   lastEvent: string;
+  /** boss last words, shown briefly over the transition out of a boss fight */
+  bossOutro: string | null;
+  /** final record of the run that just ended (score screen + leaderboard) */
+  lastRun: RunRecord | null;
+  scoreSubmitted: boolean;
   // actions
   loadMeta: () => void;
   startRun: (heroId: string, seedLabel?: string) => void;
@@ -144,6 +164,9 @@ export interface GameState {
   leaveShop: () => void;
   toMap: () => void;
   abandon: () => void;
+  clearBossOutro: () => void;
+  setPlayerName: (name: string) => void;
+  markScoreSubmitted: () => void;
   buyUpgrade: (id: string) => void;
   unlockRelic: (relicId: string) => void;
   addFloat: (f: Omit<Float, "id" | "at">) => void;
@@ -154,7 +177,7 @@ const META_KEY = "overtung_meta_v1";
 const LEGACY_META_KEY = "chronobreak_meta_v1";
 
 function defaultMeta() {
-  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number> };
+  return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "" };
 }
 
 let floatId = 1;
@@ -399,6 +422,9 @@ export const useGame = create<GameState>((set, get) => ({
   shopRelics: [],
   combat: null,
   lastEvent: "",
+  bossOutro: null,
+  lastRun: null,
+  scoreSubmitted: false,
 
   loadMeta: () => set({ meta: loadMetaFromStorage() }),
 
@@ -547,7 +573,9 @@ export const useGame = create<GameState>((set, get) => ({
       cardsPlayedThisTurn: 0,
       attacksPlayedThisTurn: 0,
       targetingCardUid: null,
-      log: [`Battle start — ${enemies.map((e) => e.name).join(", ")}`],
+      log: bossIntro
+        ? [`Battle start — ${enemies.map((e) => e.name).join(", ")}`, `“${bossIntro}”`]
+        : [`Battle start — ${enemies.map((e) => e.name).join(", ")}`],
       floats: [],
       isBoss,
       bg,
@@ -1161,6 +1189,16 @@ export const useGame = create<GameState>((set, get) => ({
     set({ meta });
   },
 
+  clearBossOutro: () => set({ bossOutro: null }),
+
+  setPlayerName: (name) => {
+    const meta = { ...get().meta, playerName: name.slice(0, 16) };
+    saveMeta(meta);
+    set({ meta });
+  },
+
+  markScoreSubmitted: () => set({ scoreSubmitted: true }),
+
   abandon: () => {
     set({ inRun: false, combat: null, phase: "map" });
   },
@@ -1639,7 +1677,18 @@ function handleCombatWin(set: any, get: () => GameState) {
       totalRuns: s.meta.totalRuns + 1,
     };
     saveMeta(meta);
-    set({ hp, gold, floorsCleared, phase: "victory", combat: null, meta });
+    const score = computeScore(floorsCleared, s.act + 1, gold, true);
+    set({
+      hp,
+      gold,
+      floorsCleared,
+      phase: "victory",
+      combat: null,
+      meta,
+      bossOutro: BOSSES[c.enemies[0]?.defId ?? ""]?.deathLine ?? null,
+      lastRun: { heroId: s.heroId, score, floorsCleared, act: s.act + 1, fullClear: true },
+      scoreSubmitted: false,
+    });
     return;
   }
 
@@ -1669,7 +1718,14 @@ function handleDeath(set: any, get: () => GameState) {
     totalRuns: s.meta.totalRuns + 1,
   };
   saveMeta(meta);
-  set({ phase: "dead", combat: null, meta });
+  const score = computeScore(s.floorsCleared, s.act, s.gold, false);
+  set({
+    phase: "dead",
+    combat: null,
+    meta,
+    lastRun: { heroId: s.heroId, score, floorsCleared: s.floorsCleared, act: s.act, fullClear: false },
+    scoreSubmitted: false,
+  });
 }
 
 function markNodeVisited(set: any, get: () => GameState) {
