@@ -822,6 +822,29 @@ export const useGame = create<GameState>((set, get) => ({
         pushFloat(c, `+${healed}`, "heal", e.uid);
       }
       if (e.trait === "aegis" && c.turn % 2 === 1) e.block += Math.round(2 + e.maxHp * 0.02);
+      // ---- formation traits: enemies that support each other ----
+      if (e.trait === "guardian") {
+        const allies = c.enemies.filter((x) => !x.isDead && x.uid !== e.uid);
+        const ward = allies.sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+        if (ward) {
+          const shield = 6 + Math.round(e.maxHp * 0.08);
+          ward.block += shield;
+          pushFloat(c, `+${shield} 🛡`, "block", ward.uid);
+          pushLog(c, `${e.name} covers ${ward.name} for ${shield} Block.`);
+        }
+      }
+      if (e.trait === "mender") {
+        const allies = c.enemies.filter((x) => !x.isDead && x.uid !== e.uid && x.hp < x.maxHp);
+        if (allies.length > 0) {
+          const amount = 4 + Math.round(e.maxHp * 0.06);
+          for (const a of allies) {
+            const healed = Math.min(a.maxHp - a.hp, amount);
+            a.hp += healed;
+            pushFloat(c, `+${healed}`, "heal", a.uid);
+          }
+          pushLog(c, `${e.name} repairs its allies for ${amount}.`);
+        }
+      }
     }
     c.ultCharge = Math.min(100, charge.v);
     // advance enemy intents
