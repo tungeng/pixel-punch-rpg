@@ -69,6 +69,10 @@ export interface Combat {
   ultUsedThisCombat: boolean;
   damageTakenThisCombat: number;
   ragePaid: number;
+  /** Tracer: Recall Protocol has already rewound this combat. */
+  recallUsed?: boolean;
+  /** Doomfist: Attacks thrown this combat (Cataclysm). */
+  attacksThisCombat?: number;
   overclock: { blockPerEnergy: number; damagePerEnergy: number } | null;
   /** Heal-over-time stacks on the player (Moira). */
   regen: number;
@@ -397,6 +401,23 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
   }
   c.hp -= remaining;
   c.damageTakenThisCombat += remaining;
+  // Tracer: Recall Protocol rewinds her out of a lethal spiral, once per fight.
+  const gs = get();
+  if (
+    gs.heroId === "tracer" &&
+    gs.augments.includes("tracer_accelerant") &&
+    !c.recallUsed &&
+    c.hp > 0 &&
+    c.hp < c.maxHp * 0.4
+  ) {
+    c.recallUsed = true;
+    const t = gs.augmentTiers["tracer_accelerant"] ?? 1;
+    const healed = Math.min(12 * t, c.maxHp - c.hp);
+    c.hp += healed;
+    drawCards(c, 2);
+    pushFloat(c, `RECALL +${healed}`, "heal", "player");
+    pushLog(c, "Recall Protocol rewinds Tracer out of danger.");
+  }
   // thorn mail
   return remaining;
 }
@@ -1197,6 +1218,12 @@ export const useGame = create<GameState>((set, get) => ({
     // Aegis Loop keeps half your Block instead of wiping it
     c.block = relics.includes("aegis_loop") ? Math.floor(c.block / 2) : 0;
     c.thorns = 0;
+    if (s.heroId === "reinhardt" && s.augments.includes("rein_honor") && c.armor > 0) {
+      const bite = Math.ceil((c.armor / 4) * (s.augmentTiers["rein_honor"] ?? 1));
+      c.thorns += bite;
+      pushFloat(c, `RETALIATE ${bite}`, "buff", "player");
+    }
+    c.recallUsed = c.recallUsed ?? false;
     // ---- per-turn relic ticks ----
     if (relics.includes("dragon_ember")) {
       gainStrength(c, 1, relics);
@@ -1783,13 +1810,10 @@ function resolveCard(
           c.nextAttackPct += 25;
           pushFloat(c, "BLUE BEAM", "buff", "player");
         }
-        if (s.heroId === "mercy" && s.augments.includes("mercy_valkyrie")) {
-          charge.v += 8;
-          pushFloat(c, "+8 ULT", "ult", "player");
-        }
       }
     const wasted = amount - healed;
-    if (card.overheal && wasted > 0) {
+    const triage = s.heroId === "mercy" && s.augments.includes("mercy_valkyrie");
+    if ((card.overheal || triage) && wasted > 0) {
       c.block += wasted;
       pushFloat(c, `+${wasted}`, "block", "player");
     }
@@ -1919,6 +1943,14 @@ function resolveCard(
         const gained = gainStrength(c, tier, relics);
         pushFloat(c, `+${gained} STR`, "buff", "player");
       }
+      if (s.augments.includes("bastion_artillery")) {
+        const shell = 6 * (s.augmentTiers["bastion_artillery"] ?? 1);
+        for (const e of c.enemies) {
+          if (e.isDead || e.untargetable) continue;
+          applyEnemyDamage(c, e, shell, charge, relics.includes("power_core"), true);
+        }
+        pushLog(c, "Siege Uplink shells the line.");
+      }
       if (s.augments.includes("bastion_ironclad") && next === "sentry") {
         const tier = s.augmentTiers["bastion_ironclad"] ?? 1;
         c.block += 5 * tier;
@@ -1943,8 +1975,9 @@ function resolveCard(
       bonus += 4 * Math.max(0, c.attacksPlayedThisTurn - 1);
     }
     let totalBase = scaled + bonus;
-    if (s.heroId === "junkrat" && s.augments.includes("junkrat_hairtrigger") && (card.randomDamage || card.randomHits)) {
-      totalBase += 3;
+    if (s.heroId === "junkrat" && s.augments.includes("junkrat_hairtrigger") && card.randomDamage) {
+      const [lo, hi] = card.randomDamage;
+      totalBase = Math.max(totalBase, Math.ceil((lo + hi) / 2));
     }
     if (card.doubleIfHandEmpty && c.hand.length === 0) {
       totalBase *= 2;
@@ -2018,6 +2051,14 @@ function resolveCard(
       pushFloat(c, `+${stacks} PSN`, "debuff", t.uid);
     }
     if (targets.length > 0) c.poisonBoost = 0;
+    if (targets.length > 0 && s.heroId === "moira" && s.augments.includes("moira_coalescence")) {
+      const seep = 2 * (s.augmentTiers["moira_coalescence"] ?? 1);
+      for (const e of c.enemies) {
+        if (e.isDead || e.untargetable || targets.includes(e)) continue;
+        e.poison += seep;
+        pushFloat(c, `+${seep} PSN`, "debuff", e.uid);
+      }
+    }
     if (targets.length > 0 && s.heroId === "moira" && s.augments.includes("moira_reservoir")) {
       c.regen += 1;
       pushFloat(c, "+1 REG", "heal", "player");
