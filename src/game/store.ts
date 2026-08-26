@@ -135,6 +135,8 @@ export interface GameState {
   currentNodeId: number | null;
   act: number;
   floorsCleared: number;
+  /** Fights cleared inside the current act. Drives the difficulty curve. */
+  actFloors: number;
   phase: Phase;
   rewardChoices: CardInstance[];
   startingRelicChoices: string[];
@@ -448,6 +450,7 @@ export const useGame = create<GameState>((set, get) => ({
   currentNodeId: null,
   act: 0,
   floorsCleared: 0,
+  actFloors: 0,
   phase: "map",
   rewardChoices: [],
   startingRelicChoices: [],
@@ -496,6 +499,7 @@ export const useGame = create<GameState>((set, get) => ({
       currentNodeId: null,
       act: 0,
       floorsCleared: 0,
+      actFloors: 0,
       phase: "relic_choice",
       startingRelicChoices: rng.shuffle(startingRelicChoices),
       combat: null,
@@ -560,14 +564,16 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // Difficulty curve: the breach hardens the deeper you fall, and it adapts
     // to how much relic power you're carrying, so a stacked run still bites.
-    const floor = s.floorsCleared;
+    // Difficulty is anchored to the act and how deep you are inside it, so a
+    // longer act does not spiral, and relic power is only softly answered.
+    const floor = s.actFloors;
     const relicCount = s.relics.length;
-    const hpScale = 1 + floor * 0.185 + s.act * 0.4 + relicCount * 0.09;
+    const hpScale = 1 + s.act * 0.62 + floor * 0.1 + relicCount * 0.05;
     const strBonus =
-      Math.floor(floor / 2) +
-      Math.round(s.act * 2.5) +
-      Math.floor(relicCount / 2) +
-      (nodeType === "elite" ? 4 + s.act : 0);
+      Math.floor(floor / 3) +
+      Math.round(s.act * 2) +
+      Math.floor(relicCount / 3) +
+      (nodeType === "elite" ? 3 + s.act : 0);
 
 
     for (const e of enemies) {
@@ -1795,6 +1801,7 @@ function handleCombatWin(set: any, get: () => GameState) {
   if (has("salvage_claw")) g += 20;
   gold += g;
   const floorsCleared = s.floorsCleared + 1;
+  const actFloors = s.actFloors + 1;
   // card reward
   const rng = rngForRun(s.seed, 9000 + floorsCleared);
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
@@ -1837,6 +1844,7 @@ function handleCombatWin(set: any, get: () => GameState) {
         gold,
         relics,
         floorsCleared,
+        actFloors: 0,
         act: nextAct,
         map: newMap,
         currentNodeId: null,
@@ -1878,6 +1886,7 @@ function handleCombatWin(set: any, get: () => GameState) {
     gold,
     relics,
     floorsCleared,
+    actFloors,
     phase: "reward",
     pendingRelic: droppedRelic,
     rewardChoices: choices,
