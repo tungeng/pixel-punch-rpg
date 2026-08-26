@@ -185,6 +185,13 @@ export interface GameState {
 const META_KEY = "overtung_meta_v1";
 const LEGACY_META_KEY = "chronobreak_meta_v1";
 
+/**
+ * Hard ceiling on relics per run. Collecting the whole vault every run flattened
+ * build identity and trivialised acts 2-4, so a satchel now holds ten.
+ */
+export const MAX_RELICS = 10;
+
+
 function defaultMeta() {
   return { unlockedHeroes: [...STARTER_HEROES], unlockedRelics: [...DEFAULT_UNLOCKED_RELIC_IDS], credits: 0, bestFloor: 0, totalRuns: 0, upgrades: {} as Record<string, number>, playerName: "" };
 }
