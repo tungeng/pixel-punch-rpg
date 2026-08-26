@@ -36,7 +36,7 @@ type Entry = { to: string; label: string; blurb: string; glyph: string; tone?: "
 const ENTRIES: Entry[] = [
   { to: "/heroes", label: "HEROES", blurb: "Roster, unlocks and mastery", glyph: "☗" },
   { to: "/progression", label: "PROGRESSION", blurb: "Spend Chrono Cores on permanent upgrades", glyph: "▤" },
-  { to: "/archive", label: "ARCHIVE", blurb: "Relics, bosses, protocols and lore", glyph: "✦" },
+  { to: "/archive", label: "ARCHIVE", blurb: "Relics, bosses and Breach Protocols", glyph: "✦" },
   { to: "/stats", label: "STATISTICS", blurb: "Records, hero performance, leaderboard", glyph: "★" },
   { to: "/settings", label: "SETTINGS", blurb: "Display name, save data, updates", glyph: "⚙" },
 ];
