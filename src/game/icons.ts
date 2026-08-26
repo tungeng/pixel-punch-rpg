@@ -80,6 +80,14 @@ import potion from "../assets/icons/potion.png";
 import clawslash from "../assets/icons/clawslash.png";
 import brokenshield from "../assets/icons/brokenshield.png";
 import timevortex from "../assets/icons/timevortex.png";
+import reconmode from "../assets/icons/reconmode.png";
+import sentrymode from "../assets/icons/sentrymode.png";
+import tankmode from "../assets/icons/tankmode.png";
+import selfrepair from "../assets/icons/selfrepair.png";
+import tacgrenade from "../assets/icons/tacgrenade.png";
+import ricochet from "../assets/icons/ricochet.png";
+import bunkericon from "../assets/icons/bunker.png";
+import artillery from "../assets/icons/artillery.png";
 
 /** Per-card pixel-art effect icon (replaces hero portraits on cards). */
 export const CARD_ICONS: Record<string, string> = {
@@ -178,6 +186,24 @@ export const CARD_ICONS: Record<string, string> = {
   doomfist_executioner: executionericon,
   doomfist_momentum: momentum,
   doomfist_meteor: meteorfist,
+  // Bastion
+  bastion_rounds: bullets,
+  bastion_plating: steelplating,
+  bastion_recon: reconmode,
+  bastion_sentry: sentrymode,
+  bastion_assaultmode: tankmode,
+  bastion_repair: selfrepair,
+  bastion_suppress: pellets,
+  bastion_grenade: tacgrenade,
+  bastion_recalibrate: reload,
+  bastion_ricochet: ricochet,
+  bastion_assault: bullets,
+  bastion_burst: fireburst,
+  bastion_bunker: bunkericon,
+  bastion_lockdown: spikeshield,
+  bastion_overhaul: medkit,
+  bastion_siege: tankmode,
+  bastion_artillery: artillery,
   // Neutral
   n_block: reinforce,
   n_strike: sword,

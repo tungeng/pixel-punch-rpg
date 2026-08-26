@@ -95,6 +95,24 @@ export const CARDS: Record<string, CardDef> = {
   doomfist_momentum: { id: "doomfist_momentum", name: "Vengeful Momentum", type: "attack", cost: 2, hero: "doomfist", rarity: "rare", damage: 13, costPerDamageTaken: 12, text: "Deal 13 damage. Costs 1 less per 12 damage you have taken this combat.", up: { damage: 17 } },
 
 
+  // ---------------- BASTION (Configuration stances) ----------------
+  bastion_rounds: { id: "bastion_rounds", name: "Configured Rounds", type: "attack", cost: 1, hero: "bastion", rarity: "starter", damage: 7, text: "Deal 7 damage.", up: { damage: 10 } },
+  bastion_plating: { id: "bastion_plating", name: "Ironclad Plating", type: "skill", cost: 1, hero: "bastion", rarity: "starter", block: 8, text: "Gain 8 Block.", up: { block: 12 } },
+  bastion_recon: { id: "bastion_recon", name: "Configuration: Recon", type: "skill", cost: 0, hero: "bastion", rarity: "starter", setStance: "recon", draw: 1, text: "Switch to RECON. Draw 1 card.", up: { draw: 2 } },
+  bastion_sentry: { id: "bastion_sentry", name: "Configuration: Sentry", type: "skill", cost: 0, hero: "bastion", rarity: "starter", setStance: "sentry", block: 4, text: "Switch to SENTRY. Gain 4 Block.", up: { block: 8 } },
+  bastion_assaultmode: { id: "bastion_assaultmode", name: "Configuration: Tank", type: "skill", cost: 0, hero: "bastion", rarity: "starter", setStance: "tank", text: "Switch to TANK.", up: { cost: 0, strength: 1 } },
+  bastion_repair: { id: "bastion_repair", name: "Self-Repair", type: "skill", cost: 1, hero: "bastion", rarity: "starter", heal: 9, text: "Restore 9 HP.", up: { heal: 14 } },
+  bastion_suppress: { id: "bastion_suppress", name: "Suppressing Fire", type: "attack", cost: 1, hero: "bastion", rarity: "starter", damage: 4, aoe: true, text: "Deal 4 damage to ALL enemies.", up: { damage: 7 } },
+  bastion_grenade: { id: "bastion_grenade", name: "A-36 Grenade", type: "attack", cost: 1, hero: "bastion", rarity: "common", damage: 9, vulnerable: 2, text: "Deal 9 damage. Apply 2 Vulnerable.", up: { damage: 12, vulnerable: 3 } },
+  bastion_recalibrate: { id: "bastion_recalibrate", name: "Recalibrate", type: "skill", cost: 1, hero: "bastion", rarity: "common", stanceCycle: true, draw: 2, energyGain: 1, text: "Rotate Configuration. Draw 2. Gain 1 Energy.", up: { draw: 3 } },
+  bastion_ricochet: { id: "bastion_ricochet", name: "Ricochet", type: "attack", cost: 2, hero: "bastion", rarity: "uncommon", damage: 8, aoe: true, text: "Deal 8 damage to ALL enemies.", up: { damage: 12 } },
+  bastion_assault: { id: "bastion_assault", name: "Assault Rounds", type: "attack", cost: 2, hero: "bastion", rarity: "uncommon", damage: 7, hits: 2, text: "Deal 7 damage twice.", up: { damage: 10 } },
+  bastion_burst: { id: "bastion_burst", name: "Reconfiguration Burst", type: "attack", cost: 1, hero: "bastion", rarity: "uncommon", damage: 5, damagePerStanceSwap: 4, text: "Deal 5 damage, +4 per Configuration change this combat.", up: { damagePerStanceSwap: 6 } },
+  bastion_bunker: { id: "bastion_bunker", name: "Bunker Down", type: "skill", cost: 2, hero: "bastion", rarity: "uncommon", block: 8, blockPerStanceSwap: 4, text: "Gain 8 Block, +4 per Configuration change this combat.", up: { blockPerStanceSwap: 6 } },
+  bastion_lockdown: { id: "bastion_lockdown", name: "Lockdown", type: "skill", cost: 1, hero: "bastion", rarity: "uncommon", setStance: "sentry", block: 6, thorns: 5, text: "Switch to SENTRY. Gain 6 Block. Retaliate 5.", up: { block: 10, thorns: 8 } },
+  bastion_overhaul: { id: "bastion_overhaul", name: "Field Overhaul", type: "skill", cost: 2, hero: "bastion", rarity: "uncommon", heal: 14, draw: 1, setStance: "recon", text: "Switch to RECON. Restore 14 HP. Draw 1.", up: { heal: 20 } },
+  bastion_siege: { id: "bastion_siege", name: "Siege Mode", type: "attack", cost: 3, hero: "bastion", rarity: "rare", damage: 22, setStance: "tank", ignoreBlock: true, text: "Switch to TANK. Deal 22 damage, ignoring Block.", up: { damage: 30 } },
+
   // ---------------- NEUTRAL (reward pool, any hero) ----------------
   n_block: { id: "n_block", name: "Reinforce", type: "skill", cost: 0, rarity: "common", block: 3, text: "Gain 3 Block.", up: { block: 5 } },
   n_strike: { id: "n_strike", name: "Strike", type: "attack", cost: 1, rarity: "common", damage: 6, text: "Deal 6 damage.", up: { damage: 9 } },
@@ -176,6 +194,14 @@ export function makeCard(defId: string, upgraded = false): CardInstance {
     if (up.regen !== undefined) merged.regen = up.regen;
     if (up.poisonBoost !== undefined) merged.poisonBoost = up.poisonBoost;
     if (up.poisonDetonate !== undefined) merged.poisonDetonate = up.poisonDetonate;
+    if (up.armor !== undefined) merged.armor = up.armor;
+    if (up.damagePerArmor !== undefined) merged.damagePerArmor = up.damagePerArmor;
+    if (up.doubleIfArmor !== undefined) merged.doubleIfArmor = up.doubleIfArmor;
+    if (up.thorns !== undefined) merged.thorns = up.thorns;
+    if (up.armorPerCardPlayed !== undefined) merged.armorPerCardPlayed = up.armorPerCardPlayed;
+    if (up.armorBurst !== undefined) merged.armorBurst = up.armorBurst;
+    if (up.damagePerStanceSwap !== undefined) merged.damagePerStanceSwap = up.damagePerStanceSwap;
+    if (up.blockPerStanceSwap !== undefined) merged.blockPerStanceSwap = up.blockPerStanceSwap;
   }
   return merged;
 }
