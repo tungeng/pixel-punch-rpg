@@ -242,6 +242,28 @@ export function CombatScreen() {
       <KeywordTips />
       <BossOutro />
 
+      {/* boss dossier bar — a boss fight announces itself before you read the sprite */}
+      {combat.isBoss && combat.enemies[0] && (
+        <div className="pointer-events-none absolute left-1/2 top-2 z-30 w-[62%] -translate-x-1/2">
+          <div
+            className="px-2 py-1"
+            style={{ background: "#12060f", border: "2px solid #ff5cf0", boxShadow: "0 0 12px #ff5cf055" }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-pixel text-[7px] tracking-widest" style={{ color: "#ff5cf0" }}>
+                BOSS
+              </span>
+              <span className="text-pixel text-[7px] text-foreground/70">
+                {Math.max(0, Math.round((combat.enemies[0].hp / Math.max(1, combat.enemies[0].maxHp)) * 100))}%
+              </span>
+            </div>
+            <div className="text-pixel mt-0.5 truncate text-[9px] text-foreground">
+              {combat.enemies[0].name}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* arena — enemies centered in the remaining space */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <div className="relative flex flex-1 items-center justify-center gap-1 px-3 pt-3">
@@ -257,9 +279,12 @@ export function CombatScreen() {
                 aiming={aimUid === e.uid}
                 depth={depth}
                 onSelect={onSelectTarget}
+                onImpact={onImpact}
+                onPhase={onPhase}
               />
             );
           })}
+
 
           {/* AoE sweep — a shockwave that crosses every depth slot */}
           <AnimatePresence>
