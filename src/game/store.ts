@@ -155,6 +155,10 @@ export interface GameState {
   shopRelics: string[];
   combat: Combat | null;
   lastEvent: string;
+  /** monotonically bumped each time lastEvent is set, so repeats still re-fire the toast */
+  lastEventAt: number;
+  /** big centred beat shown over a phase transition (combat cleared, act cleared) */
+  banner: { title: string; lines: string[]; tone: "win" | "boss" | "info" } | null;
   /** boss last words, shown briefly over the transition out of a boss fight */
   bossOutro: string | null;
   /** final record of the run that just ended (score screen + leaderboard) */
@@ -187,6 +191,7 @@ export interface GameState {
   toMap: () => void;
   abandon: () => void;
   clearBossOutro: () => void;
+  clearBanner: () => void;
   setPlayerName: (name: string) => void;
   markScoreSubmitted: () => void;
   buyUpgrade: (id: string) => void;
@@ -503,6 +508,8 @@ export const useGame = create<GameState>((set, get) => ({
   shopRelics: [],
   combat: null,
   lastEvent: "",
+  lastEventAt: 0,
+  banner: null,
   bossOutro: null,
   lastRun: null,
   scoreSubmitted: false,
@@ -551,6 +558,8 @@ export const useGame = create<GameState>((set, get) => ({
       startingRelicChoices: rng.shuffle(startingRelicChoices),
       combat: null,
       lastEvent: "",
+      lastEventAt: 0,
+      banner: null,
     });
   },
 
