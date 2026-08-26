@@ -6,7 +6,7 @@ import { PixelButton } from "@/components/game/PixelButton";
 
 const TIER_ORDER = ["common", "uncommon", "rare"] as const;
 
-export function RelicCodexScreen({ onClose }: { onClose: () => void }) {
+export function RelicCodexScreen({ onClose, embedded }: { onClose?: () => void; embedded?: boolean }) {
   const meta = useGame((s) => s.meta);
   const unlockRelic = useGame((s) => s.unlockRelic);
   const unlocked = new Set(meta.unlockedRelics);
@@ -18,17 +18,23 @@ export function RelicCodexScreen({ onClose }: { onClose: () => void }) {
   );
 
   return (
-    <div className="scanlines fixed inset-0 z-50 overflow-y-auto bg-background px-4 py-6">
-      <div className="mx-auto flex max-w-md flex-col">
-        <div className="flex items-center justify-between border-b border-primary/30 pb-3">
-          <h2 className="text-pixel text-[13px] text-accent">RELIC CODEX</h2>
-          <span
-            className="text-[13px] text-muted-foreground"
-            style={{ fontFamily: "var(--font-pixel-body)" }}
-          >
-            ⬢ {meta.credits} Cores
-          </span>
-        </div>
+    <div
+      className={
+        embedded ? "" : "scanlines fixed inset-0 z-50 overflow-y-auto bg-background px-4 py-6"
+      }
+    >
+      <div className={embedded ? "flex flex-col" : "mx-auto flex max-w-md flex-col"}>
+        {!embedded && (
+          <div className="flex items-center justify-between border-b border-primary/30 pb-3">
+            <h2 className="text-pixel text-[13px] text-accent">RELIC CODEX</h2>
+            <span
+              className="text-[13px] text-muted-foreground"
+              style={{ fontFamily: "var(--font-pixel-body)" }}
+            >
+              ⬢ {meta.credits} Cores
+            </span>
+          </div>
+        )}
 
         <p
           className="mt-3 text-[13px] text-muted-foreground"
@@ -133,11 +139,13 @@ export function RelicCodexScreen({ onClose }: { onClose: () => void }) {
           })}
         </div>
 
-        <div className="mt-5 pb-4">
-          <PixelButton onClick={onClose} color="primary" className="w-full">
-            ◀ BACK
-          </PixelButton>
-        </div>
+        {!embedded && onClose && (
+          <div className="mt-5 pb-4">
+            <PixelButton onClick={onClose} color="primary" className="w-full">
+              ◀ BACK
+            </PixelButton>
+          </div>
+        )}
       </div>
     </div>
   );
