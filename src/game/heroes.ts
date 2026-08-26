@@ -221,7 +221,7 @@ export const HEROES: Record<string, HeroDef> = {
     id: "bastion",
     name: "Bastion",
     role: "Turret",
-    maxHp: 90,
+    maxHp: 96,
     color: "#84cc16",
     asset: bastionImg,
     passive:
