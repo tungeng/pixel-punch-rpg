@@ -39,15 +39,6 @@ export const UPGRADES: UpgradeDef[] = [
     perTier: "+5% starting gold per tier",
     effect: (t) => `Start each run with ${t * 5} Gold (+${t * 5}%)`,
   },
-  {
-    id: "scanner_array",
-    name: "SCANNER ARRAY",
-    icon: "◎",
-    maxTier: 2,
-    costs: [140, 260],
-    perTier: "Better Cache relic odds per tier",
-    effect: (t) => `Cache nodes yield a relic ${70 + t * 15}% of the time (base 70%)`,
-  },
 ];
 
 export function upgradeById(id: string): UpgradeDef | undefined {
@@ -82,6 +73,8 @@ export function upgradeStartGold(upgrades?: Record<string, number>): number {
   return tierOf(upgrades, "overcharge_battery") * 5;
 }
 
-export function upgradeCacheRelicChance(upgrades?: Record<string, number>): number {
-  return 0.7 + tierOf(upgrades, "scanner_array") * 0.15;
+export function upgradeCacheRelicChance(): number {
+  // Cache nodes always mattered more as a relic than as a coin pile, so the
+  // old "buy better cache odds" upgrade was replaced by a flat, readable rate.
+  return 0.85;
 }
