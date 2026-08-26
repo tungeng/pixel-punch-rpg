@@ -1,5 +1,6 @@
 import { ACT_COUNT } from "@/game/enemies";
 import { useGame, cardPrice, relicPrice } from "@/game/store";
+import type { RunRecord } from "@/game/store";
 import { HEROES } from "@/game/heroes";
 import { RELICS, RELIC_TIER_COLOR, isExaltedTier, relicUnlockCost, ALL_RELIC_IDS } from "@/game/relics";
 import { MUTATORS } from "@/game/mutators";
@@ -35,7 +36,7 @@ export function RewardScreen() {
         <motion.div
           initial={{ scale: 0.4, rotate: -14, opacity: 0 }}
           animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 240, damping: 13 }}
+          transition={{ type: "spring", stiffness: isExaltedTier(relic.tier) ? 160 : 240, damping: isExaltedTier(relic.tier) ? 11 : 13 }}
           className={`mb-4 flex w-full max-w-[320px] items-center gap-3 bg-black/50 p-2 ${
             isExaltedTier(relic.tier) ? "relic-exalted" : ""
           } ${relic.tier === "mythic" ? "relic-mythic" : ""}`}
@@ -51,7 +52,10 @@ export function RewardScreen() {
             <RelicIcon id={relic.id} />
           </div>
           <div className="min-w-0">
-            <div className="text-pixel text-[7px] text-primary">RELIC SALVAGED</div>
+            <div className="text-pixel text-[7px]" style={{ color: RELIC_TIER_COLOR[relic.tier ?? "common"] }}>
+              {isExaltedTier(relic.tier) ? "★ " : ""}
+              {(relic.tier ?? "common").toUpperCase()} RELIC SALVAGED
+            </div>
             <div className="text-pixel text-[9px] leading-[12px]" style={{ color: relic.color }}>
               {relic.name}
             </div>
@@ -328,6 +332,38 @@ export function ShopScreen() {
   );
 }
 
+/** Records broken by the run just finished. Legendary beats read louder. */
+function RecordReel({ records }: { records: NonNullable<RunRecord["records"]> }) {
+  if (!records.length) return null;
+  return (
+    <div className="mb-4 w-full max-w-[320px] space-y-2">
+      {records.map((r, i) => {
+        const legendary = r.tier === "legendary";
+        const tone = legendary ? "#ffcf4d" : "#5ff2e0";
+        return (
+          <motion.div
+            key={r.label}
+            initial={{ opacity: 0, scale: legendary ? 0.6 : 0.9, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ delay: 0.35 + i * 0.18, type: "spring", stiffness: 240, damping: 14 }}
+            className="flex items-center justify-between gap-3 px-3 py-2"
+            style={{
+              border: `3px solid ${tone}`,
+              background: legendary ? `${tone}1f` : "rgba(6,10,20,0.7)",
+              boxShadow: legendary ? `0 0 26px -6px ${tone}` : "none",
+            }}
+          >
+            <div className="text-pixel text-[7px]" style={{ color: tone }}>
+              {legendary ? "★ " : ""}NEW {r.label}
+            </div>
+            <div className="text-pixel text-[9px] text-foreground">{r.value}</div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 /** The single most important screen for retention: it has to make you tap again. */
 function RunOverTail() {
   const abandon = useGame((s) => s.abandon);
@@ -343,6 +379,53 @@ function RunOverTail() {
     .sort((a, b) => a.cost - b.cost)[0];
   return (
     <>
+      <RecordReel records={last?.records ?? []} />
+
+      {last && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-3 w-full max-w-[320px] border-2 border-primary/40 bg-background/70"
+        >
+          <div className="flex items-center gap-3 border-b-2 border-primary/25 p-3">
+            {hero && (
+              <img
+                src={hero.asset}
+                alt={hero.name}
+                width={64}
+                height={64}
+                decoding="async"
+                className="pixelated h-12 w-12 shrink-0 object-contain"
+              />
+            )}
+            <div className="min-w-0">
+              <div className="text-pixel text-[9px]" style={{ color: hero?.color }}>
+                {hero?.name ?? "AGENT"}
+              </div>
+              <div className="text-pixel mt-1 text-[7px] text-muted-foreground">
+                ACT {last.act} · FLOOR {last.floorsCleared}
+              </div>
+            </div>
+            <div className="ml-auto text-right">
+              <div className="text-pixel text-[6px] text-muted-foreground">SCORE</div>
+              <div className="text-pixel text-[13px] text-primary">{last.score}</div>
+            </div>
+          </div>
+          <div className="text-pixel grid grid-cols-3 text-center text-[6px] text-muted-foreground">
+            <span className="border-r-2 border-primary/20 px-1 py-2">
+              CORES<br /><b className="text-[9px] text-primary">+{last.cores ?? 0}</b>
+            </span>
+            <span className="border-r-2 border-primary/20 px-1 py-2">
+              BIG HIT<br /><b className="text-[9px] text-foreground">{last.bestHit ?? 0}</b>
+            </span>
+            <span className="px-1 py-2">
+              BOSSES<br /><b className="text-[9px] text-foreground">{last.bossKills ?? 0}</b>
+            </span>
+          </div>
+        </motion.div>
+      )}
+
       {last?.highlight && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -363,6 +446,7 @@ function RunOverTail() {
       )}
       {next && (
         <div className="mb-4 w-full max-w-[320px] border-2 border-primary/25 bg-background/60 p-2 text-center">
+          <div className="text-pixel mb-1 text-[6px] text-muted-foreground">NEXT UNLOCK</div>
           <div className="text-[14px] text-foreground/70" style={{ fontFamily: "var(--font-pixel-body)" }}>
             {credits >= next.cost
               ? `You can unlock ${RELICS[next.id]?.name} in the Codex right now.`
@@ -372,7 +456,7 @@ function RunOverTail() {
       )}
       <ScoreSubmit />
       <div className="flex w-full max-w-[320px] flex-col gap-2">
-        <PixelButton onClick={rerun} color="danger">
+        <PixelButton onClick={rerun} color="danger" className="cta-throb press w-full py-4 text-[12px]">
           ▶ BREACH AGAIN{hero ? ` AS ${hero.name.toUpperCase()}` : ""}
         </PixelButton>
         <PixelButton onClick={abandon} color="primary">Return to hub</PixelButton>
@@ -383,17 +467,21 @@ function RunOverTail() {
 
 export function DeathScreen() {
   const floors = useGame((s) => s.floorsCleared);
+  const best = useGame((s) => s.meta.bestFloor);
+  const shy = Math.max(0, best - floors);
   return (
     <Screen title="THE BREACH CONSUMED YOU" tone="#ff3b3b" scroll>
       <motion.div
         initial={{ opacity: 0, scale: 1.4 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="text-pixel glitch mb-3 text-center text-[16px] text-destructive"
+        className="text-pixel glitch mb-2 text-center text-[16px] text-destructive"
       >
         FLOOR {floors}
       </motion.div>
       <div className="mb-4 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/70" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        The timeline snaps back. Only the Chrono Cores you banked survive the rewrite.
+        {shy > 0
+          ? `Your best still stands at floor ${best}. ${shy} more floor${shy === 1 ? "" : "s"} next time.`
+          : "The timeline snaps back. Only the Chrono Cores you banked survive the rewrite."}
       </div>
       <RunOverTail />
     </Screen>
@@ -402,14 +490,42 @@ export function DeathScreen() {
 
 export function VictoryScreen() {
   const floors = useGame((s) => s.floorsCleared);
+  const last = useGame((s) => s.lastRun);
+  const wins = useGame((s) => s.meta.stats?.wins ?? 0);
+  const hero = last ? HEROES[last.heroId] : null;
   return (
     <Screen title="BREACH SEALED" tone="#54d98c" scroll>
       <motion.div
-        animate={{ scale: [1, 1.06, 1] }}
-        transition={{ repeat: Infinity, duration: 1.8 }}
-        className="text-pixel mb-3 text-center text-[14px] text-primary"
+        initial={{ scale: 0.3, opacity: 0, rotate: -8 }}
+        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 180, damping: 12 }}
+        className="mb-3 flex w-full max-w-[320px] flex-col items-center border-4 border-[#ffcf4d] bg-[#ffcf4d]/10 px-4 py-4"
+        style={{ boxShadow: "0 0 34px -8px #ffcf4d" }}
       >
-        ✦ {floors} FLOORS ✦
+        {hero && (
+          <img
+            src={hero.asset}
+            alt={hero.name}
+            width={64}
+            height={64}
+            decoding="async"
+            className="pixelated idle-bob-slow h-16 w-16 object-contain"
+            style={{ filter: "drop-shadow(0 0 16px #ffcf4d)" }}
+          />
+        )}
+        <div className="text-pixel mt-2 text-[11px]" style={{ color: "#ffcf4d" }}>
+          ALL FOUR BOSSES DOWN
+        </div>
+        <motion.div
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="text-pixel mt-2 text-[14px] text-primary"
+        >
+          ✦ {floors} FLOORS ✦
+        </motion.div>
+        <div className="text-pixel mt-2 text-[7px] text-muted-foreground">
+          CAREER FULL CLEARS · {wins}
+        </div>
       </motion.div>
       <div className="mb-4 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
         The fracture folds shut over King's Row. Another you wakes up and never hears a shot.

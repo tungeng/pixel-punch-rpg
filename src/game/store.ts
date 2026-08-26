@@ -122,6 +122,30 @@ export interface RunRecord {
   floorsCleared: number;
   act: number;
   fullClear: boolean;
+  /** cores banked from this run */
+  cores?: number;
+  bestHit?: number;
+  bossKills?: number;
+  /** lifetime records broken by this run, already phrased for display */
+  records?: { label: string; value: string; tier: "major" | "legendary" }[];
+}
+
+/** Compare a finished run against the lifetime block it is about to fold into. */
+export function brokenRecords(
+  prev: MetaStats | undefined,
+  r: { win: boolean; score: number; floorsCleared: number; bestHit: number },
+  prevBestFloor: number,
+): NonNullable<RunRecord["records"]> {
+  const base = { ...emptyStats(), ...(prev ?? {}) };
+  const out: NonNullable<RunRecord["records"]> = [];
+  if (r.score > base.bestScore) out.push({ label: "BEST SCORE", value: `${r.score}`, tier: "legendary" });
+  if (r.floorsCleared > prevBestFloor) out.push({ label: "DEEPEST RUN", value: `FLOOR ${r.floorsCleared}`, tier: "major" });
+  if (r.bestHit > base.bestHit) out.push({ label: "LARGEST HIT", value: `${r.bestHit} DMG`, tier: "major" });
+  if (r.win && (base.fastestWinFloors === null || r.floorsCleared < base.fastestWinFloors)) {
+    out.push({ label: "FASTEST CLEAR", value: `${r.floorsCleared} FLOORS`, tier: "legendary" });
+  }
+  if (r.win && base.wins === 0) out.push({ label: "FIRST BREACH SEALED", value: "TIMELINE RESTORED", tier: "legendary" });
+  return out;
 }
 
 /** Final run score. Floors and act carry the most weight, full clears get a big bonus. */
@@ -223,6 +247,7 @@ export interface GameState {
   chooseStartingRelic: (relicId: string, index?: number) => void;
   chooseStartingMutator: (mutatorId: string | null) => void;
   selectHero: (heroId: string) => void;
+  unlockHero: (heroId: string, cost: number) => boolean;
   chooseAugment: (augmentId: string) => void;
   enterNode: (nodeId: number) => void;
   startCombat: (nodeType: NodeType, rng: Rng) => void;
@@ -637,6 +662,16 @@ export const useGame = create<GameState>((set, get) => ({
   scoreSubmitted: false,
 
   loadMeta: () => set({ meta: loadMetaFromStorage() }),
+
+  /** Spend cores on a locked hero. Returns true when the unlock actually happened. */
+  unlockHero: (heroId, cost) => {
+    const m = get().meta;
+    if (!HEROES[heroId] || m.unlockedHeroes.includes(heroId) || m.credits < cost) return false;
+    const meta = { ...m, credits: m.credits - cost, unlockedHeroes: [...m.unlockedHeroes, heroId], selectedHeroId: heroId };
+    saveMeta(meta);
+    set({ meta });
+    return true;
+  },
 
   /** Straight back into the breach with the same hero. No hub round trip. */
   rerun: () => {
@@ -2458,6 +2493,8 @@ function handleCombatWin(set: any, get: () => GameState) {
       return;
     }
     const score = computeScore(floorsCleared, s.act + 1, gold, true);
+    const coresEarned = Math.floor((200 + floorsCleared) * upgradeCreditMult(s.meta.upgrades));
+    const records = brokenRecords(s.meta.stats, { win: true, score, floorsCleared, bestHit: s.runStats.bestHit }, s.meta.bestFloor);
     const meta = withRunStats({
       ...s.meta,
       credits: s.meta.credits + Math.floor((200 + floorsCleared) * upgradeCreditMult(s.meta.upgrades)),
@@ -2474,7 +2511,7 @@ function handleCombatWin(set: any, get: () => GameState) {
       meta,
       banner,
       bossOutro: BOSSES[c.enemies[0]?.defId ?? ""]?.deathLine ?? null,
-      lastRun: { heroId: s.heroId, score, floorsCleared, act: s.act + 1, fullClear: true, highlight: runHighlight({ ...s, floorsCleared }), mutator: s.mutator },
+      lastRun: { heroId: s.heroId, score, floorsCleared, act: s.act + 1, fullClear: true, highlight: runHighlight({ ...s, floorsCleared }), mutator: s.mutator, cores: coresEarned, bestHit: s.runStats.bestHit, bossKills: s.runStats.bossKills, records },
       scoreSubmitted: false,
     });
     return;
@@ -2517,6 +2554,7 @@ function handleDeath(set: any, get: () => GameState) {
   const s = get();
   const credits = Math.floor((s.floorsCleared * 8 + s.gold * 0.2) * upgradeCreditMult(s.meta.upgrades));
   const score = computeScore(s.floorsCleared, s.act, s.gold, false);
+  const records = brokenRecords(s.meta.stats, { win: false, score, floorsCleared: s.floorsCleared, bestHit: s.runStats.bestHit }, s.meta.bestFloor);
   const meta = withRunStats({
     ...s.meta,
     credits: s.meta.credits + credits,
@@ -2528,7 +2566,7 @@ function handleDeath(set: any, get: () => GameState) {
     phase: "dead",
     combat: null,
     meta,
-    lastRun: { heroId: s.heroId, score, floorsCleared: s.floorsCleared, act: s.act, fullClear: false, highlight: runHighlight(s), mutator: s.mutator },
+    lastRun: { heroId: s.heroId, score, floorsCleared: s.floorsCleared, act: s.act, fullClear: false, highlight: runHighlight(s), mutator: s.mutator, cores: credits, bestHit: s.runStats.bestHit, bossKills: s.runStats.bossKills, records },
     scoreSubmitted: false,
   });
 }
