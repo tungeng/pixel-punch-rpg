@@ -619,7 +619,7 @@ export function CombatScreen() {
         )}
       </AnimatePresence>
 
-      {/* turn banner — one self-contained pass prevents dev-mode timers from getting stranded */}
+      {/* minor beat: the turn ticker is quick and thin so it never costs tempo */}
       {banner && (
         <motion.div
           key={banner}
@@ -629,13 +629,79 @@ export function CombatScreen() {
             opacity: [0, 1, 1, 0],
             skewX: [-14, 0, 0, 14],
           }}
-          transition={{ duration: 0.82, times: [0, 0.24, 0.62, 1], ease: "easeInOut" }}
+          transition={{ duration: 0.6, times: [0, 0.22, 0.55, 1], ease: "easeInOut" }}
           onAnimationComplete={() => setBanner(null)}
-          className="text-pixel pointer-events-none absolute left-0 right-0 top-1/3 z-30 bg-primary/85 py-2 text-center text-[14px] text-black"
+          className="text-pixel pointer-events-none absolute left-0 right-0 top-1/3 z-30 bg-primary/85 py-1 text-center text-[11px] text-black"
         >
           {banner}
         </motion.div>
       )}
+
+      {/* run-defining beat: boss contact and phase turns get weight and darkness */}
+      <AnimatePresence>
+        {bigBanner && (
+          <motion.div
+            key={`big-${bigBanner.seq}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 1.7, times: [0, 0.14, 0.72, 1] }}
+            onAnimationComplete={() => setBigBanner(null)}
+            className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center bg-black/60"
+          >
+            <motion.div
+              initial={{ scale: 0.82, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-[86%] px-3 py-3 text-center"
+              style={{
+                background: "#0b0410",
+                border: "3px solid #ff5cf0",
+                boxShadow: "0 0 26px #ff5cf066",
+              }}
+            >
+              <div className="text-pixel text-[8px] tracking-[0.3em]" style={{ color: "#ff5cf0" }}>
+                {bigBanner.kicker}
+              </div>
+              <div className="text-pixel mt-2 text-[16px] leading-[20px] text-foreground">
+                {bigBanner.text}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* impact wash — one short frame of colour so big hits register physically */}
+      <AnimatePresence>
+        {flash && (
+          <motion.div
+            key={`flash-${flash.seq}`}
+            initial={{ opacity: flash.kind === "boss" ? 0.85 : flash.kind === "kill" ? 0.5 : 0.28 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: flash.kind === "boss" ? 0.5 : 0.26, ease: "easeOut" }}
+            onAnimationComplete={() => setFlash(null)}
+            className="pointer-events-none absolute inset-0 z-[55]"
+            style={{
+              background:
+                flash.kind === "boss"
+                  ? "#ffffff"
+                  : flash.kind === "kill"
+                    ? "radial-gradient(circle, #fff2c2, transparent 72%)"
+                    : "radial-gradient(circle, #ffd9a0, transparent 78%)",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* near death — a standing warning frame instead of a one-off cue you can miss */}
+      {combat.hp > 0 && combat.hp / combat.maxHp <= 0.25 && (
+        <motion.div
+          animate={{ opacity: [0.35, 0.85, 0.35] }}
+          transition={{ repeat: Infinity, duration: 1.4 }}
+          className="pointer-events-none absolute inset-0 z-[50]"
+          style={{ boxShadow: "inset 0 0 60px 14px #ff2b4d", border: "2px solid #ff2b4d55" }}
+        />
+      )}
+
 
       {/* ultimate announcement — visual only; the ult resolves when it finishes */}
       <AnimatePresence>
