@@ -80,6 +80,11 @@ export function CombatScreen() {
 
   const [shake, setShake] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
+  /** major, slower announcement reserved for boss openings and phase turns */
+  const [bigBanner, setBigBanner] = useState<{ kicker: string; text: string; seq: number } | null>(
+    null,
+  );
+  const [flash, setFlash] = useState<{ seq: number; kind: "big" | "kill" | "boss" } | null>(null);
   const [flying, setFlying] = useState<CardInstance | null>(null);
   const [lunge, setLunge] = useState(0);
   const [sweep, setSweep] = useState(0);
@@ -92,6 +97,18 @@ export function CombatScreen() {
   const prevHp = useRef<number | null>(null);
   const prevBlock = useRef<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const fxSeq = useRef(0);
+  const bannerSeq = useRef(0);
+
+  /** children report notable hits so the screen itself can react once, briefly */
+  const onImpact = (kind: "big" | "kill" | "boss") => {
+    fxSeq.current += 1;
+    setFlash({ seq: fxSeq.current, kind });
+  };
+  const onPhase = (kicker: string, text: string) => {
+    bannerSeq.current += 1;
+    setBigBanner({ kicker, text, seq: bannerSeq.current });
+  };
 
   useEffect(() => {
     const t = setInterval(pruneFloats, 400);
@@ -122,10 +139,19 @@ export function CombatScreen() {
   }, [blockVal]);
 
   const turn = combat?.turn ?? 0;
+  const isBossFight = !!combat?.isBoss;
+  const bossName = combat?.enemies[0]?.name ?? "";
   useEffect(() => {
     if (turn === 0) return;
+    // Turn 1 of a boss fight gets the heavy announcement instead of "TURN 1".
+    if (turn === 1 && isBossFight) {
+      bannerSeq.current += 1;
+      setBigBanner({ kicker: "BREACH CONTACT", text: bossName, seq: bannerSeq.current });
+      return;
+    }
     setBanner(`TURN ${turn}`);
-  }, [turn]);
+  }, [turn, isBossFight, bossName]);
+
 
   if (!combat) return null;
   const hero = HEROES[heroId]!;
