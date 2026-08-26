@@ -103,7 +103,7 @@ export const CARDS: Record<string, CardDef> = {
   n_focus: { id: "n_focus", name: "Focus", type: "skill", cost: 0, rarity: "uncommon", draw: 2, text: "Draw 2 cards.", up: { draw: 3 } },
   n_power: { id: "n_power", name: "Power Surge", type: "skill", cost: 1, rarity: "uncommon", strength: 1, block: 3, text: "Gain 1 Strength and 3 Block.", up: { strength: 2 } },
   // ---------------- REINHARDT (persistent armor / bulwark) ----------------
-  rein_hammer: { id: "rein_hammer", name: "Rocket Hammer", type: "attack", cost: 1, hero: "reinhardt", rarity: "starter", damage: 6, damagePerArmor: 2, text: "Deal 6 damage, +1 per 2 Armor.", up: { damage: 9, damagePerArmor: 1 } },
+  rein_hammer: { id: "rein_hammer", name: "Rocket Hammer", type: "attack", cost: 1, hero: "reinhardt", rarity: "starter", damage: 6, damagePerArmor: 1, text: "Deal 6 damage, +1 per Armor.", up: { damage: 10 } },
   rein_plating: { id: "rein_plating", name: "Steel Plating", type: "skill", cost: 1, hero: "reinhardt", rarity: "starter", armor: 9, text: "Gain 9 Armor (Armor never expires).", up: { armor: 10 } },
   rein_barrier: { id: "rein_barrier", name: "Barrier Field", type: "skill", cost: 1, hero: "reinhardt", rarity: "starter", block: 5, blockFromArmor: true, text: "Gain 5 Block plus Block equal to your Armor.", up: { block: 8 } },
   rein_firestrike: { id: "rein_firestrike", name: "Fire Strike", type: "attack", cost: 1, hero: "reinhardt", rarity: "starter", damage: 6, aoe: true, ignoreBlock: true, text: "Deal 6 damage to ALL enemies, ignoring Block.", up: { damage: 9 } },
@@ -111,7 +111,7 @@ export const CARDS: Record<string, CardDef> = {
   rein_bulwark: { id: "rein_bulwark", name: "Barbed Bulwark", type: "skill", cost: 1, hero: "reinhardt", rarity: "common", thorns: 5, block: 3, text: "Gain 3 Block. Retaliate 5: attackers take 5 damage this turn.", up: { thorns: 8, block: 5 } },
   rein_forge: { id: "rein_forge", name: "Crusader Forge", type: "skill", cost: 0, hero: "reinhardt", rarity: "common", blockToArmor: true, text: "Reforge all of your Block into Armor.", up: { armor: 3 } },
   rein_bash: { id: "rein_bash", name: "Shield Bash", type: "attack", cost: 1, hero: "reinhardt", rarity: "uncommon", damage: 7, stealBlockAsArmor: true, text: "Deal 7 damage. Strip the target's Block and bolt it on as Armor.", up: { damage: 10 } },
-  rein_smash: { id: "rein_smash", name: "Ground Smash", type: "attack", cost: 2, hero: "reinhardt", rarity: "uncommon", damage: 3, damagePerArmor: 2, aoe: true, text: "Deal 3 damage, +1 per 2 Armor, to ALL enemies.", up: { damagePerArmor: 1 } },
+  rein_smash: { id: "rein_smash", name: "Ground Smash", type: "attack", cost: 2, hero: "reinhardt", rarity: "uncommon", damage: 4, damagePerArmor: 1, aoe: true, text: "Deal 4 damage, +1 per Armor, to ALL enemies.", up: { damage: 8 } },
   rein_endure: { id: "rein_endure", name: "Endure", type: "skill", cost: 1, hero: "reinhardt", rarity: "uncommon", armor: 12, selfDamage: 5, text: "Take 5 damage. Gain 12 Armor.", up: { armor: 18 } },
   rein_rally: { id: "rein_rally", name: "Rally", type: "skill", cost: 1, hero: "reinhardt", rarity: "uncommon", armorPerCardPlayed: 3, draw: 1, text: "Draw 1. Gain 3 Armor per card played earlier this turn.", up: { armorPerCardPlayed: 4 } },
   rein_will: { id: "rein_will", name: "Unbreakable Will", type: "skill", cost: 2, hero: "reinhardt", rarity: "rare", armor: 8, strength: 2, retain: true, text: "Gain 8 Armor and 2 Strength. Retained in hand.", up: { armor: 12, strength: 3 } },
