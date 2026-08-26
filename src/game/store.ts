@@ -279,19 +279,15 @@ function drawCountFor(heroId: string, relics: string[]): number {
  * so their damage window still closes fights.
  */
 const HERO_PRESSURE: Record<string, number> = {
-  mercy: 1.12,
-  moira: 1.06,
-  reinhardt: 0.72,
-  tracer: 0.76,
-  genji: 0.62,
-  junkrat: 0.68,
-  doomfist: 0.76,
+  mercy: 1.08,
+  moira: 1.12,
+  reinhardt: 0.93,
+  tracer: 0.95,
+  genji: 0.8,
+  junkrat: 0.9,
+  doomfist: 0.88,
 };
 
-/**
- * Sustain kits shrug off bigger HP bars, so they are answered with harder
- * hits instead. Bruisers who bank Armor or Strength get a touch of relief.
- */
 const HERO_AGGRO: Record<string, number> = {
   mercy: 4,
   moira: 2,
@@ -645,27 +641,35 @@ export const useGame = create<GameState>((set, get) => ({
     const augmentCount = s.augments.length;
     const upgradedCount = s.deck.filter((card) => card.upgraded).length;
     const leanDeckBonus = s.deck.length < 24 ? (24 - s.deck.length) * 0.012 : 0;
-    const bossEase = nodeType === "boss" ? 0.95 : 1;
     // Longer fights reward sustain and punish burst, so each hero meets a
     // difficulty curve tuned to how their kit ages across a combat.
     const heroPressure = HERO_PRESSURE[s.heroId] ?? 1;
-    // Fights are meant to be read, not deleted. Enemies carry a deeper HP pool so
-    // a combat plays out over several turns of real decisions.
-    const DEPTH = 1.9;
+    // Difficulty should live across the whole route, not in one boss spike.
+    // Trash used to die in under two turns while bosses ran seven, so the run
+    // was filler punctuated by a wall. Each encounter class now has its own
+    // depth: skirmishes are real attrition, elites are puzzles, bosses stay
+    // long but hit less brutally per turn.
+    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.95 : 1.08) : nodeType === "elite" ? 2.65 : 2.85;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
-      bossEase *
       heroPressure;
     // ...and hit softer per turn, so length creates tension instead of coin-flips.
-    const strBonus =
-      Math.floor(floor / 4) +
-      Math.round(s.act * 1.1) +
-      Math.floor(relicCount / 4) +
-      Math.floor(augmentCount / 3) +
-      (nodeType === "elite" ? 2 + s.act : 0) +
-      (nodeType === "boss" ? 1 + s.act : 0) +
-      (HERO_AGGRO[s.heroId] ?? 0);
+    const pace = nodeType === "boss" ? 0.7 : nodeType === "elite" ? 0.8 : 0.55;
+    const strBonus = Math.max(
+      0,
+      Math.round(
+        (Math.floor(floor / 4) +
+          Math.round(s.act * 1.1) +
+          Math.floor(relicCount / 4) +
+          Math.floor(augmentCount / 3) +
+          (nodeType === "elite" ? 2 + s.act : 0) +
+          (nodeType === "boss" ? 1 + Math.round(s.act * 0.6) : 0) +
+          (HERO_AGGRO[s.heroId] ?? 0)) *
+          pace,
+      ),
+    );
+
 
 
     for (const e of enemies) {
@@ -1037,6 +1041,17 @@ export const useGame = create<GameState>((set, get) => ({
       }
     }
     c.ultCharge = Math.min(100, charge.v);
+    // Fracture Surge: long fights are meant to be tense, not safe. From turn 6
+    // on, the rift feeds the enemy line so stalling stops being a strategy.
+    if (c.turn >= 5) {
+      const surge = 1 + Math.floor((c.turn - 5) / 2);
+      for (const e of c.enemies) {
+        if (e.isDead) continue;
+        e.strength += surge;
+      }
+      pushFloat(c, "SURGE", "buff", "player");
+      pushLog(c, `The fracture surges. Enemies gain ${surge} Strength.`);
+    }
     // advance enemy intents
     for (const e of c.enemies) {
       if (e.isDead) continue;

@@ -20,6 +20,8 @@ export interface RunResult {
   won: boolean;
   turns: number;
   combats: number;
+  turnsByNode: Record<string, number>;
+  combatsByNode: Record<string, number>;
   deathNode: string | null;
   deathEnemy: string | null;
   goldLeft: number;
@@ -112,6 +114,8 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
     won: false,
     turns: 0,
     combats: 0,
+    turnsByNode: {},
+    combatsByNode: {},
     deathNode: null,
     deathEnemy: null,
     goldLeft: 0,
@@ -229,7 +233,10 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
           options.find((n) => n.type === "treasure") ??
           options[0]!;
         lastNodeType = pick.type;
-        if (pick.type === "combat" || pick.type === "elite" || pick.type === "boss") res.combats++;
+        if (pick.type === "combat" || pick.type === "elite" || pick.type === "boss") {
+          res.combats++;
+          res.combatsByNode[pick.type] = (res.combatsByNode[pick.type] ?? 0) + 1;
+        }
         if (pick.type === "elite") res.elitesVisited++;
         if (pick.type === "shop") res.shopsVisited++;
         if (pick.type === "rest") res.restsVisited++;
@@ -276,6 +283,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         if (playsThisTurn > 40) {
           playsThisTurn = 0;
           res.turns++;
+          res.turnsByNode[lastNodeType] = (res.turnsByNode[lastNodeType] ?? 0) + 1;
           s.endTurn();
           break;
         }
@@ -321,6 +329,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         } else {
           res.wastedEnergy += c.energy;
           res.turns++;
+          res.turnsByNode[lastNodeType] = (res.turnsByNode[lastNodeType] ?? 0) + 1;
           s.endTurn();
         }
         break;
@@ -425,6 +434,7 @@ export interface Report {
   winRate: number;
   avgFloors: number;
   avgTurnsPerCombat: number;
+  avgTurnsByNode: Record<string, number>;
   errors: string[];
   perHero: Record<string, { runs: number; wins: number; winRate: number; avgFloors: number }>;
   deathsByAct: Record<number, number>;
@@ -461,6 +471,8 @@ export function summarize(results: RunResult[]): Report {
   const relicWin: Record<string, { n: number; wins: number }> = {};
   let turns = 0;
   let combats = 0;
+  const turnsByNode: Record<string, number> = {};
+  const combatsByNode: Record<string, number> = {};
   for (const r of results) {
     const h = (perHero[r.hero] ??= { runs: 0, wins: 0, winRate: 0, avgFloors: 0 });
     h.runs++;
@@ -479,6 +491,8 @@ export function summarize(results: RunResult[]): Report {
     for (const id of r.augments) cardUse[`augment:${id}`] = (cardUse[`augment:${id}`] ?? 0) + 1;
     turns += r.turns;
     combats += r.combats;
+    for (const [k, v] of Object.entries(r.turnsByNode)) turnsByNode[k] = (turnsByNode[k] ?? 0) + v;
+    for (const [k, v] of Object.entries(r.combatsByNode)) combatsByNode[k] = (combatsByNode[k] ?? 0) + v;
   }
   const augmentUse = Object.fromEntries(
     Object.entries(cardUse)
@@ -495,6 +509,9 @@ export function summarize(results: RunResult[]): Report {
     winRate: wins / results.length,
     avgFloors: results.reduce((a, r) => a + r.floors, 0) / results.length,
     avgTurnsPerCombat: combats ? turns / combats : 0,
+    avgTurnsByNode: Object.fromEntries(
+      Object.keys(combatsByNode).map((k) => [k, (turnsByNode[k] ?? 0) / (combatsByNode[k] || 1)]),
+    ),
     errors: results.filter((r) => r.error).map((r) => `${r.hero}/${r.seed}: ${r.error}`),
     perHero,
     deathsByAct,
