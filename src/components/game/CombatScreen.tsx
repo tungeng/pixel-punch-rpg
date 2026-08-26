@@ -727,20 +727,29 @@ function EnemyView({
   aiming,
   depth,
   onSelect,
+  onImpact,
+  onPhase,
 }: {
   enemyUid: string;
   targeting: boolean;
   aiming?: boolean;
   depth: number;
   onSelect: (uid: string) => void;
+  onImpact: (kind: "big" | "kill" | "boss") => void;
+  onPhase: (kicker: string, text: string) => void;
 }) {
   const enemy = useGame((s) => s.combat?.enemies.find((e) => e.uid === enemyUid));
   const floats = useGame((s) => s.combat?.floats ?? []);
   /** hit pulse: seq re-triggers the animation, ratio = damage / max HP */
   const [hitFx, setHitFx] = useState<{ seq: number; ratio: number } | null>(null);
   const [hitstop, setHitstop] = useState(false);
+  const [slain, setSlain] = useState(false);
   const prev = useRef<number | null>(null);
+  const phased = useRef(false);
   const maxHp = enemy?.maxHp ?? 1;
+  const isBoss = !!enemy?.isBoss;
+  const isElite = !!enemy?.isElite;
+  const name = enemy?.name ?? "";
 
   const hp = enemy?.hp ?? null;
   useEffect(() => {
@@ -749,9 +758,20 @@ function EnemyView({
       const ratio = Math.min(1, (prev.current - hp) / Math.max(1, maxHp));
       const lethal = hp <= 0;
       setHitFx((f) => ({ seq: (f?.seq ?? 0) + 1, ratio }));
-      if (lethal) setHitstop(true);
+      if (lethal) {
+        setHitstop(true);
+        setSlain(true);
+        onImpact(isBoss ? "boss" : "kill");
+      } else if (ratio >= 0.22) {
+        onImpact("big");
+      }
+      // bosses turn at the halfway mark: same rules, much louder presentation
+      if (isBoss && !lethal && !phased.current && hp / Math.max(1, maxHp) <= 0.5) {
+        phased.current = true;
+        onPhase("THRESHOLD BREACHED", `${name} · PHASE II`);
+      }
       const t = setTimeout(() => setHitFx(null), 340);
-      const t2 = lethal ? setTimeout(() => setHitstop(false), 90) : undefined;
+      const t2 = lethal ? setTimeout(() => setHitstop(false), lethal && isBoss ? 220 : 120) : undefined;
       prev.current = hp;
       return () => {
         clearTimeout(t);
@@ -760,7 +780,8 @@ function EnemyView({
     }
     prev.current = hp;
     return;
-  }, [hp, maxHp]);
+  }, [hp, maxHp, isBoss, name, onImpact, onPhase]);
+
 
   if (!enemy) return null;
 
