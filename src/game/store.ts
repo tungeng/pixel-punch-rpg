@@ -23,6 +23,7 @@ import { AUGMENTS, augmentPoolFor, makeContract, type ContractState } from "./pr
 export type Phase =
   | "map"
   | "relic_choice"
+  | "protocol_choice"
   | "augment_choice"
   | "combat"
   | "reward"
@@ -167,6 +168,8 @@ export interface GameState {
     bossHeroes?: string[];
     /** lifetime accomplishments shown on the Statistics screen */
     stats?: MetaStats;
+    /** hero the player picked for their next run (persists outside runs) */
+    selectedHeroId?: string;
   };
   // run
   inRun: boolean;
@@ -218,6 +221,8 @@ export interface GameState {
   startRun: (heroId: string, seedLabel?: string) => void;
   rerun: () => void;
   chooseStartingRelic: (relicId: string, index?: number) => void;
+  chooseStartingMutator: (mutatorId: string | null) => void;
+  selectHero: (heroId: string) => void;
   chooseAugment: (augmentId: string) => void;
   enterNode: (nodeId: number) => void;
   startCombat: (nodeType: NodeType, rng: Rng) => void;
