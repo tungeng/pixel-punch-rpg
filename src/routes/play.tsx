@@ -197,22 +197,15 @@ function PlaySetup() {
             style={{ fontFamily: "var(--font-pixel-body)" }}
           />
 
-          <motion.div
-            className="mt-6"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, type: "spring", stiffness: 240, damping: 16 }}
+          <p
+            className="mt-2 text-[13px] text-muted-foreground"
+            style={{ fontFamily: "var(--font-pixel-body)" }}
           >
-            <PixelButton
-              onClick={breach}
-              color="danger"
-              className="cta-throb sheen relative w-full overflow-hidden px-8 py-6 text-[18px]"
-            >
-              ▶ BREACH
-            </PixelButton>
-          </motion.div>
+            Step 2 of 2. Breach when you are ready.
+          </p>
         </>
       )}
+
     </MenuShell>
   );
 }
