@@ -1910,6 +1910,9 @@ function resolveCard(
       c.stanceSwaps += 1;
       pushFloat(c, next.toUpperCase(), "buff", "player");
       pushLog(c, `Bastion reconfigures into ${next.toUpperCase()}.`);
+      // Passive engine: every Configuration change bolts on lasting power.
+      const gainedCfg = gainStrength(c, 2, relics);
+      pushFloat(c, `+${gainedCfg} STR`, "buff", "player");
       if (s.augments.includes("bastion_cycler")) {
         const tier = s.augmentTiers["bastion_cycler"] ?? 1;
         drawCards(c, 1);
