@@ -11,7 +11,7 @@ import { Rng, hashSeed, randomSeed } from "./rng";
 import { makeCard, CARDS, NEUTRAL_POOL } from "./cards";
 import { HEROES, UNLOCKABLE_HEROES, STARTER_HEROES } from "./heroes";
 import { ENEMIES, BOSSES, ACT_BOSSES, enemyPoolFor, elitePoolFor } from "./enemies";
-import { RELICS, ALL_RELIC_IDS, DEFAULT_UNLOCKED_RELIC_IDS, pickRelicId, relicUnlockCost } from "./relics";
+import { RELICS, ALL_RELIC_IDS, DEFAULT_UNLOCKED_RELIC_IDS, pickRelicId, relicUnlockCost, isDropEligible } from "./relics";
 import { generateMap } from "./mapgen";
 import tracerImg from "../assets/tracer.png";
 import kingsrowImg from "../assets/bg_kingsrow.jpg";
@@ -83,6 +83,12 @@ export interface Combat {
   armor: number;
   /** Reinhardt: retaliation damage dealt back to attackers this turn. */
   thorns: number;
+  /** Chrono Duplicator: the first card of the combat has already been echoed. */
+  duplicatorUsed: boolean;
+  /** Null Sector Core: the free ultimate has already been spent this combat. */
+  freeUltUsed: boolean;
+  /** Timeline Fracture: waiting on the player's opening choice. */
+  fracturePending: boolean;
 }
 
 
@@ -152,6 +158,7 @@ export interface GameState {
   cancelTarget: () => void;
   endTurn: () => void;
   useUltimate: (targetUid?: string) => void;
+  chooseFracture: (option: "block" | "damage" | "draw") => void;
   pickRewardCard: (cardId: string) => void;
   skipReward: () => void;
   restHeal: () => void;
@@ -215,10 +222,18 @@ function getHero(heroId: string): HeroDef {
   return HEROES[heroId]!;
 }
 
+/** Strength gains are doubled by the Singularity Anchor. */
+function gainStrength(c: Combat, amount: number, relics: string[]): number {
+  const total = relics.includes("singularity_anchor") ? amount * 2 : amount;
+  c.strength += total;
+  return total;
+}
+
 function maxEnergyFor(heroId: string, relics: string[]): number {
   let e = 3;
   if (heroId === "tracer") e += 1;
   if (relics.includes("energy_core")) e += 1;
+  if (relics.includes("overclocked_core")) e += 2;
   if (relics.includes("titan_plating")) e -= 1;
   return Math.max(1, e);
 }
@@ -594,6 +609,9 @@ export const useGame = create<GameState>((set, get) => ({
       hackDraw: false,
       beams: [],
       firstCardDiscount: s.relics.includes("haste_module"),
+      duplicatorUsed: false,
+      freeUltUsed: false,
+      fracturePending: s.relics.includes("timeline_fracture"),
     };
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
@@ -610,8 +628,8 @@ export const useGame = create<GameState>((set, get) => ({
       combat.block += 20;
       drawCards(combat, 1);
     }
-    if (R("berserker")) combat.strength += 2;
-    if (R("execution_chip")) combat.strength += 3;
+    if (R("berserker")) gainStrength(combat, 2, s.relics);
+    if (R("execution_chip")) gainStrength(combat, 3, s.relics);
     if (R("ult_battery")) combat.ultCharge = Math.max(combat.ultCharge, 30);
     if (R("war_banner")) for (const e of combat.enemies) e.vulnerable = Math.max(e.vulnerable, 2);
     if (R("hex_emitter")) for (const e of combat.enemies) e.weak = Math.max(e.weak, 2);
@@ -920,7 +938,7 @@ export const useGame = create<GameState>((set, get) => ({
     c.thorns = 0;
     // ---- per-turn relic ticks ----
     if (relics.includes("dragon_ember")) {
-      c.strength += 1;
+      gainStrength(c, 1, relics);
       pushFloat(c, "+1 STR", "buff", "player");
     }
     if (relics.includes("volt_capacitor")) {
@@ -1027,6 +1045,18 @@ export const useGame = create<GameState>((set, get) => ({
       }
     }
 
+    if (relics.includes("overclocked_core")) {
+      c.hp -= 1;
+      pushFloat(c, "1", "dmg", "player");
+      pushLog(c, "Overclocked Core burns 1 HP.");
+      if (c.hp <= 0) {
+        c.hp = 0;
+        c.active = false;
+        handleDeath(set, get);
+        set({ combat: { ...c } });
+        return;
+      }
+    }
     if (relics.includes("regen_drone")) {
       const healed = Math.min(c.maxHp - c.hp, 2);
       if (healed > 0) {
@@ -1047,12 +1077,51 @@ export const useGame = create<GameState>((set, get) => ({
     c.ultCharge = 0;
     const living = c.enemies.filter((e) => !e.isDead);
     const needsTarget = ((ult.damage ?? 0) > 0 || !!ult.beam) && !ult.aoe && living.length > 1;
+    const freeUlt = s.relics.includes("null_sector_core") && !c.freeUltUsed;
     if (needsTarget && !targetUid) {
-      // store a flag for targeting ult via targetingCardUid? simpler: just target first
       resolveCard(set, get, ult, living[0]?.uid ?? null, true);
     } else {
       resolveCard(set, get, ult, targetUid ?? living[0]?.uid ?? null, true);
     }
+    if (freeUlt) {
+      const after = get().combat;
+      if (after) {
+        after.freeUltUsed = true;
+        after.ultCharge = 100;
+        pushLog(after, "Null Sector Core refunds the Ultimate.");
+        set({ combat: { ...after } });
+      }
+    }
+  },
+
+  chooseFracture: (option) => {
+    const s = get();
+    const c = s.combat;
+    if (!c || !c.active || !c.fracturePending) return;
+    c.fracturePending = false;
+    if (option === "block") {
+      c.block += 40;
+      pushFloat(c, "+40", "block", "player");
+      pushLog(c, "Timeline Fracture braces the line. +40 Block.");
+    } else if (option === "damage") {
+      const charge = { v: c.ultCharge };
+      for (const e of c.enemies.filter((x) => !x.isDead && !x.untargetable)) {
+        const dealt = applyEnemyDamage(c, e, 15, charge, s.relics.includes("power_cell"));
+        pushFloat(c, `${dealt}`, "dmg", e.uid);
+      }
+      c.ultCharge = Math.min(100, charge.v);
+      pushLog(c, "Timeline Fracture collapses on the enemy line.");
+      if (c.enemies.every((e) => e.isDead)) {
+        c.active = false;
+        handleCombatWin(set, get);
+        set({ combat: { ...c } });
+        return;
+      }
+    } else {
+      drawCards(c, 3);
+      pushLog(c, "Timeline Fracture pulls 3 cards forward.");
+    }
+    set({ combat: { ...c } });
   },
 
   pickRewardCard: (cardId) => {
@@ -1087,7 +1156,7 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const owned = new Set(s.relics);
     const unlocked = new Set(s.meta.unlockedRelics);
-    const avail = ALL_RELIC_IDS.filter((r) => unlocked.has(r) && !owned.has(r));
+    const avail = ALL_RELIC_IDS.filter((r) => unlocked.has(r) && !owned.has(r) && isDropEligible(r));
     if (avail.length === 0) {
       set({ phase: "map" });
       markNodeVisited(set, get);
@@ -1296,6 +1365,7 @@ function resolveCard(
   card: CardInstance,
   targetUid: string | null,
   isUlt = false,
+  echo = false,
 ) {
   const s = get();
   const c = s.combat!;
@@ -1313,7 +1383,7 @@ function resolveCard(
 
   const comboMet = card.comboCards !== undefined && c.cardsPlayedThisTurn >= card.comboCards;
 
-  if (!isUlt) {
+  if (!isUlt && !echo) {
     c.energy -= effectiveCost(card, c);
     // remove from hand
     c.hand = c.hand.filter((x) => x.uid !== card.uid);
@@ -1330,8 +1400,8 @@ function resolveCard(
 
   // strength gain
   if (card.strength) {
-    c.strength += card.strength;
-    pushFloat(c, `+${card.strength} STR`, "buff", "player");
+    const gained = gainStrength(c, card.strength, relics);
+    pushFloat(c, `+${gained} STR`, "buff", "player");
   }
   // block (may scale with Attacks played this turn, for Doomfist)
   const blockGain = scaledBlock(card, c);
@@ -1441,9 +1511,9 @@ function resolveCard(
         pushFloat(c, `${dealt}`, "dmg", t.uid);
         // Doomfist: executions feed permanent Strength
         if (t.isDead && card.strengthOnKill) {
-          c.strength += card.strengthOnKill;
-          pushFloat(c, `+${card.strengthOnKill} STR`, "buff", "player");
-          pushLog(c, `${card.name} executes ${t.name}. +${card.strengthOnKill} Strength.`);
+          const gained = gainStrength(c, card.strengthOnKill, relics);
+          pushFloat(c, `+${gained} STR`, "buff", "player");
+          pushLog(c, `${card.name} executes ${t.name}. +${gained} Strength.`);
         }
       }
     }
@@ -1579,7 +1649,7 @@ function resolveCard(
   c.targetingCardUid = null;
 
   // move to discard/exhaust
-  if (!isUlt) {
+  if (!isUlt && !echo) {
     if (card.exhaust) {
       c.exhaustPile.push(card);
       if (relics.includes("phoenix_core")) {
@@ -1592,7 +1662,22 @@ function resolveCard(
     } else c.discardPile.push(card);
   }
 
-  pushLog(c, `Played ${card.name}`);
+  pushLog(c, echo ? `${card.name} echoes.` : `Played ${card.name}`);
+
+  // Chrono Duplicator: the opening card of the combat resolves a second time.
+  if (
+    !isUlt &&
+    !echo &&
+    relics.includes("chrono_duplicator") &&
+    !c.duplicatorUsed &&
+    c.hp > 0 &&
+    !c.enemies.every((e) => e.isDead)
+  ) {
+    c.duplicatorUsed = true;
+    set({ combat: { ...c } });
+    resolveCard(set, get, card, targetUid, false, true);
+    return;
+  }
 
   // check combat win
   const allDead = c.enemies.every((e) => e.isDead);
@@ -1649,7 +1734,7 @@ function handleCombatWin(set: any, get: () => GameState) {
   // ---- relic drops: bosses and elites always, normal fights sometimes ----
   const ownedIds = new Set(s.relics);
   const unlockedIds = new Set(s.meta.unlockedRelics);
-  const availRelics = ALL_RELIC_IDS.filter((r) => unlockedIds.has(r) && !ownedIds.has(r));
+  const availRelics = ALL_RELIC_IDS.filter((r) => unlockedIds.has(r) && !ownedIds.has(r) && isDropEligible(r));
   const dropChance =
     c.nodeType === "boss" || c.nodeType === "elite" ? 1 : has("relic_scanner") ? 0.35 : 0.18;
   const droppedRelic =
@@ -1758,7 +1843,7 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
   }
   const owned = new Set(s.relics);
   const unlockedShop = new Set(s.meta.unlockedRelics);
-  let avail = ALL_RELIC_IDS.filter((r) => unlockedShop.has(r) && !owned.has(r));
+  let avail = ALL_RELIC_IDS.filter((r) => unlockedShop.has(r) && !owned.has(r) && isDropEligible(r));
   const shopRelics: string[] = [];
   for (let i = 0; i < 3; i++) {
     const id = pickRelicId(avail, rng.next());
@@ -1778,7 +1863,7 @@ export function cardPrice(card: CardInstance): number {
 /** Shop price for a relic, scaled by tier. */
 export function relicPrice(relicId: string): number {
   const tier = RELICS[relicId]?.tier ?? "common";
-  return tier === "rare" ? 190 : tier === "uncommon" ? 145 : 110;
+  return tier === "mythic" ? 520 : tier === "legendary" ? 340 : tier === "rare" ? 190 : tier === "uncommon" ? 145 : 110;
 }
 
 
