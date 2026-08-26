@@ -17,6 +17,7 @@ import tracerImg from "../assets/tracer.png";
 import kingsrowImg from "../assets/bg_kingsrow.jpg";
 import factoryImg from "../assets/bg_factory.jpg";
 import { UPGRADES, tierOf, upgradeBonusMaxHp, upgradeCacheRelicChance, upgradeCreditMult, upgradeStartGold } from "./upgrades";
+import { MUTATORS, MUTATOR_IDS } from "./mutators";
 import { AUGMENTS, augmentPoolFor, makeContract, type ContractState } from "./progression";
 
 export type Phase =
@@ -96,12 +97,19 @@ export interface Combat {
   nextAttackPct: number;
   /** Junkrat: self-blast counter for Total Mayhem tuning. */
   junkratBlastCount: number;
+  /** Fracture Protocol warping this run's rules. */
+  mutator: string | null;
+  /** biggest single hit landed this combat, feeds the run highlight reel */
+  bestHit: number;
 }
 
 
 export interface RunRecord {
   heroId: string;
   score: number;
+  /** one-line "what you'll remember" beat, generated from run stats */
+  highlight?: string;
+  mutator?: string | null;
   floorsCleared: number;
   act: number;
   fullClear: boolean;
@@ -143,6 +151,12 @@ export interface GameState {
   /** Fights cleared inside the current act. Drives the difficulty curve. */
   actFloors: number;
   augments: string[];
+  /** Fracture Protocol bending this run's rules (paired with the starting relic) */
+  mutator: string | null;
+  /** protocol paired with each starting relic choice, same index */
+  startingMutators: string[];
+  /** highlight reel material, surfaced on the run-over screen */
+  runStats: { bestHit: number; lowestHp: number; bossKills: number; clutch: boolean };
   augmentTiers: Record<string, number>;
   augmentChoices: string[];
   contract: ContractState;
@@ -168,6 +182,7 @@ export interface GameState {
   // actions
   loadMeta: () => void;
   startRun: (heroId: string, seedLabel?: string) => void;
+  rerun: () => void;
   chooseStartingRelic: (relicId: string) => void;
   chooseAugment: (augmentId: string) => void;
   enterNode: (nodeId: number) => void;
@@ -330,6 +345,8 @@ function applyEnemyDamage(
     enemy.trait !== "conduit" &&
     c.enemies.some((e) => !e.isDead && e.uid !== enemy.uid && e.trait === "conduit");
   if (dampened) dmg = Math.ceil(dmg * 0.65);
+  const outMult = c.mutator ? MUTATORS[c.mutator]?.outMult ?? 1 : 1;
+  if (outMult !== 1) dmg = Math.floor(dmg * outMult);
   dmg = Math.max(0, dmg);
   let remaining = dmg;
   if (enemy.block > 0 && !ignoreBlock) {
@@ -342,8 +359,10 @@ function applyEnemyDamage(
     enemy.hp = 0;
     enemy.isDead = true;
   }
+  if (remaining > c.bestHit) c.bestHit = remaining;
   // Ults no longer charge off their own damage, so normal card damage charges faster.
-  charge.v += dmg * (relicPower ? 2.2 : 1.4);
+  const ultMult = c.mutator ? MUTATORS[c.mutator]?.ultMult ?? 1 : 1;
+  charge.v += dmg * (relicPower ? 2.2 : 1.4) * ultMult;
   return dmg;
 }
 
@@ -351,6 +370,8 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
   let dmg = base + srcStrength;
   if (srcWeak > 0) dmg = Math.floor(dmg * 0.75);
   if (c.vulnerable > 0) dmg = Math.floor(dmg * 1.5);
+  const inMult = c.mutator ? MUTATORS[c.mutator]?.inMult ?? 1 : 1;
+  if (inMult !== 1) dmg = Math.ceil(dmg * inMult);
   dmg = Math.max(0, dmg);
   let remaining = dmg;
   if (c.block > 0) {
@@ -746,6 +767,8 @@ export const useGame = create<GameState>((set, get) => ({
       freeUltUsed: false,
       fracturePending: s.relics.includes("timeline_fracture"),
       junkratBlastCount: 0,
+      mutator: s.mutator,
+      bestHit: 0,
     };
     for (const id of s.augments) {
       const a = AUGMENTS[id];
