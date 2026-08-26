@@ -73,13 +73,14 @@ function Index() {
           <br />
           TUNG
         </motion.h1>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-pixel breathe-glow mt-2 text-center text-[8px] text-accent">TUNG. TUNG. TUNG. — PIXEL DECK ROGUELIKE</motion.div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-pixel breathe-glow mt-2 text-center text-[8px] text-accent">TUNG. TUNG. TUNG. PIXEL DECK ROGUELIKE</motion.div>
 
         <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.5 }} className="mt-5 text-center text-[15px] leading-[18px] text-foreground/85" style={{ fontFamily: "var(--font-pixel-body)" }}>
-          A chrono-fracture tore open over King's Row. Null Sector poured through,
-          and wraith-corrupted echoes of fallen agents march with them — Reaper
-          leads the breach. Pick a hero. Dive the shattered timeline floor by floor.
-          Die, and the timeline snaps back — but the Chrono Cores you banked persist.
+          Something tore a hole in the sky over King's Row at 4am. Null Sector walked
+          out of it, and so did the dead: wraith-static copies of agents who were
+          buried years ago. Reaper is leading them. Pick a hero, drop into the
+          fracture, and fight down through it floor by floor. When you die the
+          timeline edits you out. The Chrono Cores you banked are all that carries over.
         </motion.p>
 
         <div className="text-pixel mt-6 mb-2 text-[8px] text-muted-foreground">SELECT YOUR HERO</div>
@@ -210,7 +211,7 @@ function HeroInfo({ id }: { id: string }) {
         <div className="flex items-start gap-1.5 text-[14px] text-foreground/75">
           <Star size={13} className="mt-[3px] shrink-0 text-accent" />
           <span>
-            {hero.ultimate.name} — {hero.ultimate.text}
+            {hero.ultimate.name}: {hero.ultimate.text}
           </span>
         </div>
       </div>

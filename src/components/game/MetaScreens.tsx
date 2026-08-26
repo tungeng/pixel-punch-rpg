@@ -90,9 +90,9 @@ export function RestScreen() {
         <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={14} />
       </div>
       <div className="mb-4 text-center text-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        The rift hums quietly here. Patch up, or sharpen a card.
+        Nobody shooting at you for once. Stitch yourself up, or put an edge on one card.
       </div>
-      <PixelButton onClick={heal} color="primary">Rest — heal 30%</PixelButton>
+      <PixelButton onClick={heal} color="primary">Rest, heal 30%</PixelButton>
       <div className="text-pixel mb-2 mt-5 text-center text-[8px] text-muted-foreground">OR UPGRADE:</div>
       <div className="flex max-h-56 flex-wrap justify-center gap-2 overflow-y-auto px-2 pb-2">
         {upgradeable.map((c) => (
@@ -152,7 +152,7 @@ export function TreasureScreen() {
         ▣
       </motion.div>
       <div className="mb-6 text-center text-[16px] text-foreground/80" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        A sealed relic pod, humming out of sync with time.
+        A sealed pod, ticking a half-second behind everything else.
       </div>
       <PixelButton onClick={take} color="primary">Crack it open</PixelButton>
     </Screen>
@@ -226,7 +226,7 @@ export function ShopScreen() {
       </div>
 
       <div className="text-pixel mt-5 text-center text-[8px] text-muted-foreground">
-        PURGE A CARD — 75⬢ {deck.length <= 5 ? "(deck too small)" : ""}
+        PURGE A CARD: 75⬢ {deck.length <= 5 ? "(deck too small)" : ""}
       </div>
       <div className="mt-2 flex max-h-40 flex-wrap justify-center gap-2 overflow-y-auto px-2 pb-2">
         {deck.map((c) => (
@@ -254,8 +254,8 @@ export function DeathScreen() {
         FLOOR {floors}
       </motion.div>
       <div className="mb-6 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/70" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        The timeline snaps back and swallows the version of you that fell here.
-        The Chrono Cores you banked survive the reset.
+        The timeline snaps back. The version of you that fell here is edited out.
+        Only the Chrono Cores you banked survive the rewrite.
       </div>
       <ScoreSubmit />
       <PixelButton onClick={abandon} color="primary">Return to hub</PixelButton>
@@ -276,8 +276,8 @@ export function VictoryScreen() {
         ✦ {floors} FLOORS ✦
       </motion.div>
       <div className="mb-6 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        The fracture folds shut. King's Row exhales. Somewhere down the line,
-        another you never had to fight at all.
+        The fracture folds shut over King's Row. Somewhere down the line, another
+        you wakes up and never hears a single shot.
       </div>
       <ScoreSubmit />
       <PixelButton onClick={abandon} color="primary">Return to hub</PixelButton>
@@ -391,7 +391,7 @@ export function RelicChoiceScreen() {
         className="mb-4 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/75"
         style={{ fontFamily: "var(--font-pixel-body)" }}
       >
-        One artifact survives the breach with you. Choose carefully.
+        One artifact makes it through the breach intact. Pick the one you'll miss least without.
       </div>
       <div className="flex w-full max-w-[440px] flex-col gap-3 pb-6">
         {choices.map((id, i) => {

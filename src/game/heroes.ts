@@ -15,7 +15,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 64,
     color: "#f59e0b",
     asset: tracerImg,
-    passive: "Chrono Battery: +1 max Energy.",
+    passive: "Cheers, love, she's always got one more in the tank. +1 max Energy.",
     startingDeck: [
       "tracer_blink", "tracer_blink", "tracer_pistols", "tracer_pistols",
       "tracer_recall", "tracer_strafe", "tracer_strafe", "tracer_hnr",
@@ -43,7 +43,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 66,
     color: "#fcd34d",
     asset: mercyImg,
-    passive: "Regeneration: heal 1 HP at the start of each turn.",
+    passive: "Her staff never fully powers down, so she mends 1 HP at the start of every turn.",
     startingDeck: [
       "mercy_blaster", "mercy_blaster", "mercy_heal", "mercy_heal",
       "mercy_guardian", "mercy_pacify", "mercy_regen", "mercy_shot",
@@ -73,7 +73,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 58,
     color: "#22c55e",
     asset: genjiImg,
-    passive: "Cyber Agility: draw +1 card at the start of each turn.",
+    passive: "The body moves before the mind asks. Draw 1 extra card each turn.",
     startingDeck: [
       "genji_shuriken", "genji_shuriken", "genji_swift", "genji_swift",
       "genji_deflect", "genji_fang", "genji_agility", "genji_riposte",
@@ -102,7 +102,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 104,
     color: "#eab308",
     asset: junkratImg,
-    passive: "Total Mayhem: enemies start each combat with 3 Vulnerable, and Junkrat ignores the first 3 damage of every self-inflicted blast.",
+    passive: "Everyone starts the party rattled! Enemies open combat with 3 Vulnerable, and the first 3 damage of Junkrat's own blasts barely tickles.",
     startingDeck: [
       "junkrat_launcher", "junkrat_launcher", "junkrat_trap", "junkrat_rummage",
       "junkrat_concussive", "junkrat_mine", "junkrat_scatter", "junkrat_armor",
@@ -131,7 +131,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 72,
     color: "#a855f7",
     asset: moiraImg,
-    passive: "Biotic Grasp: whenever your Poison damages an enemy, heal for 50% of that damage.",
+    passive: "Life is simply a resource to be moved. Every tick of your Poison returns half of it to you as healing.",
     startingDeck: [
       "moira_orb_dmg", "moira_orb_dmg", "moira_grasp", "moira_grasp",
       "moira_orb_heal", "moira_fade", "moira_fade", "moira_decay",
@@ -161,7 +161,7 @@ export const HEROES: Record<string, HeroDef> = {
     color: "#38bdf8",
     asset: reinhardtImg,
     passive:
-      "Crusader Plating: Armor never expires between turns, and every 3 Block left over at end of turn is forged into 1 permanent Armor.",
+      "Crusader steel does not fade. Armor endures between turns, and every 3 Block left standing at turn's end is forged into 1 permanent Armor.",
     startingDeck: [
       "rein_hammer", "rein_hammer", "rein_hammer", "rein_plating",
       "rein_plating", "rein_barrier", "rein_barrier", "rein_firestrike",
@@ -193,7 +193,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 98,
     color: "#7c3aed",
     asset: doomfistImg,
-    passive: "Best Defense: gain 4 Block whenever you play an Attack.",
+    passive: "The best defense is a fist already moving. Every Attack you play grants 4 Block.",
     startingDeck: [
       "doomfist_punch", "doomfist_punch", "doomfist_slam", "doomfist_slam",
       "doomfist_shield", "doomfist_uppercut", "doomfist_grapple",
