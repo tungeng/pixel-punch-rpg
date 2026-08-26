@@ -621,7 +621,7 @@ export function Hud() {
           <span className={contract.complete ? "text-primary" : ""}>▣ {contract.name} {contract.progress}/{contract.goal}</span>
           {augments.length > 0 && <span className="text-accent">⚡{augments.length}</span>}
         </div>
-        <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={12} />
+        <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={18} />
         <div className="mt-0.5 flex items-center justify-between text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
           <span>F{floors} · ACT {act + 1}/{ACT_COUNT} · 🂠{deckCount}</span>
           <RelicTray size={18} align="right" />
