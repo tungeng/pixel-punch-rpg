@@ -246,11 +246,14 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       case "shop": {
         const goldBefore = s.gold;
         const relicIdx = s.shopRelics.findIndex((r) => !!r);
-        if (s.gold >= 150 && relicIdx >= 0) s.buyRelic(relicIdx);
-        else if (s.shopCards.length > 0) s.buyCard(0);
+        const bloat = s.deck.find((c) => c.id === "n_strike" || c.id === "n_block");
+        if (relicIdx >= 0) s.buyRelic(relicIdx);
+        else if (bloat && s.gold >= 120 && s.deck.length > 14) s.buyRemove(bloat.uid);
+        else if (s.shopCards.length > 0 && s.gold >= 160) s.buyCard(0);
         if (g().gold === goldBefore) s.leaveShop();
         break;
       }
+
       case "treasure": {
         s.takeTreasure();
         break;
