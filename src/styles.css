@@ -95,7 +95,12 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-pixel-body);
+    /* standalone (home-screen) launch: keep UI clear of the notch / home bar */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    overscroll-behavior: none;
   }
+
 }
 
 @utility pixelated {
