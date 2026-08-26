@@ -22,13 +22,16 @@ export function EventFeedback() {
     return () => clearTimeout(t);
   }, [lastEvent, lastEventAt]);
 
+  // Reward hierarchy: an ordinary clear gets out of the way fast, a boss kill
+  // holds the screen and earns its weight.
+  const isBoss = banner?.tone === "boss";
   useEffect(() => {
     if (!banner) return;
-    const t = setTimeout(clearBanner, 1900);
+    const t = setTimeout(clearBanner, banner.tone === "boss" ? 3200 : 1600);
     return () => clearTimeout(t);
   }, [banner, clearBanner]);
 
-  const accent = banner?.tone === "boss" ? "#ff5cf0" : "#5ff2e0";
+  const accent = isBoss ? "#ff5cf0" : "#5ff2e0";
 
   return (
     <>
@@ -38,25 +41,43 @@ export function EventFeedback() {
             type="button"
             onClick={clearBanner}
             className="absolute inset-0 z-[120] flex flex-col items-center justify-center"
-            style={{ background: "rgba(4,6,14,0.82)" }}
+            style={{
+              background: isBoss
+                ? `radial-gradient(circle at 50% 45%, ${accent}33 0 24%, rgba(3,4,10,0.95) 62%)`
+                : "rgba(4,6,14,0.82)",
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
           >
             <motion.div
-              initial={{ scale: 0.7, y: 14 }}
+              initial={{ scale: isBoss ? 0.45 : 0.7, y: 14 }}
               animate={{ scale: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 260, damping: 16 }}
+              transition={{ type: "spring", stiffness: isBoss ? 180 : 260, damping: isBoss ? 12 : 16 }}
               className="px-6 text-center"
             >
+              {isBoss && (
+                <motion.div
+                  initial={{ scaleX: 0, opacity: 0 }}
+                  animate={{ scaleX: 1, opacity: [0, 1, 0.5] }}
+                  transition={{ duration: 0.7 }}
+                  className="mx-auto mb-4 h-[6px] w-56"
+                  style={{ background: accent, boxShadow: `0 0 26px ${accent}` }}
+                />
+              )}
               <div
-                className="font-pixel text-2xl"
-                style={{ color: accent, textShadow: `0 0 18px ${accent}` }}
+                className={`font-pixel ${isBoss ? "text-4xl" : "text-2xl"}`}
+                style={{ color: accent, textShadow: `0 0 ${isBoss ? 34 : 18}px ${accent}` }}
               >
                 {banner.title}
               </div>
-              <div className="mx-auto mt-3 h-[3px] w-40" style={{ background: accent }} />
+              {isBoss && (
+                <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.4em] text-foreground/70">
+                  major threat neutralised
+                </div>
+              )}
+              <div className="mx-auto mt-3 h-[3px]" style={{ background: accent, width: isBoss ? "14rem" : "10rem" }} />
               <div className="mt-4 space-y-1">
                 {banner.lines.map((line) => (
                   <motion.div
