@@ -114,7 +114,7 @@ export function AugmentChoiceScreen() {
           if (!augment) return null;
           return (
             <motion.button
-              key={id}
+              key={`${id}-${i}`}
               initial={{ x: i % 2 ? 40 : -40, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               whileTap={{ scale: 0.97 }}
@@ -537,8 +537,9 @@ One artifact and one distortion make it through with you. They come as a pair, s
       <div className="flex w-full max-w-[440px] flex-col gap-3 pb-6">
         {choices.map((id, i) => {
           const relic = RELICS[id];
-          if (!relic) return null;
-          const tierColor = RELIC_TIER_COLOR[relic.tier ?? "common"] ?? "#cbd5e1";
+          const proto = protocols[i] ? MUTATORS[protocols[i]!] : null;
+          if (!relic && !proto) return null;
+          const tierColor = relic ? RELIC_TIER_COLOR[relic.tier ?? "common"] ?? "#cbd5e1" : proto!.color;
           return (
             <motion.button
               key={id}
@@ -546,34 +547,38 @@ One artifact and one distortion make it through with you. They come as a pair, s
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => choose(id)}
+              onClick={() => choose(id, i)}
               className={`flex items-center gap-3 bg-[#0b0a12] p-3 text-left ${
-                isExaltedTier(relic.tier) ? "relic-exalted" : ""
-              } ${relic.tier === "mythic" ? "relic-mythic" : ""}`}
+                relic && isExaltedTier(relic.tier) ? "relic-exalted" : ""
+              } ${relic?.tier === "mythic" ? "relic-mythic" : ""}`}
               style={
                 {
                   border: `3px solid ${tierColor}`,
-                  boxShadow: `0 0 16px -6px ${relic.color}`,
+                  boxShadow: `0 0 16px -6px ${relic?.color ?? tierColor}`,
                   "--tier-color": tierColor,
                 } as unknown as MotionStyle
               }
             >
-              <RelicIcon id={id} />
+              {relic ? <RelicIcon id={id} /> : null}
               <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="text-pixel text-[9px]" style={{ color: relic.color }}>
-                    {relic.name}
-                  </span>
-                  <span className="text-pixel text-[6px]" style={{ color: tierColor }}>
-                    {(relic.tier ?? "common").toUpperCase()}
-                  </span>
-                </div>
-                <div
-                  className="text-[14px] leading-[15px] text-foreground/80"
-                  style={{ fontFamily: "var(--font-pixel-body)" }}
-                >
-                  {relic.text}
-                </div>
+                {relic && (
+                  <>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <span className="text-pixel text-[9px]" style={{ color: relic.color }}>
+                        {relic.name}
+                      </span>
+                      <span className="text-pixel text-[6px]" style={{ color: tierColor }}>
+                        {(relic.tier ?? "common").toUpperCase()}
+                      </span>
+                    </div>
+                    <div
+                      className="text-[14px] leading-[15px] text-foreground/80"
+                      style={{ fontFamily: "var(--font-pixel-body)" }}
+                    >
+                      {relic.text}
+                    </div>
+                  </>
+                )}
                 {protocols[i] && MUTATORS[protocols[i]!] && (
                   <div
                     className="mt-2 border-t-2 border-dashed pt-1"

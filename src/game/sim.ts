@@ -255,7 +255,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
           s.toMap();
         } else {
           const idx = Math.floor(seedRoll(seed, 11) * choices.length);
-          s.chooseStartingRelic(choices[idx]!);
+          s.chooseStartingRelic(choices[idx]!, idx);
           res.mutator = useGame.getState().mutator;
         }
         break;

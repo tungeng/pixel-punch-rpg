@@ -183,7 +183,7 @@ export interface GameState {
   loadMeta: () => void;
   startRun: (heroId: string, seedLabel?: string) => void;
   rerun: () => void;
-  chooseStartingRelic: (relicId: string) => void;
+  chooseStartingRelic: (relicId: string, index?: number) => void;
   chooseAugment: (augmentId: string) => void;
   enterNode: (nodeId: number) => void;
   startCombat: (nodeType: NodeType, rng: Rng) => void;
@@ -563,7 +563,10 @@ export const useGame = create<GameState>((set, get) => ({
       if (startingRelicChoices.length >= 3) break;
       if (!startingRelicChoices.includes(id)) startingRelicChoices.push(id);
     }
-    const startingMutators = rng.shuffle([...MUTATOR_IDS]).slice(0, startingRelicChoices.length);
+    // Protocols never depend on relic unlocks, so a brand new player still gets
+    // a real opening decision (and a run identity) on their very first breach.
+    const startingMutators = rng.shuffle([...MUTATOR_IDS]).slice(0, 3);
+    while (startingRelicChoices.length < startingMutators.length) startingRelicChoices.push("");
     set({
       inRun: true,
       seed,
@@ -596,10 +599,10 @@ export const useGame = create<GameState>((set, get) => ({
     });
   },
 
-  chooseStartingRelic: (relicId) => {
+  chooseStartingRelic: (relicId, index) => {
     const s = get();
-    const relics = [relicId];
-    const idx = s.startingRelicChoices.indexOf(relicId);
+    const idx = index ?? s.startingRelicChoices.indexOf(relicId);
+    const relics = relicId ? [relicId] : [];
     const mutator = s.startingMutators[idx] ?? null;
     const maxHp = Math.max(20, maxHpFor(s.heroId, relics, s.act, s.meta.upgrades) + (mutator ? MUTATORS[mutator]?.hpMod ?? 0 : 0));
     set({
@@ -610,7 +613,7 @@ export const useGame = create<GameState>((set, get) => ({
       startingRelicChoices: [],
       startingMutators: [],
       phase: "map",
-      lastEvent: `${RELICS[relicId]!.name} equipped. ${mutator ? MUTATORS[mutator]!.name + " online." : ""}`.trim(),
+      lastEvent: `${relicId ? RELICS[relicId]!.name + " equipped. " : ""}${mutator ? MUTATORS[mutator]!.name + " online." : ""}`.trim(),
       lastEventAt: Date.now(),
     });
   },
