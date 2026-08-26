@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useGame } from "@/game/store";
-import { MenuShell } from "@/components/game/MenuShell";
+import { MenuShell, Readout } from "@/components/game/MenuShell";
 import { ArchiveScreen } from "@/components/game/ArchiveScreen";
 
 export const Route = createFileRoute("/progression")({
@@ -29,15 +29,10 @@ function Progression() {
   return (
     <MenuShell
       title="PROGRESSION"
+      glyph="▤"
+      accent="var(--corrupt)"
       crumb="Permanent upgrades. Bought once, kept forever."
-      aside={
-        <span
-          className="text-[13px] text-muted-foreground"
-          style={{ fontFamily: "var(--font-pixel-body)" }}
-        >
-          ⬢ {meta.credits}
-        </span>
-      }
+      aside={<Readout icon="⬢" value={meta.credits} />}
     >
       <ArchiveScreen embedded />
     </MenuShell>
