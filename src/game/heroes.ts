@@ -73,7 +73,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 68,
     color: "#22c55e",
     asset: genjiImg,
-    passive: "The body moves before the mind asks. Draw 1 extra card each turn, and every Attack after the first in a turn strikes for +3.",
+    passive: "The body moves before the mind asks. Draw 1 extra card each turn, and every Attack after the first in a turn strikes for +4.",
     startingDeck: [
       "genji_shuriken", "genji_shuriken", "genji_swift", "genji_swift",
       "genji_deflect", "genji_fang", "genji_agility", "genji_riposte",
@@ -102,7 +102,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 104,
     color: "#eab308",
     asset: junkratImg,
-    passive: "Everyone starts the party rattled! Enemies open combat with 3 Vulnerable, and the first 3 damage of Junkrat's own blasts barely tickles.",
+    passive: "Everyone starts the party rattled! Enemies open combat with 3 Vulnerable, the first 3 damage of Junkrat's own blasts barely tickles, and every self-blast pumps him up with 1 Strength.",
     startingDeck: [
       "junkrat_launcher", "junkrat_launcher", "junkrat_trap", "junkrat_rummage",
       "junkrat_concussive", "junkrat_mine", "junkrat_scatter", "junkrat_armor",

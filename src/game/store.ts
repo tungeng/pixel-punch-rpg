@@ -1517,6 +1517,11 @@ function resolveCard(
   if (card.selfDamage) {
     // Junkrat's Total Mayhem soaks the first 3 damage of every self-blast.
     const soak = s.heroId === "junkrat" ? 3 : 0;
+    // Junkrat: Total Mayhem. Every self-blast feeds his Strength for the fight.
+    if (s.heroId === "junkrat") {
+      const gained = gainStrength(c, 1, relics);
+      pushFloat(c, `+${gained} STR`, "buff", "player");
+    }
     const selfDmg = Math.max(0, card.selfDamage - soak);
     if (selfDmg > 0) {
       c.hp -= selfDmg;
@@ -1569,7 +1574,7 @@ function resolveCard(
     if (card.bonusIfAttack && c.attacksPlayedThisTurn > (isAttack ? 1 : 0)) bonus = card.bonusIfAttack;
     // Genji: Strike Chain. Each Attack after the first this turn escalates.
     if (s.heroId === "genji" && isAttack && !isUlt) {
-      bonus += 3 * Math.max(0, c.attacksPlayedThisTurn - 1);
+      bonus += 4 * Math.max(0, c.attacksPlayedThisTurn - 1);
     }
     let totalBase = scaled + bonus;
     if (card.doubleIfHandEmpty && c.hand.length === 0) {
