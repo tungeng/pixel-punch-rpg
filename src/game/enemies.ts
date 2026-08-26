@@ -123,6 +123,48 @@ export const ENEMIES: Record<string, EnemyDef> = {
     ],
   },
 
+  // ---------------- Formation support units ----------------
+  bulwark_sentinel: {
+    id: "bulwark_sentinel",
+    name: "Bulwark Sentinel",
+    asset: shieldDroneImg,
+    hp: [18, 22],
+    trait: "guardian",
+    traitName: "COVER ALLY",
+    moves: [
+      { type: "block", text: "Deploy Cover 6", block: 6 },
+      { type: "attack", text: "Repulsor 8", damage: 8 },
+      { type: "debuff", text: "Suppress 1 Weak", weak: 1 },
+    ],
+  },
+  mender_pod: {
+    id: "mender_pod",
+    name: "Mender Pod",
+    asset: podImg,
+    hp: [16, 20],
+    trait: "mender",
+    traitName: "REPAIR FIELD",
+    moves: [
+      { type: "block", text: "Seal Hatch 5", block: 5 },
+      { type: "attack", text: "Nanite Lance 7", damage: 7 },
+      { type: "buff", text: "Overtune +1 Str", strength: 1 },
+    ],
+  },
+  null_conduit: {
+    id: "null_conduit",
+    name: "Null Conduit",
+    asset: arcImg,
+    hp: [20, 24],
+    trait: "conduit",
+    traitName: "DAMPEN FIELD",
+    moves: [
+      { type: "debuff", text: "Static 1 Vuln", vulnerable: 1 },
+      { type: "attack", text: "Arc Lash x2 5", damage: 5, hits: 2 },
+      { type: "block", text: "Phase Wall 7", block: 7 },
+    ],
+  },
+
+
   // ---------------- Act 2+ escalation ----------------
   talon_breacher: {
     id: "talon_breacher",
