@@ -279,19 +279,15 @@ function drawCountFor(heroId: string, relics: string[]): number {
  * so their damage window still closes fights.
  */
 const HERO_PRESSURE: Record<string, number> = {
-  mercy: 1.12,
-  moira: 1.06,
-  reinhardt: 0.72,
-  tracer: 0.76,
-  genji: 0.62,
-  junkrat: 0.68,
-  doomfist: 0.76,
+  mercy: 1.08,
+  moira: 1.02,
+  reinhardt: 0.98,
+  tracer: 0.95,
+  genji: 0.95,
+  junkrat: 0.98,
+  doomfist: 0.92,
 };
 
-/**
- * Sustain kits shrug off bigger HP bars, so they are answered with harder
- * hits instead. Bruisers who bank Armor or Strength get a touch of relief.
- */
 const HERO_AGGRO: Record<string, number> = {
   mercy: 4,
   moira: 2,
@@ -651,7 +647,7 @@ export const useGame = create<GameState>((set, get) => ({
     const heroPressure = HERO_PRESSURE[s.heroId] ?? 1;
     // Fights are meant to be read, not deleted. Enemies carry a deeper HP pool so
     // a combat plays out over several turns of real decisions.
-    const DEPTH = 1.9;
+    const DEPTH = 1.78;
     const hpScale =
       DEPTH *
       (1 + s.act * 0.6 + floor * 0.11 + relicCount * 0.06 + augmentCount * 0.1 + upgradedCount * 0.012 + leanDeckBonus) *
@@ -1037,6 +1033,17 @@ export const useGame = create<GameState>((set, get) => ({
       }
     }
     c.ultCharge = Math.min(100, charge.v);
+    // Fracture Surge: long fights are meant to be tense, not safe. From turn 6
+    // on, the rift feeds the enemy line so stalling stops being a strategy.
+    if (c.turn >= 5) {
+      const surge = 1 + Math.floor((c.turn - 5) / 2);
+      for (const e of c.enemies) {
+        if (e.isDead) continue;
+        e.strength += surge;
+      }
+      pushFloat(c, "FRACTURE SURGE", "buff");
+      pushLog(c, `The fracture surges. Enemies gain ${surge} Strength.`);
+    }
     // advance enemy intents
     for (const e of c.enemies) {
       if (e.isDead) continue;
