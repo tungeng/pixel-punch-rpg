@@ -36,7 +36,7 @@ export function RewardScreen() {
         <motion.div
           initial={{ scale: 0.4, rotate: -14, opacity: 0 }}
           animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 240, damping: 13 }}
+          transition={{ type: "spring", stiffness: isExaltedTier(relic.tier) ? 160 : 240, damping: isExaltedTier(relic.tier) ? 11 : 13 }}
           className={`mb-4 flex w-full max-w-[320px] items-center gap-3 bg-black/50 p-2 ${
             isExaltedTier(relic.tier) ? "relic-exalted" : ""
           } ${relic.tier === "mythic" ? "relic-mythic" : ""}`}
@@ -52,7 +52,10 @@ export function RewardScreen() {
             <RelicIcon id={relic.id} />
           </div>
           <div className="min-w-0">
-            <div className="text-pixel text-[7px] text-primary">RELIC SALVAGED</div>
+            <div className="text-pixel text-[7px]" style={{ color: RELIC_TIER_COLOR[relic.tier ?? "common"] }}>
+              {isExaltedTier(relic.tier) ? "★ " : ""}
+              {(relic.tier ?? "common").toUpperCase()} RELIC SALVAGED
+            </div>
             <div className="text-pixel text-[9px] leading-[12px]" style={{ color: relic.color }}>
               {relic.name}
             </div>
