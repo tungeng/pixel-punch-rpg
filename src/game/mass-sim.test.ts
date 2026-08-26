@@ -7,13 +7,15 @@ import { describe, it } from "vitest";
 import { writeFileSync } from "node:fs";
 import { ALL_HEROES, simulateRun, summarize, type RunResult } from "./sim";
 import { STARTER_HEROES } from "./heroes";
-import { ALL_RELIC_IDS } from "./relics";
+import { ALL_RELIC_IDS, DEFAULT_UNLOCKED_RELIC_IDS } from "./relics";
 
 const RUNS = Number(process.env["SIM_RUNS"] ?? 0);
 const OUT = process.env["SIM_OUT"] ?? "/tmp/overtung-sim.json";
 const TAG = process.env["SIM_TAG"] ?? "batch";
 const POLICY = (process.env["SIM_POLICY"] ?? "balanced") as "balanced" | "lean" | "greedy" | "risk" | "explore";
 const CHUNK_SIZE = 500;
+/** FTUE cohort: brand new save, starter heroes, no meta upgrades. */
+const FTUE = process.env["SIM_COHORT"] === "new";
 
 describe.skipIf(RUNS <= 0)("mass sim", () => {
   it(`runs ${RUNS} playtests in chunks`, () => {
@@ -22,15 +24,22 @@ describe.skipIf(RUNS <= 0)("mass sim", () => {
     for (let i = 0; i < RUNS; i++) {
       const progress = RUNS > 1 ? i / (RUNS - 1) : 0;
       
-      const unlockedHeroes = progress < 0.2 
+      const unlockedHeroes = FTUE || progress < 0.2 
         ? [...STARTER_HEROES] 
         : progress < 0.5 
             ? [...ALL_HEROES.slice(0, Math.floor(ALL_HEROES.length * 0.7))]
             : [...ALL_HEROES];
             
-      const unlockedRelics = progress < 0.3 
-        ? [] 
-        : ALL_RELIC_IDS.slice(0, Math.floor(ALL_RELIC_IDS.length * progress));
+      // A real first-session player already owns every non-locked relic, so the
+      // early cohort must mirror that instead of an impossible empty pool.
+      const unlockedRelics = FTUE
+        ? [...DEFAULT_UNLOCKED_RELIC_IDS]
+        : progress < 0.3
+          ? [...DEFAULT_UNLOCKED_RELIC_IDS]
+          : Array.from(new Set([
+              ...DEFAULT_UNLOCKED_RELIC_IDS,
+              ...ALL_RELIC_IDS.slice(0, Math.floor(ALL_RELIC_IDS.length * progress)),
+            ]));
 
       const hero = unlockedHeroes[i % unlockedHeroes.length]!;
       
@@ -43,7 +52,7 @@ describe.skipIf(RUNS <= 0)("mass sim", () => {
             bestFloor: 0,
             playerName: `sim-${i}`,
             totalRuns: i,
-            upgrades: progress > 0.6 ? { "vitality_matrix": 2, "salvage_protocol": 1 } : {},
+            upgrades: !FTUE && progress > 0.6 ? { "vitality_matrix": 2, "salvage_protocol": 1 } : {},
         }
       }));
 
