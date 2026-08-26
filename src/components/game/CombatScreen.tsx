@@ -133,6 +133,14 @@ export function CombatScreen() {
   const ultimateReady = combat.ultCharge >= 100 || (hasNullSectorCore && !combat.freeUltUsed);
   const hand = combat.hand;
   const mid = (hand.length - 1) / 2;
+  // Turn readability: when nothing in hand is castable the END button becomes the
+  // obvious next input instead of the player hunting for a play they cannot make.
+  const hasPlayable = hand.some(
+    (card) =>
+      effectiveCost(card, combat) <= combat.energy &&
+      !(card.goldCost && gold < card.goldCost) &&
+      combat.hackedType !== card.type,
+  );
   // fit the fan inside the portrait viewport by scaling it down instead of
   // overlapping cards — overlap used to hide the right edge of each card's text
   const CARD_W = 100;
@@ -442,9 +450,14 @@ export function CombatScreen() {
             ULT
           </PixelButton>
         </motion.div>
-        <PixelButton onClick={endTurn} color="secondary" className="px-3 py-2">
-          END
-        </PixelButton>
+        <motion.div
+          animate={hasPlayable ? { scale: 1 } : { scale: [1, 1.08, 1] }}
+          transition={{ repeat: hasPlayable ? 0 : Infinity, duration: 1.1 }}
+        >
+          <PixelButton onClick={endTurn} color={hasPlayable ? "secondary" : "primary"} className="px-3 py-2">
+            END
+          </PixelButton>
+        </motion.div>
       </div>
 
       {/* hand — fanned, scaled to fit so no card text is covered */}

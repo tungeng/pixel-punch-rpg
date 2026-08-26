@@ -13,19 +13,23 @@ import { CabinetShell } from "@/components/game/CabinetShell";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Overtung" },
+      { title: "Overtung — Pixel Deck Roguelike" },
       {
         name: "description",
-        content: "TUNGVERWATCH",
+        content:
+          "Fight through a fractured King's Row in a pixel-art deck roguelike. Seven heroes, run-warping Breach Protocols, four acts, permadeath.",
       },
-      { property: "og:title", content: "Overtung" },
+      { property: "og:title", content: "Overtung — Pixel Deck Roguelike" },
       {
         property: "og:description",
-        content: "TUNGVERWATCH",
+        content:
+          "Seven heroes, run-warping Breach Protocols, four acts of card combat. One wrong route ends the run.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://overtung.lovable.app/" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://overtung.lovable.app/" }],
   }),
   component: Index,
 });
@@ -76,6 +80,24 @@ function Index() {
         
 
 
+        {meta.totalRuns === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-5 w-full border-2 border-primary/40 bg-card/50 p-2"
+          >
+            <div className="text-pixel mb-1 text-[7px] text-primary">FIRST BREACH</div>
+            <ul
+              className="space-y-0.5 text-[13px] leading-[15px] text-foreground/75"
+              style={{ fontFamily: "var(--font-pixel-body)" }}
+            >
+              <li>Play cards with Energy each turn. Unspent Block is gone by your next turn.</li>
+              <li>Pick your route on the map. Every node is a choice you live with.</li>
+              <li>Death is permanent, but Chrono Cores are not. They buy permanent upgrades.</li>
+            </ul>
+          </motion.div>
+        )}
         <div className="text-pixel mt-6 mb-2 text-[8px] text-muted-foreground">SELECT YOUR HERO</div>
         <div className="grid w-full grid-cols-3 gap-1.5">
           {all.map((id) => {
@@ -103,6 +125,9 @@ function Index() {
                 <img
                   src={hero.asset}
                   alt={hero.name}
+                  width={64}
+                  height={64}
+                  decoding="async"
                   className={`pixelated h-12 w-12 object-contain ${isLocked ? "" : isSel ? "idle-bob" : "idle-bob-slow"}`}
                   style={{ filter: isLocked ? "grayscale(1) brightness(0.4)" : "none" }}
                 />

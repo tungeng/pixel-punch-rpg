@@ -48,10 +48,10 @@ export const MUTATORS: Record<string, Mutator> = {
   bloodpact: {
     id: "bloodpact",
     name: "BLOOD PACT",
-    text: "Start every combat with 2 Strength. Lose 26 max HP.",
+    text: "Start every combat with 2 Strength. Lose 32 max HP.",
     color: "#ff3b6b",
     startStrength: 2,
-    hpMod: -26,
+    hpMod: -32,
   },
   bulwark: {
     id: "bulwark",
