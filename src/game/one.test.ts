@@ -1,9 +1,10 @@
 import { it } from "vitest";
+import { HEROES } from "/dev-server/src/game/heroes";
 import { simulateRun } from "/dev-server/src/game/sim";
-import { useGame } from "/dev-server/src/game/store";
-it("one", () => {
-  const r = simulateRun("bastion", "dbg-1", { policy: "balanced" });
-  const s = useGame.getState();
-  console.log(JSON.stringify({ floors: r.floors, won: r.won, deathNode: r.deathNode, deck: s.deck.map(c=>c.id) }));
-  console.log("stance", s.combat?.stance, "swaps", s.combat?.stanceSwaps, "hp", s.combat?.hp, s.combat?.maxHp);
+it("control", () => {
+  HEROES["bastion"]!.startingDeck = [...HEROES["genji"]!.startingDeck];
+  HEROES["bastion"]!.cardPool = [...HEROES["genji"]!.cardPool];
+  let w=0; const N=200;
+  for (let i=0;i<N;i++) { const r = simulateRun("bastion", `ctl-${i}`, { policy: "balanced" }); if (r.won) w++; }
+  console.log("CONTROL winrate", w/N);
 });
