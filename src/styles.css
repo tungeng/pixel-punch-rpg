@@ -397,3 +397,8 @@
   .cabinet-side-l { left: max(24px, calc(50vw - 500px)); }
   .cabinet-side-r { right: max(24px, calc(50vw - 500px)); transform: translateY(-50%) rotate(180deg); }
 }
+
+/* Hide the Lovable "Edit with Lovable" badge on published/preview deployments */
+#lovable-badge {
+  display: none !important;
+}
