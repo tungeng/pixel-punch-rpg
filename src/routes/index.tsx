@@ -39,7 +39,6 @@ const ENTRIES: Entry[] = [
   { to: "/archive", label: "ARCHIVE", blurb: "Relics, bosses, protocols and lore", glyph: "✦" },
   { to: "/stats", label: "STATISTICS", blurb: "Records, hero performance, leaderboard", glyph: "★" },
   { to: "/settings", label: "SETTINGS", blurb: "Display name, save data, updates", glyph: "⚙" },
-  { to: "/credits", label: "CREDITS", blurb: "Who built the fracture", glyph: "❖" },
 ];
 
 function MainMenu() {

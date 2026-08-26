@@ -10,14 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as HeroesRouteImport } from './routes/heroes'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as ProgressionRouteImport } from './routes/progression'
 import { Route as RunRouteImport } from './routes/run'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as StatsRouteImport } from './routes/stats'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchiveRoute = ArchiveRouteImport.update({
+  id: '/archive',
+  path: '/archive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreditsRoute = CreditsRouteImport.update({
@@ -35,48 +44,107 @@ const PlayRoute = PlayRouteImport.update({
   path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProgressionRoute = ProgressionRouteImport.update({
+  id: '/progression',
+  path: '/progression',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RunRoute = RunRouteImport.update({
   id: '/run',
   path: '/run',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
   '/credits': typeof CreditsRoute
   '/heroes': typeof HeroesRoute
   '/play': typeof PlayRoute
+  '/progression': typeof ProgressionRoute
   '/run': typeof RunRoute
+  '/settings': typeof SettingsRoute
+  '/stats': typeof StatsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
   '/credits': typeof CreditsRoute
   '/heroes': typeof HeroesRoute
   '/play': typeof PlayRoute
+  '/progression': typeof ProgressionRoute
   '/run': typeof RunRoute
+  '/settings': typeof SettingsRoute
+  '/stats': typeof StatsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
   '/credits': typeof CreditsRoute
   '/heroes': typeof HeroesRoute
   '/play': typeof PlayRoute
+  '/progression': typeof ProgressionRoute
   '/run': typeof RunRoute
+  '/settings': typeof SettingsRoute
+  '/stats': typeof StatsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/credits' | '/heroes' | '/play' | '/run'
+  fullPaths:
+    | '/'
+    | '/archive'
+    | '/credits'
+    | '/heroes'
+    | '/play'
+    | '/progression'
+    | '/run'
+    | '/settings'
+    | '/stats'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/credits' | '/heroes' | '/play' | '/run'
-  id: '__root__' | '/' | '/credits' | '/heroes' | '/play' | '/run'
+  to:
+    | '/'
+    | '/archive'
+    | '/credits'
+    | '/heroes'
+    | '/play'
+    | '/progression'
+    | '/run'
+    | '/settings'
+    | '/stats'
+  id:
+    | '__root__'
+    | '/'
+    | '/archive'
+    | '/credits'
+    | '/heroes'
+    | '/play'
+    | '/progression'
+    | '/run'
+    | '/settings'
+    | '/stats'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArchiveRoute: typeof ArchiveRoute
   CreditsRoute: typeof CreditsRoute
   HeroesRoute: typeof HeroesRoute
   PlayRoute: typeof PlayRoute
+  ProgressionRoute: typeof ProgressionRoute
   RunRoute: typeof RunRoute
+  SettingsRoute: typeof SettingsRoute
+  StatsRoute: typeof StatsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -86,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/archive': {
+      id: '/archive'
+      path: '/archive'
+      fullPath: '/archive'
+      preLoaderRoute: typeof ArchiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/credits': {
@@ -109,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/progression': {
+      id: '/progression'
+      path: '/progression'
+      fullPath: '/progression'
+      preLoaderRoute: typeof ProgressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/run': {
       id: '/run'
       path: '/run'
@@ -116,15 +198,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RunRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArchiveRoute: ArchiveRoute,
   CreditsRoute: CreditsRoute,
   HeroesRoute: HeroesRoute,
   PlayRoute: PlayRoute,
+  ProgressionRoute: ProgressionRoute,
   RunRoute: RunRoute,
+  SettingsRoute: SettingsRoute,
+  StatsRoute: StatsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
