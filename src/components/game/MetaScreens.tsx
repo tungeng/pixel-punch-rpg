@@ -10,6 +10,7 @@ import { motion } from "motion/react";
 import { RelicTray } from "./RelicTray";
 import type { ReactNode } from "react";
 import type { MotionStyle } from "motion/react";
+import { AUGMENTS } from "@/game/progression";
 
 export function RewardScreen() {
   const choices = useGame((s) => s.rewardChoices);
@@ -78,8 +79,45 @@ export function RewardScreen() {
           </motion.div>
         ))}
       </div>
-      <div className="mt-6 flex justify-center pb-4">
-        <PixelButton onClick={skip} color="ghost">Skip</PixelButton>
+      <div className="mt-6 flex flex-col items-center gap-1 pb-4">
+        <PixelButton onClick={skip} color="ghost">Stabilize deck</PixelButton>
+        <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
+          upgrades a card or recovers 18 gold
+        </span>
+      </div>
+    </Screen>
+  );
+}
+
+export function AugmentChoiceScreen() {
+  const ids = useGame((s) => s.augmentChoices);
+  const choose = useGame((s) => s.chooseAugment);
+  return (
+    <Screen title="HERO EVOLUTION" tone="#ff7a45" scroll>
+      <div className="mb-5 text-center text-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
+        The last boss left a combat protocol exposed. Install one.
+      </div>
+      <div className="grid w-full max-w-[360px] gap-3">
+        {ids.map((id, i) => {
+          const augment = AUGMENTS[id];
+          if (!augment) return null;
+          return (
+            <motion.button
+              key={id}
+              initial={{ x: i % 2 ? 40 : -40, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => choose(id)}
+              className="flex items-center gap-3 border-2 border-primary/70 bg-card p-3 text-left hover:border-primary"
+            >
+              <span className="text-pixel flex h-12 w-12 shrink-0 items-center justify-center bg-primary text-[15px] text-primary-foreground">{augment.icon}</span>
+              <span>
+                <span className="text-pixel block text-[9px] text-primary">{augment.name}</span>
+                <span className="mt-1 block text-[14px] leading-[16px] text-foreground/80" style={{ fontFamily: "var(--font-pixel-body)" }}>{augment.text}</span>
+              </span>
+            </motion.button>
+          );
+        })}
       </div>
     </Screen>
   );
@@ -92,6 +130,7 @@ export function RestScreen() {
   const deck = useGame((s) => s.deck);
   const heal = useGame((s) => s.restHeal);
   const upgrade = useGame((s) => s.restUpgrade);
+  const recycle = useGame((s) => s.restRecycle);
   const upgradeable = deck.filter((c) => !c.upgraded);
   return (
     <Screen title="SAFEHOUSE" tone="#54d98c">
@@ -113,6 +152,14 @@ export function RestScreen() {
           </div>
         )}
       </div>
+      {deck.length > 6 && (
+        <>
+          <div className="text-pixel mb-2 mt-4 text-center text-[8px] text-accent">OR RECYCLE: REMOVE A CARD, +4 MAX HP</div>
+          <div className="flex max-h-32 flex-wrap justify-center gap-2 overflow-y-auto px-2 pb-2">
+            {deck.map((c) => <CardView key={`recycle-${c.uid}`} card={c} size="hand" onClick={() => recycle(c.uid)} />)}
+          </div>
+        </>
+      )}
     </Screen>
   );
 }
@@ -166,7 +213,10 @@ export function TreasureScreen() {
       <div className="mb-6 text-center text-[16px] text-foreground/80" style={{ fontFamily: "var(--font-pixel-body)" }}>
         A sealed pod, ticking a half-second behind everything else.
       </div>
-      <PixelButton onClick={take} color="primary">Crack it open</PixelButton>
+      <div className="grid w-full max-w-[300px] gap-3">
+        <PixelButton onClick={() => take("salvage")} color="secondary">SALVAGE · 3 UPGRADED CARDS</PixelButton>
+        <PixelButton onClick={() => take("breach")} color="danger">BREACH · RELIC, LOSE 12% HP</PixelButton>
+      </div>
     </Screen>
   );
 }
@@ -324,7 +374,7 @@ function Screen({
       } px-4`}
       style={{
         background:
-          `radial-gradient(ellipse at 50% 0%, ${tone}22, transparent 60%), #0b0a12`,
+          `linear-gradient(135deg, ${tone}18 0 12%, transparent 12% 22%, ${tone}10 22% 30%, transparent 30%), #0b0a12`,
       }}
     >
       <div className="vignette pointer-events-none absolute inset-0" />
@@ -367,9 +417,11 @@ export function Hud() {
   const act = useGame((s) => s.act);
   const deckCount = useGame((s) => s.deck.length);
   const abandon = useGame((s) => s.abandon);
+  const contract = useGame((s) => s.contract);
+  const augments = useGame((s) => s.augments);
   const hero = HEROES[heroId]!;
   return (
-    <div className="relative z-30 flex items-center gap-2 border-b-[3px] border-primary/50 bg-[#0b0a12] px-2 py-1.5">
+    <div className="relative z-30 flex items-center gap-2 border-b-[3px] border-primary/50 bg-[#0b0a12] px-2 py-1.5" title={`${contract.name}: ${contract.progress}/${contract.goal}`}>
       <img src={hero.asset} alt={hero.name} className="pixelated h-10 w-10 object-contain" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between">
@@ -383,6 +435,10 @@ export function Hud() {
           >
             ⬢{gold}
           </motion.span>
+        </div>
+        <div className="mt-0.5 flex items-center gap-2 text-pixel text-[5px] text-muted-foreground">
+          <span className={contract.complete ? "text-primary" : ""}>▣ {contract.name} {contract.progress}/{contract.goal}</span>
+          {augments.length > 0 && <span className="text-accent">⚡{augments.length}</span>}
         </div>
         <Bar value={hp} max={maxHp} color="linear-gradient(90deg,#ff3b3b,#ffcc4d)" label={`${hp}/${maxHp}`} height={12} />
         <div className="mt-0.5 flex items-center justify-between text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>

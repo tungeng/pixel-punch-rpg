@@ -17,10 +17,12 @@ import tracerImg from "../assets/tracer.png";
 import kingsrowImg from "../assets/bg_kingsrow.jpg";
 import factoryImg from "../assets/bg_factory.jpg";
 import { UPGRADES, tierOf, upgradeBonusMaxHp, upgradeCacheRelicChance, upgradeCreditMult, upgradeStartGold } from "./upgrades";
+import { AUGMENTS, augmentPoolFor, makeContract, type ContractState } from "./progression";
 
 export type Phase =
   | "map"
   | "relic_choice"
+  | "augment_choice"
   | "combat"
   | "reward"
   | "rest"
@@ -92,6 +94,8 @@ export interface Combat {
   fracturePending: boolean;
   /** Mirror Ward: percent bonus applied to your next Attack this turn. */
   nextAttackPct: number;
+  /** Junkrat: self-blast counter for Total Mayhem tuning. */
+  junkratBlastCount: number;
 }
 
 
@@ -138,6 +142,10 @@ export interface GameState {
   floorsCleared: number;
   /** Fights cleared inside the current act. Drives the difficulty curve. */
   actFloors: number;
+  augments: string[];
+  augmentChoices: string[];
+  contract: ContractState;
+  contractsCompleted: number;
   phase: Phase;
   rewardChoices: CardInstance[];
   startingRelicChoices: string[];
@@ -156,6 +164,7 @@ export interface GameState {
   loadMeta: () => void;
   startRun: (heroId: string, seedLabel?: string) => void;
   chooseStartingRelic: (relicId: string) => void;
+  chooseAugment: (augmentId: string) => void;
   enterNode: (nodeId: number) => void;
   startCombat: (nodeType: NodeType, rng: Rng) => void;
   playCard: (uid: string, targetUid?: string) => void;
@@ -168,7 +177,8 @@ export interface GameState {
   skipReward: () => void;
   restHeal: () => void;
   restUpgrade: (cardUid: string) => void;
-  takeTreasure: () => void;
+  restRecycle: (cardUid: string) => void;
+  takeTreasure: (mode?: "salvage" | "breach") => void;
   confirmRelic: () => void;
   buyCard: (index: number) => void;
   buyRelic: (index: number) => void;
@@ -452,6 +462,10 @@ export const useGame = create<GameState>((set, get) => ({
   act: 0,
   floorsCleared: 0,
   actFloors: 0,
+  augments: [],
+  augmentChoices: [],
+  contract: makeContract(0),
+  contractsCompleted: 0,
   phase: "map",
   rewardChoices: [],
   startingRelicChoices: [],
@@ -501,6 +515,10 @@ export const useGame = create<GameState>((set, get) => ({
       act: 0,
       floorsCleared: 0,
       actFloors: 0,
+      augments: [],
+      augmentChoices: [],
+      contract: makeContract(seed % 3),
+      contractsCompleted: 0,
       phase: "relic_choice",
       startingRelicChoices: rng.shuffle(startingRelicChoices),
       combat: null,
@@ -513,6 +531,16 @@ export const useGame = create<GameState>((set, get) => ({
     const relics = [relicId];
     const maxHp = maxHpFor(s.heroId, relics, s.act, s.meta.upgrades);
     set({ relics, maxHp, hp: maxHp, startingRelicChoices: [], phase: "map" });
+  },
+
+  chooseAugment: (augmentId) => {
+    const s = get();
+    if (!s.augmentChoices.includes(augmentId) || !AUGMENTS[augmentId]) return;
+    set({
+      augments: [...s.augments, augmentId],
+      augmentChoices: [],
+      phase: s.pendingRelic ? "treasure" : "map",
+    });
   },
 
   enterNode: (nodeId) => {
@@ -563,18 +591,20 @@ export const useGame = create<GameState>((set, get) => ({
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
       }
     }
-    // Difficulty curve: the breach hardens the deeper you fall, and it adapts
-    // to how much relic power you're carrying, so a stacked run still bites.
-    // Difficulty is anchored to the act and how deep you are inside it, so a
-    // longer act does not spiral, and relic power is only softly answered.
+    // Difficulty is anchored to the act, then answers actual build power.
+    // Augments, upgraded lean decks and relics should feel exciting, not free.
     const floor = s.actFloors;
     const relicCount = s.relics.length;
+    const augmentCount = s.augments.length;
+    const upgradedCount = s.deck.filter((card) => card.upgraded).length;
+    const leanDeckBonus = s.deck.length < 24 ? (24 - s.deck.length) * 0.012 : 0;
     const bossEase = nodeType === "boss" ? 0.86 : 1;
-    const hpScale = (1 + s.act * 0.5 + floor * 0.09 + relicCount * 0.05) * bossEase;
+    const hpScale = (1 + s.act * 0.52 + floor * 0.1 + relicCount * 0.055 + augmentCount * 0.07 + upgradedCount * 0.008 + leanDeckBonus) * bossEase;
     const strBonus =
       Math.floor(floor / 3) +
-      Math.round(s.act * 1.6) +
+      Math.round(s.act * 1.75) +
       Math.floor(relicCount / 3) +
+      Math.floor(augmentCount / 2) +
       (nodeType === "elite" ? 3 + s.act : 0);
 
 
@@ -586,9 +616,9 @@ export const useGame = create<GameState>((set, get) => ({
     }
 
 
-    // junkrat passive: enemies start with 1 vulnerable
+    // junkrat passive: enemies start cracked, but not solved.
     if (s.heroId === "junkrat") {
-      for (const e of enemies) e.vulnerable = 3;
+      for (const e of enemies) e.vulnerable = 2;
     }
     const maxEnergy = maxEnergyFor(s.heroId, s.relics);
     const drawN = drawCountFor(s.heroId, s.relics);
@@ -642,7 +672,19 @@ export const useGame = create<GameState>((set, get) => ({
       duplicatorUsed: false,
       freeUltUsed: false,
       fracturePending: s.relics.includes("timeline_fracture"),
+      junkratBlastCount: 0,
     };
+    for (const id of s.augments) {
+      const a = AUGMENTS[id];
+      if (!a) continue;
+      combat.block += a.block;
+      combat.strength += a.strength;
+      combat.energy += a.energy;
+      combat.ultCharge += a.ult;
+      if (a.draw > 0) drawCards(combat, a.draw);
+      if (id === "rein_crusader") combat.armor += 12;
+    }
+    combat.ultCharge = Math.min(100, combat.ultCharge);
     // elite modifier: curse enemies hex you the moment the fight opens
     for (const e of enemies) {
       if (e.trait === "curse") {
@@ -801,6 +843,10 @@ export const useGame = create<GameState>((set, get) => ({
       if (e.hp <= 0) {
         e.hp = 0;
         e.isDead = true;
+        if (s.heroId === "moira" && s.augments.includes("moira_adaptation")) {
+          const gained = gainStrength(c, 1, relics);
+          pushFloat(c, `+${gained} STR`, "buff", "player");
+        }
       }
       e.poison -= 1;
     }
@@ -964,7 +1010,8 @@ export const useGame = create<GameState>((set, get) => ({
     c.turn += 1;
     // Doomfist: The Rising Uppercut. Pain fuels permanent Strength.
     if (s.heroId === "doomfist") {
-      const owed = Math.floor(c.damageTakenThisCombat / 8) - (c.ragePaid ?? 0);
+      const rageThreshold = s.augments.includes("doom_rising") ? 8 : 12;
+      const owed = Math.floor(c.damageTakenThisCombat / rageThreshold) - (c.ragePaid ?? 0);
       if (owed > 0) {
         c.ragePaid = (c.ragePaid ?? 0) + owed;
         const gained = gainStrength(c, owed, relics);
@@ -978,6 +1025,11 @@ export const useGame = create<GameState>((set, get) => ({
       c.armor += forged;
       pushFloat(c, `+${forged} ARM`, "block", "player");
       pushLog(c, `Crusader Plating forges ${forged} Armor from leftover Block.`);
+    }
+    if (s.heroId === "reinhardt" && s.augments.includes("rein_barrier") && c.armor > 0) {
+      const projected = Math.min(18, Math.ceil(c.armor / 2));
+      c.block += projected;
+      pushFloat(c, `+${projected}`, "block", "player");
     }
     // Aegis Loop keeps half your Block instead of wiping it
     c.block = relics.includes("aegis_loop") ? Math.floor(c.block / 2) : 0;
@@ -1089,6 +1141,12 @@ export const useGame = create<GameState>((set, get) => ({
       if (healed > 0) {
         pushFloat(c, `+${healed}`, "heal", "player");
         pushLog(c, `Mercy's staff mends ${healed} HP.`);
+        if (s.augments.includes("mercy_caduceus")) {
+          c.block += 1;
+          pushFloat(c, "+1", "block", "player");
+        }
+        if (s.augments.includes("mercy_bluebeam")) c.nextAttackPct += 10;
+        if (s.augments.includes("mercy_valkyrie")) c.ultCharge = Math.min(100, c.ultCharge + 3);
       }
     }
 
@@ -1118,13 +1176,14 @@ export const useGame = create<GameState>((set, get) => ({
   useUltimate: (targetUid) => {
     const s = get();
     const c = s.combat;
-    if (!c || !c.active || c.ultCharge < 100) return;
+    const freeUlt = !!c && s.relics.includes("null_sector_core") && !c.freeUltUsed;
+    if (!c || !c.active || (c.ultCharge < 100 && !freeUlt)) return;
     const hero = getHero(s.heroId);
     const ult = { ...hero.ultimate, uid: `ult_${c.turn}`, upgraded: false } as CardInstance;
+    const chargeBefore = c.ultCharge;
     c.ultCharge = 0;
     const living = c.enemies.filter((e) => !e.isDead);
     const needsTarget = ((ult.damage ?? 0) > 0 || !!ult.beam) && !ult.aoe && living.length > 1;
-    const freeUlt = s.relics.includes("null_sector_core") && !c.freeUltUsed;
     if (needsTarget && !targetUid) {
       resolveCard(set, get, ult, living[0]?.uid ?? null, true);
     } else {
@@ -1134,8 +1193,8 @@ export const useGame = create<GameState>((set, get) => ({
       const after = get().combat;
       if (after) {
         after.freeUltUsed = true;
-        after.ultCharge = 100;
-        pushLog(after, "Null Sector Core refunds the Ultimate.");
+        after.ultCharge = chargeBefore;
+        pushLog(after, "Null Sector Core fires the Ultimate for free.");
         set({ combat: { ...after } });
       }
     }
@@ -1180,7 +1239,17 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   skipReward: () => {
-    set({ phase: "map", pendingRelic: null });
+    const s = get();
+    const stabilizeRoll = Math.abs((s.seed + s.floorsCleared * 17) % 100);
+    const candidates = stabilizeRoll < 45 ? s.deck.filter((c) => !c.upgraded) : [];
+    const chosen = candidates.length > 0
+      ? candidates[Math.abs((s.seed + s.floorsCleared * 31) % candidates.length)]
+      : undefined;
+    const deck = chosen
+      ? s.deck.map((c) => (c.uid === chosen.uid ? makeCard(c.id, true) : c))
+      : s.deck;
+    const bonusGold = chosen ? 0 : 18;
+    set({ deck, gold: s.gold + bonusGold, phase: "map", pendingRelic: null, lastEvent: chosen ? `${chosen.name} stabilized.` : "+18 gold recovered." });
     markNodeVisited(set, get);
   },
 
@@ -1199,7 +1268,16 @@ export const useGame = create<GameState>((set, get) => ({
     markNodeVisited(set, get);
   },
 
-  takeTreasure: () => {
+  restRecycle: (cardUid) => {
+    const s = get();
+    if (s.deck.length <= 6 || !s.deck.some((c) => c.uid === cardUid)) return;
+    const deck = s.deck.filter((c) => c.uid !== cardUid);
+    const maxHp = s.maxHp + 4;
+    set({ deck, maxHp, hp: Math.min(maxHp, s.hp + 4), phase: "map", lastEvent: "Card recycled into +4 Max HP." });
+    markNodeVisited(set, get);
+  },
+
+  takeTreasure: (mode) => {
     const s = get();
     const owned = new Set(s.relics);
     const unlocked = new Set(s.meta.unlockedRelics);
@@ -1212,8 +1290,18 @@ export const useGame = create<GameState>((set, get) => ({
     }
 
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
+    if (mode === "salvage") {
+      const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
+      const choices = rng.shuffle(pool).slice(0, 3).map((id) => makeCard(id, true));
+      set({ phase: "reward", rewardChoices: choices, rewardGold: 0, lastEvent: "Cache safely salvaged." });
+      return;
+    }
+    if (mode === "breach") {
+      const damage = Math.max(1, Math.floor(s.maxHp * 0.12));
+      set({ hp: Math.max(1, s.hp - damage), lastEvent: `Cache breached for ${damage} HP.` });
+    }
     // caches usually hold a relic; otherwise they pay out a card choice
-    if (!rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
+    if (mode !== "breach" && !rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
 
       // scanner missed: cache yields a card reward instead
       const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
@@ -1444,9 +1532,10 @@ function resolveCard(
   if (isAttack) c.attacksPlayedThisTurn += 1;
 
   // doomfist passive
-  if (s.heroId === "doomfist" && isAttack && !isUlt) {
-    c.block += 4;
-    pushFloat(c, "+4", "block", "player");
+    if (s.heroId === "doomfist" && isAttack && !isUlt) {
+      const block = s.augments.includes("doom_gauntlet") ? 5 : 3;
+      c.block += block;
+      pushFloat(c, `+${block}`, "block", "player");
   }
 
   // Tracer: Blink Chain. Every 3rd card played in a turn refunds 1 Energy.
@@ -1454,6 +1543,10 @@ function resolveCard(
     c.energy += 1;
     pushFloat(c, "+1 NRG", "buff", "player");
     pushLog(c, "Blink Chain snaps back a point of Energy.");
+      if (s.augments.includes("tracer_afterimage")) {
+        c.block += 4;
+        pushFloat(c, "+4", "block", "player");
+      }
   }
 
   // strength gain (Last Stand pays out far harder while you are bleeding)
@@ -1470,9 +1563,13 @@ function resolveCard(
   }
   // block (may scale with Attacks played this turn, for Doomfist)
   const blockGain = scaledBlock(card, c);
-  if (blockGain > 0) {
+    if (blockGain > 0) {
     c.block += blockGain;
     pushFloat(c, `+${blockGain}`, "block", "player");
+      if (s.heroId === "genji" && s.augments.includes("genji_deflect") && card.type === "skill") {
+        c.thorns += 3;
+        pushFloat(c, "DEFLECT", "buff", "player");
+      }
   }
   // heal (overheal converts the wasted portion into Block; Mercy heals harder when low)
   if (card.heal) {
@@ -1480,7 +1577,22 @@ function resolveCard(
     const amount = card.heal + (card.bonusHealIfLowHp && lowHp ? card.bonusHealIfLowHp : 0);
     const healed = Math.min(amount, c.maxHp - c.hp);
     c.hp += healed;
-    if (healed > 0) pushFloat(c, `+${healed}`, "heal", "player");
+      if (healed > 0) {
+        pushFloat(c, `+${healed}`, "heal", "player");
+        if (s.heroId === "mercy" && s.augments.includes("mercy_caduceus")) {
+          const ward = Math.ceil(healed / 2);
+          c.block += ward;
+          pushFloat(c, `+${ward}`, "block", "player");
+        }
+        if (s.heroId === "mercy" && s.augments.includes("mercy_bluebeam")) {
+          c.nextAttackPct += 25;
+          pushFloat(c, "BLUE BEAM", "buff", "player");
+        }
+        if (s.heroId === "mercy" && s.augments.includes("mercy_valkyrie")) {
+          charge.v += 8;
+          pushFloat(c, "+8 ULT", "ult", "player");
+        }
+      }
     const wasted = amount - healed;
     if (card.overheal && wasted > 0) {
       c.block += wasted;
@@ -1518,7 +1630,16 @@ function resolveCard(
   if (comboMet) {
     if (card.comboDraw) drawCards(c, card.comboDraw);
     if (card.comboEnergy) c.energy += card.comboEnergy;
+    if (s.heroId === "genji" && s.augments.includes("genji_flow")) drawCards(c, 1);
     pushFloat(c, "COMBO", "buff", "player");
+  }
+  if (s.heroId === "tracer" && s.augments.includes("tracer_slipstream") && isAttack && c.attacksPlayedThisTurn === 1) {
+    drawCards(c, 1);
+    pushFloat(c, "+1 CARD", "buff", "player");
+  }
+  if (s.heroId === "genji" && s.augments.includes("genji_dragon") && isAttack && c.attacksPlayedThisTurn % 3 === 0) {
+    const gained = gainStrength(c, 1, relics);
+    pushFloat(c, `+${gained} STR`, "buff", "player");
   }
   // overclock arms the end-of-turn energy payoff (Tracer)
   if (card.overclock) {
@@ -1527,12 +1648,18 @@ function resolveCard(
   }
   // self damage
   if (card.selfDamage) {
-    // Junkrat's Total Mayhem soaks the first 3 damage of every self-blast.
-    const soak = s.heroId === "junkrat" ? 3 : 0;
-    // Junkrat: Total Mayhem. Every self-blast feeds his Strength for the fight.
+    // Junkrat's blast suit soaks a little recoil. Total Mayhem makes every blast pay off.
+    const soak = s.heroId === "junkrat" ? 2 : 0;
     if (s.heroId === "junkrat") {
-      const gained = gainStrength(c, 1, relics);
-      pushFloat(c, `+${gained} STR`, "buff", "player");
+      c.junkratBlastCount += 1;
+      if (s.augments.includes("junkrat_total") || c.junkratBlastCount % 2 === 0) {
+        const gained = gainStrength(c, 1, relics);
+        pushFloat(c, `+${gained} STR`, "buff", "player");
+      }
+      if (s.augments.includes("junkrat_shrapnel")) {
+        for (const e of c.enemies.filter((enemy) => !enemy.isDead && !enemy.untargetable)) e.weak += 1;
+        pushFloat(c, "WEAK", "debuff", "player");
+      }
     }
     const selfDmg = Math.max(0, card.selfDamage - soak);
     if (selfDmg > 0) {
@@ -1589,6 +1716,9 @@ function resolveCard(
       bonus += 4 * Math.max(0, c.attacksPlayedThisTurn - 1);
     }
     let totalBase = scaled + bonus;
+    if (s.heroId === "junkrat" && s.augments.includes("junkrat_hairtrigger") && (card.randomDamage || card.randomHits)) {
+      totalBase += 3;
+    }
     if (card.doubleIfHandEmpty && c.hand.length === 0) {
       totalBase *= 2;
       pushLog(c, `${card.name} goes all in.`);
@@ -1660,6 +1790,10 @@ function resolveCard(
       pushFloat(c, `+${stacks} PSN`, "debuff", t.uid);
     }
     if (targets.length > 0) c.poisonBoost = 0;
+    if (targets.length > 0 && s.heroId === "moira" && s.augments.includes("moira_reservoir")) {
+      c.regen += 1;
+      pushFloat(c, "+1 REG", "heal", "player");
+    }
   }
   // Moira: consume poison stacks for burst damage
   if (card.poisonDetonate) {
@@ -1728,10 +1862,12 @@ function resolveCard(
       c.enemies.find((e) => e.uid === targetUid && !e.isDead && !e.untargetable) ??
       c.enemies.find((e) => !e.isDead && !e.untargetable);
     if (target) {
-      c.beams.push({ targetUid: target.uid, damage: card.beam.damage, heal: card.beam.heal, turns: card.beam.turns });
-      const dealt = applyEnemyDamage(c, target, card.beam.damage, charge, powerCell);
+      const beamDamage = card.beam.damage + (s.heroId === "moira" && s.augments.includes("moira_coalescence") ? 2 : 0);
+      const beamHeal = card.beam.heal + (s.heroId === "moira" && s.augments.includes("moira_coalescence") ? 2 : 0);
+      c.beams.push({ targetUid: target.uid, damage: beamDamage, heal: beamHeal, turns: card.beam.turns });
+      const dealt = applyEnemyDamage(c, target, beamDamage, charge, powerCell);
       pushFloat(c, `${dealt}`, "dmg", target.uid);
-      const healed = Math.min(c.maxHp - c.hp, card.beam.heal);
+      const healed = Math.min(c.maxHp - c.hp, beamHeal);
       if (healed > 0) {
         c.hp += healed;
         pushFloat(c, `+${healed}`, "heal", "player");
@@ -1818,6 +1954,7 @@ function handleCombatWin(set: any, get: () => GameState) {
   // bank hp
   let hp = c.hp;
   let gold = s.gold;
+  let deck = s.deck;
   const has = (id: string) => s.relics.includes(id);
   // post-combat healing relics
   if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 6);
@@ -1831,6 +1968,25 @@ function handleCombatWin(set: any, get: () => GameState) {
   gold += g;
   const floorsCleared = s.floorsCleared + 1;
   const actFloors = s.actFloors + 1;
+  const qualifies =
+    (s.contract.id === "clean_sweep" && c.hp >= c.maxHp * 0.75) ||
+    (s.contract.id === "shock_assault" && c.turn <= 2) ||
+    (s.contract.id === "iron_line" && c.block + c.armor > 0);
+  let contract = s.contract;
+  let contractsCompleted = s.contractsCompleted;
+  if (!contract.complete && qualifies) {
+    const progress = Math.min(contract.goal, contract.progress + 1);
+    contract = { ...contract, progress, complete: progress >= contract.goal };
+    if (contract.complete) {
+      contractsCompleted += 1;
+      hp = Math.min(s.maxHp, hp + 12);
+      const upgradeable = s.deck.filter((card) => !card.upgraded);
+      const reward = upgradeable[(s.seed + floorsCleared) % Math.max(1, upgradeable.length)];
+      if (reward) {
+        deck = s.deck.map((card) => card.uid === reward.uid ? makeCard(card.id, true) : card);
+      }
+    }
+  }
   // card reward
   const rng = rngForRun(s.seed, 9000 + floorsCleared);
   const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
@@ -1867,17 +2023,24 @@ function handleCombatWin(set: any, get: () => GameState) {
       const nextAct = s.act + 1;
       const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
       const nextMaxHp = maxHpFor(s.heroId, relics, nextAct, s.meta.upgrades);
+      const available = augmentPoolFor(s.heroId, s.augments);
+      const augmentChoices = rng.shuffle(available).slice(0, 3).map((a) => a.id);
       set({
         hp: Math.min(nextMaxHp, hp + Math.floor(nextMaxHp * 0.35)),
         maxHp: nextMaxHp,
         gold,
+        deck,
         relics,
         floorsCleared,
         actFloors: 0,
         act: nextAct,
         map: newMap,
         currentNodeId: null,
-        phase: droppedRelic ? "treasure" : "map",
+        phase: "augment_choice",
+        augments: s.augments,
+        augmentChoices,
+        contract: makeContract((s.seed + nextAct) % 3),
+        contractsCompleted,
         pendingRelic: droppedRelic,
         rewardChoices: choices,
         rewardGold: g,
@@ -1913,9 +2076,12 @@ function handleCombatWin(set: any, get: () => GameState) {
     hp: Math.min(hp, postMax),
     maxHp: postMax,
     gold,
+    deck,
     relics,
     floorsCleared,
     actFloors,
+    contract,
+    contractsCompleted,
     phase: "reward",
     pendingRelic: droppedRelic,
     rewardChoices: choices,

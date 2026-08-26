@@ -112,6 +112,8 @@ export interface CardDef {
   goldOnKill?: number;
   /** Costs 0 if you have already played this many cards this turn (neutral: Adrenaline Rush). */
   freeIfCardsPlayed?: number;
+  /** Relic/augment hook: this card gains temporary bonus damage before resolving. */
+  tempBonusDamage?: number;
   /** Your next Attack this turn deals this much extra percent damage (neutral: Mirror Ward). */
   nextAttackBonusPct?: number;
   /** Below half HP, gain this Strength instead of the base amount (neutral: Last Stand). */
