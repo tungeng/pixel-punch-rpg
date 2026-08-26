@@ -19,12 +19,12 @@ export const HEROES: Record<string, HeroDef> = {
     passive: "Cheers, love! +1 max Energy, and every third card she plays in a turn blinks 1 Energy right back.",
     startingDeck: [
       "tracer_blink", "tracer_blink", "tracer_pistols", "tracer_pistols",
-      "tracer_recall", "tracer_strafe", "tracer_strafe", "tracer_hnr",
+      "tracer_recall", "tracer_strafe", "tracer_strafe", "tracer_pistols",
       "tracer_reload", "tracer_dual",
     ],
     cardPool: [
-      "tracer_strafe", "tracer_charged", "tracer_adrenaline", "tracer_hnr",
-      "tracer_reload", "tracer_dual", "tracer_flurry", "tracer_overclock",
+      "tracer_charged", "tracer_adrenaline", "tracer_dual",
+      "tracer_flurry", "tracer_overclock",
     ],
     ultimate: {
       id: "tracer_pulse",
@@ -47,12 +47,12 @@ export const HEROES: Record<string, HeroDef> = {
     passive: "Her staff never fully powers down, so she mends 2 HP at the start of every turn.",
     startingDeck: [
       "mercy_blaster", "mercy_blaster", "mercy_heal", "mercy_heal",
-      "mercy_guardian", "mercy_pacify", "mercy_regen", "mercy_shot",
+      "mercy_guardian", "mercy_pacify", "mercy_regen", "mercy_blaster",
       "mercy_blight", "mercy_boost",
     ],
     cardPool: [
-      "mercy_boost", "mercy_guardian", "mercy_resurrect", "mercy_shot",
-      "mercy_blight", "mercy_lastrites", "mercy_overflow",
+      "mercy_boost", "mercy_resurrect", "mercy_blight",
+      "mercy_lastrites", "mercy_overflow",
     ],
     ultimate: {
       id: "mercy_valkyrie",
@@ -77,12 +77,11 @@ export const HEROES: Record<string, HeroDef> = {
     passive: "The body moves before the mind asks. Draw 1 extra card each turn, and every Attack after the first in a turn strikes for +4.",
     startingDeck: [
       "genji_shuriken", "genji_shuriken", "genji_swift", "genji_swift",
-      "genji_deflect", "genji_fang", "genji_agility", "genji_riposte",
+      "genji_deflect", "genji_dash", "genji_agility", "genji_agility",
       "genji_dash", "genji_storm",
     ],
     cardPool: [
-      "genji_fang", "genji_agility", "genji_spirit", "genji_riposte",
-      "genji_dash", "genji_storm", "genji_rush", "genji_windcut",
+      "genji_spirit", "genji_storm", "genji_rush", "genji_windcut",
     ],
     ultimate: {
       id: "genji_dragon",
@@ -110,8 +109,8 @@ export const HEROES: Record<string, HeroDef> = {
       "junkrat_frag", "junkrat_blast",
     ],
     cardPool: [
-      "junkrat_concussive", "junkrat_mine", "junkrat_rpg", "junkrat_scatter",
-      "junkrat_frag", "junkrat_blast", "junkrat_loose", "junkrat_scrap", "junkrat_rummage",
+      "junkrat_concussive", "junkrat_mine", "junkrat_rpg",
+      "junkrat_frag", "junkrat_blast", "junkrat_scrap",
     ],
     ultimate: {
       id: "junkrat_riptire",
@@ -140,7 +139,7 @@ export const HEROES: Record<string, HeroDef> = {
     ],
     cardPool: [
       "moira_decay", "moira_surge", "moira_bloom", "moira_miasma",
-      "moira_bioticfield", "moira_rot", "moira_leech", "moira_contagion",
+      "moira_bioticfield", "moira_leech", "moira_contagion",
       "moira_purge",
     ],
     ultimate: {
@@ -166,12 +165,11 @@ export const HEROES: Record<string, HeroDef> = {
     startingDeck: [
       "rein_hammer", "rein_hammer", "rein_hammer", "rein_plating",
       "rein_plating", "rein_barrier", "rein_barrier", "rein_firestrike",
-      "rein_charge", "rein_forge",
+      "rein_charge", "rein_plating",
     ],
     cardPool: [
-      "rein_bulwark", "rein_forge", "rein_bash", "rein_smash",
-      "rein_endure", "rein_rally", "rein_will", "rein_firestrike",
-      "rein_plating", "rein_hammer",
+      "rein_bulwark", "rein_bash", "rein_smash",
+      "rein_endure", "rein_rally", "rein_will",
     ],
     ultimate: {
       id: "rein_earthshatter",
@@ -197,12 +195,12 @@ export const HEROES: Record<string, HeroDef> = {
     passive: "The best defense is a fist already moving. Every Attack grants 4 Block, and every 8 damage he takes in a fight answers back with 1 permanent Strength.",
     startingDeck: [
       "doomfist_punch", "doomfist_punch", "doomfist_slam", "doomfist_slam",
-      "doomfist_shield", "doomfist_uppercut", "doomfist_grapple",
+      "doomfist_shield", "doomfist_uppercut", "doomfist_fortify",
       "doomfist_charge", "doomfist_bruise", "doomfist_fortify",
     ],
     cardPool: [
       "doomfist_uppercut", "doomfist_bestdefense", "doomfist_charge",
-      "doomfist_quake", "doomfist_executioner", "doomfist_momentum", "doomfist_grapple",
+      "doomfist_quake", "doomfist_executioner", "doomfist_momentum",
     ],
     ultimate: {
       id: "doomfist_meteor",
@@ -233,8 +231,7 @@ export const HEROES: Record<string, HeroDef> = {
     ],
     cardPool: [
       "bastion_grenade", "bastion_recalibrate", "bastion_ricochet", "bastion_assault",
-      "bastion_burst", "bastion_bunker", "bastion_lockdown", "bastion_overhaul",
-      "bastion_siege", "bastion_rounds",
+      "bastion_burst", "bastion_lockdown", "bastion_overhaul", "bastion_siege",
     ],
     ultimate: {
       id: "bastion_artillery",
