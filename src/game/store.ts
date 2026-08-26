@@ -567,7 +567,15 @@ export const useGame = create<GameState>((set, get) => ({
     const s = get();
     const relics = [relicId];
     const maxHp = maxHpFor(s.heroId, relics, s.act, s.meta.upgrades);
-    set({ relics, maxHp, hp: maxHp, startingRelicChoices: [], phase: "map" });
+    set({
+      relics,
+      maxHp,
+      hp: maxHp,
+      startingRelicChoices: [],
+      phase: "map",
+      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.desc}`,
+      lastEventAt: Date.now(),
+    });
   },
 
   chooseAugment: (augmentId) => {
@@ -577,6 +585,8 @@ export const useGame = create<GameState>((set, get) => ({
       augments: [...s.augments, augmentId],
       augmentChoices: [],
       phase: s.pendingRelic ? "treasure" : "map",
+      lastEvent: `Augment installed: ${AUGMENTS[augmentId]!.name}. ${AUGMENTS[augmentId]!.desc}`,
+      lastEventAt: Date.now(),
     });
   },
 
