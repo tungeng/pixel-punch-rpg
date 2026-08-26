@@ -16,6 +16,7 @@ import {
   AugmentChoiceScreen,
 } from "@/components/game/MetaScreens";
 import { CabinetShell } from "@/components/game/CabinetShell";
+import { EventFeedback } from "@/components/game/EventFeedback";
 
 export const Route = createFileRoute("/run")({
   head: () => ({
@@ -78,6 +79,7 @@ function RunRoute() {
           </motion.div>
         </AnimatePresence>
       </div>
+      <EventFeedback />
     </div>
     </CabinetShell>
   );
