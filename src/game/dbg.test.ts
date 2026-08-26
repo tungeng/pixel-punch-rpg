@@ -12,7 +12,7 @@ it("dbg", () => {
     if (!s.inRun || s.phase === "dead" || s.phase === "victory") break;
     if (steps > 8100) {
       const c = s.combat;
-      console.log(steps, s.phase, c && { turn: c.turn, hp: c.hp, energy: c.energy, hand: c.hand.map(h=>h.id+":"+h.cost), ult: c.ultCharge, ultUsed: c.ultUsedThisCombat, frac: c.fracturePending, enemies: c.enemies.map(e=>e.name+e.hp) }, s.relics.join(","));
+      console.log(steps, s.phase, c && { log: c.log.slice(-4), draw: c.drawPile.length, disc: c.discardPile.length, turn: c.turn, hp: c.hp, energy: c.energy, hand: c.hand.map(h=>h.id+":"+h.cost), ult: c.ultCharge, ultUsed: c.ultUsedThisCombat, frac: c.fracturePending, enemies: c.enemies.map(e=>e.name+e.hp) }, s.relics.join(","));
     }
     switch (s.phase) {
       case "map": { const cur = s.map.find(n=>n.id===s.currentNodeId) ?? null; const opts = cur ? s.map.filter(n=>cur.next.includes(n.id)) : s.map.filter(n=>n.col===0); s.enterNode(opts[0]!.id); break; }
