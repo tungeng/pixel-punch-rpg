@@ -271,8 +271,10 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
           res.restHeals++;
           s.restHeal();
         } else {
+          const bloat = s.deck.find((c) => c.id === "n_strike" || c.id === "n_block");
           const up = s.deck.find((c) => !c.upgraded);
-          if (up) s.restUpgrade(up.uid);
+          if (bloat && s.deck.length > 10) s.restRecycle(bloat.uid);
+          else if (up) s.restUpgrade(up.uid);
           else {
             res.restHeals++;
             s.restHeal();
@@ -292,7 +294,7 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
       }
 
       case "treasure": {
-        s.takeTreasure();
+        s.takeTreasure(s.hp > s.maxHp * 0.55 ? "breach" : "salvage");
         break;
       }
       default:

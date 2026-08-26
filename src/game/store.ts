@@ -175,7 +175,8 @@ export interface GameState {
   skipReward: () => void;
   restHeal: () => void;
   restUpgrade: (cardUid: string) => void;
-  takeTreasure: () => void;
+  restRecycle: (cardUid: string) => void;
+  takeTreasure: (mode?: "salvage" | "breach") => void;
   confirmRelic: () => void;
   buyCard: (index: number) => void;
   buyRelic: (index: number) => void;
@@ -533,7 +534,11 @@ export const useGame = create<GameState>((set, get) => ({
   chooseAugment: (augmentId) => {
     const s = get();
     if (!s.augmentChoices.includes(augmentId) || !AUGMENTS[augmentId]) return;
-    set({ augments: [...s.augments, augmentId], augmentChoices: [], phase: "map" });
+    set({
+      augments: [...s.augments, augmentId],
+      augmentChoices: [],
+      phase: s.pendingRelic ? "treasure" : "map",
+    });
   },
 
   enterNode: (nodeId) => {
@@ -1212,7 +1217,15 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   skipReward: () => {
-    set({ phase: "map", pendingRelic: null });
+    const s = get();
+    const candidates = s.deck.filter((c) => !c.upgraded);
+    const chosen = candidates.length > 0
+      ? candidates[Math.abs((s.seed + s.floorsCleared * 17) % candidates.length)]
+      : undefined;
+    const deck = chosen
+      ? s.deck.map((c) => (c.uid === chosen.uid ? makeCard(c.id, true) : c))
+      : s.deck;
+    set({ deck, phase: "map", pendingRelic: null, lastEvent: chosen ? `${chosen.name} stabilized.` : "Deck already stabilized." });
     markNodeVisited(set, get);
   },
 
@@ -1231,7 +1244,16 @@ export const useGame = create<GameState>((set, get) => ({
     markNodeVisited(set, get);
   },
 
-  takeTreasure: () => {
+  restRecycle: (cardUid) => {
+    const s = get();
+    if (s.deck.length <= 6 || !s.deck.some((c) => c.uid === cardUid)) return;
+    const deck = s.deck.filter((c) => c.uid !== cardUid);
+    const maxHp = s.maxHp + 4;
+    set({ deck, maxHp, hp: Math.min(maxHp, s.hp + 4), phase: "map", lastEvent: "Card recycled into +4 Max HP." });
+    markNodeVisited(set, get);
+  },
+
+  takeTreasure: (mode) => {
     const s = get();
     const owned = new Set(s.relics);
     const unlocked = new Set(s.meta.unlockedRelics);
@@ -1244,8 +1266,18 @@ export const useGame = create<GameState>((set, get) => ({
     }
 
     const rng = rngForRun(s.seed, 5000 + s.floorsCleared);
+    if (mode === "salvage") {
+      const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
+      const choices = rng.shuffle(pool).slice(0, 3).map((id) => makeCard(id, true));
+      set({ phase: "reward", rewardChoices: choices, rewardGold: 0, lastEvent: "Cache safely salvaged." });
+      return;
+    }
+    if (mode === "breach") {
+      const damage = Math.max(1, Math.floor(s.maxHp * 0.12));
+      set({ hp: Math.max(1, s.hp - damage), lastEvent: `Cache breached for ${damage} HP.` });
+    }
     // caches usually hold a relic; otherwise they pay out a card choice
-    if (!rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
+    if (mode !== "breach" && !rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
 
       // scanner missed: cache yields a card reward instead
       const pool = [...getHero(s.heroId).cardPool, ...NEUTRAL_POOL];
@@ -1875,7 +1907,12 @@ function handleCombatWin(set: any, get: () => GameState) {
     if (contract.complete) {
       contractsCompleted += 1;
       hp = Math.min(s.maxHp, hp + 12);
-      gold += 35;
+      const upgradeable = s.deck.filter((card) => !card.upgraded);
+      const reward = upgradeable[(s.seed + floorsCleared) % Math.max(1, upgradeable.length)];
+      if (reward) {
+        const upgradedDeck = s.deck.map((card) => card.uid === reward.uid ? makeCard(card.id, true) : card);
+        set({ deck: upgradedDeck });
+      }
     }
   }
   // card reward

@@ -127,6 +127,7 @@ export function RestScreen() {
   const deck = useGame((s) => s.deck);
   const heal = useGame((s) => s.restHeal);
   const upgrade = useGame((s) => s.restUpgrade);
+  const recycle = useGame((s) => s.restRecycle);
   const upgradeable = deck.filter((c) => !c.upgraded);
   return (
     <Screen title="SAFEHOUSE" tone="#54d98c">
@@ -148,6 +149,14 @@ export function RestScreen() {
           </div>
         )}
       </div>
+      {deck.length > 6 && (
+        <>
+          <div className="text-pixel mb-2 mt-4 text-center text-[8px] text-accent">OR RECYCLE: REMOVE A CARD, +4 MAX HP</div>
+          <div className="flex max-h-32 flex-wrap justify-center gap-2 overflow-y-auto px-2 pb-2">
+            {deck.map((c) => <CardView key={`recycle-${c.uid}`} card={c} size="hand" onClick={() => recycle(c.uid)} />)}
+          </div>
+        </>
+      )}
     </Screen>
   );
 }
@@ -201,7 +210,10 @@ export function TreasureScreen() {
       <div className="mb-6 text-center text-[16px] text-foreground/80" style={{ fontFamily: "var(--font-pixel-body)" }}>
         A sealed pod, ticking a half-second behind everything else.
       </div>
-      <PixelButton onClick={take} color="primary">Crack it open</PixelButton>
+      <div className="grid w-full max-w-[300px] gap-3">
+        <PixelButton onClick={() => take("salvage")} color="secondary">SALVAGE · 3 UPGRADED CARDS</PixelButton>
+        <PixelButton onClick={() => take("breach")} color="danger">BREACH · RELIC, LOSE 12% HP</PixelButton>
+      </div>
     </Screen>
   );
 }
