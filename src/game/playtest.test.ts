@@ -89,6 +89,11 @@ function simulateRun(hero: string, seed: string): RunResult {
           c.exhaustPile.length;
         expect(total).toBeGreaterThan(0);
 
+        if (c.fracturePending) {
+          s.chooseFracture("damage");
+          break;
+        }
+
         if (c.targetingCardUid) {
           const alive = c.enemies.filter((e) => !e.isDead);
           if (alive.length === 0) s.cancelTarget();
