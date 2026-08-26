@@ -1500,7 +1500,7 @@ export const useGame = create<GameState>((set, get) => ({
       set({ hp: Math.max(1, s.hp - damage), lastEvent: `Cache forced open. Took ${damage} damage.`, lastEventAt: Date.now() });
     }
     // caches usually hold a relic; otherwise they pay out a card choice
-    if (mode !== "breach" && !rng.chance(Math.max(0.55, upgradeCacheRelicChance(s.meta.upgrades)))) {
+    if (mode !== "breach" && !rng.chance(Math.max(0.55, upgradeCacheRelicChance()))) {
 
       // scanner missed: cache yields a card reward instead
       // Hero cards carry the run's identity, so they are offered twice as often as
