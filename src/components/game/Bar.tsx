@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Bar({
   value,
@@ -6,25 +6,54 @@ export function Bar({
   color,
   label,
   height = 18,
+  /** shows a lagging "chip" trail so the player can read how big the last hit was */
+  ghost = true,
 }: {
   value: number;
   max: number;
   color: string;
   label?: string;
   height?: number;
+  ghost?: boolean;
 }) {
+  const ratio = Math.max(0, Math.min(1, value / Math.max(1, max)));
   const [w, setW] = useState(0);
+  const [trail, setTrail] = useState(0);
+  const prev = useRef(0);
+
   useEffect(() => {
-    const t = setTimeout(() => setW(Math.max(0, Math.min(1, value / Math.max(1, max)))), 30);
+    const t = setTimeout(() => setW(ratio), 30);
     return () => clearTimeout(t);
-  }, [value, max]);
+  }, [ratio]);
+
+  // the trail holds the old value for a beat, then drains down to the new one
+  useEffect(() => {
+    if (!ghost) return;
+    if (ratio < prev.current) {
+      const from = prev.current;
+      setTrail(from);
+      const t = setTimeout(() => setTrail(ratio), 260);
+      prev.current = ratio;
+      return () => clearTimeout(t);
+    }
+    prev.current = ratio;
+    setTrail(ratio);
+    return;
+  }, [ratio, ghost]);
+
   return (
     <div
       className="relative w-full overflow-hidden pix-border"
       style={{ height, background: "oklch(0.1 0.02 265)" }}
     >
+      {ghost && (
+        <div
+          className="absolute inset-y-0 left-0 transition-all duration-500 ease-out"
+          style={{ width: `${trail * 100}%`, background: "#fff4d6", opacity: 0.85 }}
+        />
+      )}
       <div
-        className="h-full transition-all duration-300 ease-out"
+        className="absolute inset-y-0 left-0 transition-all duration-200 ease-out"
         style={{ width: `${w * 100}%`, background: color }}
       />
       {label && (
@@ -38,7 +67,6 @@ export function Bar({
           {label}
         </div>
       )}
-
     </div>
   );
 }
