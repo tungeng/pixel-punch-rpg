@@ -79,7 +79,10 @@ function cardScore(
     energyGain?: number; retain?: boolean; thorns?: number; regen?: number;
     damagePerArmor?: number; damagePerCardPlayed?: number; damagePerDebuff?: number;
     damagePerBlock?: number; damagePerMissingHp?: number; blockFromArmor?: boolean;
-    blockToArmor?: boolean; poisonBoost?: number; poisonDetonate?: number; hero?: string;
+    blockToArmor?: boolean; poisonBoost?: number; poisonDetonate?: number; hero?: string; comboEnergy?: number;
+    comboDraw?: number; comboCards?: number; bonusIfAttack?: number; poisonSpread?: boolean;
+    consumeRegenDamage?: number; damageEqualToBlock?: boolean; blockPerExhaust?: number;
+    goldOnKill?: number; freeIfCardsPlayed?: number; nextAttackBonusPct?: number;
   },
   hero: string,
   counts: Record<string, number>,
@@ -111,6 +114,16 @@ function cardScore(
   score += (card.damagePerMissingHp ?? 0) * 4;
   score += card.blockFromArmor ? 7 : 0;
   score += card.blockToArmor ? 5 : 0;
+  score += (card.comboEnergy ?? 0) * 5;
+  score += (card.comboDraw ?? 0) * 3.6;
+  score += (card.bonusIfAttack ?? 0) * 1.1;
+  score += card.poisonSpread ? 9 : 0;
+  score += (card.consumeRegenDamage ?? 0) * 3;
+  score += card.damageEqualToBlock ? 8 : 0;
+  score += (card.blockPerExhaust ?? 0) * 3.2;
+  score += (card.goldOnKill ?? 0) * 0.12;
+  score += (card.nextAttackBonusPct ?? 0) * 0.1;
+  score += card.freeIfCardsPlayed ? 4 : 0;
   score += card.rarity === "rare" ? 8 : card.rarity === "uncommon" ? 4 : 0;
   if (card.exhaust) score += 2;
   score -= card.cost * 2.5;

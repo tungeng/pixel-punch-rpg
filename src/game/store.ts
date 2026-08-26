@@ -280,13 +280,13 @@ function drawCountFor(heroId: string, relics: string[]): number {
  * so their damage window still closes fights.
  */
 const HERO_PRESSURE: Record<string, number> = {
-  mercy: 1.08,
+  mercy: 1.0,
   moira: 1.12,
   reinhardt: 0.93,
   tracer: 0.95,
-  genji: 0.8,
-  junkrat: 0.9,
-  doomfist: 0.88,
+  genji: 0.88,
+  junkrat: 0.82,
+  doomfist: 1.0,
 };
 
 const HERO_AGGRO: Record<string, number> = {

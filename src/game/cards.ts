@@ -134,11 +134,11 @@ export const NEUTRAL_EXPANSION: Record<string, CardDef> = {
 
 Object.assign(CARDS, NEUTRAL_EXPANSION);
 
+// Reward pools no longer offer strictly-worse copies of starter cards.
+// Reinforce/Strike/Field Kit still exist in starting decks, but as draft
+// options they were dead picks that made reward screens feel like filler.
 export const NEUTRAL_POOL = [
-  "n_block",
-  "n_strike",
   "n_vuln",
-  "n_heal",
   "n_focus",
   "n_power",
   ...Object.keys(NEUTRAL_EXPANSION),
