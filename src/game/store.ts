@@ -138,7 +138,7 @@ export interface GameState {
     /** leaderboard display name, asked for once */
     playerName: string;
     /** hero ids that have killed at least one boss (Bastion mastery unlock) */
-    bossHeroes: string[];
+    bossHeroes?: string[];
   };
   // run
   inRun: boolean;
@@ -2185,8 +2185,8 @@ function handleCombatWin(set: any, get: () => GameState) {
     clutch: s.runStats.clutch || (c.hp > 0 && c.hp <= Math.max(5, Math.ceil(c.maxHp * 0.08))),
   };
   set({ runStats });
-  if (c.isBoss && !s.meta.bossHeroes.includes(s.heroId)) {
-    const meta = { ...s.meta, bossHeroes: [...s.meta.bossHeroes, s.heroId] };
+  if (c.isBoss && !(s.meta.bossHeroes ?? []).includes(s.heroId)) {
+    const meta = { ...s.meta, bossHeroes: [...(s.meta.bossHeroes ?? []), s.heroId] };
     set({ meta });
     saveMeta(meta);
   }
