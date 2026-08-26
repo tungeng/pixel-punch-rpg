@@ -235,6 +235,11 @@ function applyEnemyDamage(
   let dmg = base + c.strength;
   if (c.weak > 0) dmg = Math.floor(dmg * 0.75);
   if (enemy.vulnerable > 0) dmg = Math.floor(dmg * 1.5);
+  // formation: a living Conduit dampens damage dealt to its allies
+  const dampened =
+    enemy.trait !== "conduit" &&
+    c.enemies.some((e) => !e.isDead && e.uid !== enemy.uid && e.trait === "conduit");
+  if (dampened) dmg = Math.ceil(dmg * 0.65);
   dmg = Math.max(0, dmg);
   let remaining = dmg;
   if (enemy.block > 0 && !ignoreBlock) {
