@@ -8,6 +8,7 @@
 import { useGame, computeScore, type GameState } from "./store";
 import { STARTER_HEROES, UNLOCKABLE_HEROES } from "./heroes";
 import { ALL_RELIC_IDS } from "./relics";
+import { AUGMENTS } from "./progression";
 
 export const ALL_HEROES = [...STARTER_HEROES, ...UNLOCKABLE_HEROES];
 
@@ -36,6 +37,15 @@ export interface RunResult {
   augments: string[];
   contractsCompleted: number;
   rewardsSkipped: number;
+  treasureBreaches: number;
+  treasureSalvages: number;
+  cardsAdded: number;
+  cardsRemoved: number;
+  cardsUpgraded: number;
+  shopsVisited: number;
+  restsVisited: number;
+  elitesVisited: number;
+  bossKills: number;
   error?: string;
 }
 
@@ -43,6 +53,39 @@ interface BotOpts {
   /** unlock everything (default) or use specific meta */
   meta?: GameState["meta"];
   fullUnlock?: boolean;
+  policy?: "balanced" | "lean" | "greedy" | "risk";
+}
+
+function seedRoll(seed: string, salt: number): number {
+  let h = 2166136261 ^ salt;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 10000) / 10000;
+}
+
+function cardScore(card: { id: string; type: string; cost: number; rarity: string; damage?: number; block?: number; heal?: number; draw?: number; strength?: number; vulnerable?: number; weak?: number; exhaust?: boolean }, hero: string, counts: Record<string, number>, deckSize: number, policy: NonNullable<BotOpts["policy"]>): number {
+  let score = 0;
+  score += (card.damage ?? 0) * (card.type === "attack" ? 1.2 : 0.65);
+  score += (card.block ?? 0) * 0.72;
+  score += (card.heal ?? 0) * 0.9;
+  score += (card.draw ?? 0) * 4.2;
+  score += (card.strength ?? 0) * 8;
+  score += (card.vulnerable ?? 0) * 4;
+  score += (card.weak ?? 0) * 3;
+  score += card.rarity === "rare" ? 8 : card.rarity === "uncommon" ? 4 : 0;
+  if (card.exhaust) score += 2;
+  score -= card.cost * 2.5;
+  score -= (counts[card.id] ?? 0) * (policy === "lean" ? 12 : 8);
+  if (deckSize > 26 && card.rarity === "common") score -= 6;
+  if (policy === "greedy") score += card.rarity === "rare" ? 6 : 2;
+  if (policy === "lean") score -= deckSize > 22 ? 5 : 0;
+  if (hero === "genji" && card.cost === 0) score += 4;
+  if (hero === "tracer" && (card.draw ?? 0) > 0) score += 3;
+  if (hero === "mercy" && ((card.heal ?? 0) > 0 || (card.weak ?? 0) > 0)) score += 3;
+  if (hero === "reinhardt" && ((card.block ?? 0) > 0 || card.id.startsWith("rein_"))) score += 3;
+  return score;
 }
 
 export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): RunResult {
@@ -86,6 +129,15 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
     augments: [],
     contractsCompleted: 0,
     rewardsSkipped: 0,
+    treasureBreaches: 0,
+    treasureSalvages: 0,
+    cardsAdded: 0,
+    cardsRemoved: 0,
+    cardsUpgraded: 0,
+    shopsVisited: 0,
+    restsVisited: 0,
+    elitesVisited: 0,
+    bossKills: 0,
   };
 
   let steps = 0;
@@ -135,12 +187,24 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         if (choices.length === 0) {
           s.toMap();
         } else {
-          s.chooseStartingRelic(choices[Math.floor(Math.random() * choices.length)]!);
+          const idx = Math.floor(seedRoll(seed, 11) * choices.length);
+          s.chooseStartingRelic(choices[idx]!);
         }
         break;
       }
       case "augment_choice": {
-        const choice = s.augmentChoices[res.augments.length % Math.max(1, s.augmentChoices.length)];
+        const styleOrder = opts.policy === "risk"
+          ? ["burst", "engine", "tempo", "survival"]
+          : opts.policy === "lean"
+            ? ["engine", "survival", "tempo", "burst"]
+            : ["engine", "tempo", "survival", "burst"];
+        const choice = [...s.augmentChoices].sort((a, b) => {
+          const aa = AUGMENTS[a];
+          const bb = AUGMENTS[b];
+          const pa = aa ? styleOrder.indexOf(aa.style) : 99;
+          const pb = bb ? styleOrder.indexOf(bb.style) : 99;
+          return pa - pb;
+        })[0];
         if (choice) s.chooseAugment(choice);
         else s.toMap();
         break;
@@ -154,14 +218,20 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
           res.error = "soft-lock: no map options";
           return res;
         }
+        const preferRisk = opts.policy === "risk" || (opts.policy === "greedy" && s.hp > s.maxHp * 0.62);
         const pick =
-          options.find((n) => n.type === "rest" && s.hp < s.maxHp * 0.55) ??
+          options.find((n) => n.type === "rest" && s.hp < s.maxHp * (opts.policy === "risk" ? 0.38 : 0.55)) ??
+          options.find((n) => n.type === "elite" && preferRisk && s.hp > s.maxHp * 0.62) ??
+          options.find((n) => n.type === "treasure" && opts.policy !== "lean") ??
+          options.find((n) => n.type === "shop" && s.gold > (opts.policy === "lean" ? 240 : 170)) ??
+          options.find((n) => n.type === "elite" && s.hp > s.maxHp * 0.78) ??
           options.find((n) => n.type === "treasure") ??
-          options.find((n) => n.type === "shop" && s.gold > 180) ??
-          options.find((n) => n.type === "elite" && s.hp > s.maxHp * 0.8) ??
           options[0]!;
         lastNodeType = pick.type;
         if (pick.type === "combat" || pick.type === "elite" || pick.type === "boss") res.combats++;
+        if (pick.type === "elite") res.elitesVisited++;
+        if (pick.type === "shop") res.shopsVisited++;
+        if (pick.type === "rest") res.restsVisited++;
         s.enterNode(pick.id);
         break;
       }
@@ -256,10 +326,21 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         if (choices.length > 0) {
           const counts: Record<string, number> = {};
           for (const cd of s.deck) counts[cd.id] = (counts[cd.id] ?? 0) + 1;
-          const sorted = [...choices].sort(
-            (a, b) => (counts[a.id] ?? 0) - (counts[b.id] ?? 0),
-          );
-          s.pickRewardCard(sorted[0]!.id);
+          const scored = [...choices]
+            .map((card) => ({ card, score: cardScore(card, s.heroId, counts, s.deck.length, opts.policy ?? "balanced") }))
+            .sort((a, b) => b.score - a.score);
+          const best = scored[0]!;
+          const skipThreshold = opts.policy === "greedy" ? -999 : opts.policy === "lean" ? 18 : s.deck.length > 30 ? 20 : 12;
+          if (best.score < skipThreshold) {
+            res.rewardsSkipped++;
+            const before = s.deck.filter((c) => c.upgraded).length;
+            s.skipReward();
+            const after = g().deck.filter((c) => c.upgraded).length;
+            if (after > before) res.cardsUpgraded++;
+          } else {
+            s.pickRewardCard(best.card.id);
+            res.cardsAdded++;
+          }
         } else {
           res.rewardsSkipped++;
           s.skipReward();
@@ -273,8 +354,13 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         } else {
           const bloat = s.deck.find((c) => c.id === "n_strike" || c.id === "n_block");
           const up = s.deck.find((c) => !c.upgraded);
-          if (bloat && s.deck.length > 10) s.restRecycle(bloat.uid);
-          else if (up) s.restUpgrade(up.uid);
+          if (bloat && s.deck.length > 10) {
+            s.restRecycle(bloat.uid);
+            res.cardsRemoved++;
+          } else if (up) {
+            s.restUpgrade(up.uid);
+            res.cardsUpgraded++;
+          }
           else {
             res.restHeals++;
             s.restHeal();
@@ -287,14 +373,30 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         const relicIdx = s.shopRelics.findIndex((r) => !!r);
         const bloat = s.deck.find((c) => c.id === "n_strike" || c.id === "n_block");
         if (relicIdx >= 0) s.buyRelic(relicIdx);
-        else if (bloat && s.gold >= 120 && s.deck.length > 14) s.buyRemove(bloat.uid);
-        else if (s.shopCards.length > 0 && s.gold >= 160) s.buyCard(0);
+        else if (bloat && s.gold >= 120 && s.deck.length > 14) {
+          s.buyRemove(bloat.uid);
+          if (g().deck.length < s.deck.length) res.cardsRemoved++;
+        }
+        else if (s.shopCards.length > 0 && s.gold >= 160) {
+          const counts: Record<string, number> = {};
+          for (const cd of s.deck) counts[cd.id] = (counts[cd.id] ?? 0) + 1;
+          const scored = s.shopCards.map((card, i) => ({ i, score: cardScore(card, s.heroId, counts, s.deck.length, opts.policy ?? "balanced") }));
+          scored.sort((a, b) => b.score - a.score);
+          const buy = scored[0];
+          if (buy && buy.score > 20) {
+            s.buyCard(buy.i);
+            if (g().deck.length > s.deck.length) res.cardsAdded++;
+          }
+        }
         if (g().gold === goldBefore) s.leaveShop();
         break;
       }
 
       case "treasure": {
-        s.takeTreasure(s.hp > s.maxHp * 0.55 ? "breach" : "salvage");
+        const mode = opts.policy === "risk" || s.hp > s.maxHp * 0.62 ? "breach" : "salvage";
+        if (mode === "breach") res.treasureBreaches++;
+        else res.treasureSalvages++;
+        s.takeTreasure(mode);
         break;
       }
       default:
@@ -329,6 +431,15 @@ export interface Report {
   augmentUse: Record<string, number>;
   avgContractsCompleted: number;
   avgRewardsSkipped: number;
+  avgTreasureBreaches: number;
+  avgTreasureSalvages: number;
+  avgCardsAdded: number;
+  avgCardsRemoved: number;
+  avgCardsUpgraded: number;
+  avgShopsVisited: number;
+  avgRestsVisited: number;
+  avgElitesVisited: number;
+  avgBossKills: number;
 }
 
 export function summarize(results: RunResult[]): Report {
@@ -390,5 +501,14 @@ export function summarize(results: RunResult[]): Report {
     augmentUse,
     avgContractsCompleted: results.reduce((a, r) => a + r.contractsCompleted, 0) / results.length,
     avgRewardsSkipped: results.reduce((a, r) => a + r.rewardsSkipped, 0) / results.length,
+    avgTreasureBreaches: results.reduce((a, r) => a + r.treasureBreaches, 0) / results.length,
+    avgTreasureSalvages: results.reduce((a, r) => a + r.treasureSalvages, 0) / results.length,
+    avgCardsAdded: results.reduce((a, r) => a + r.cardsAdded, 0) / results.length,
+    avgCardsRemoved: results.reduce((a, r) => a + r.cardsRemoved, 0) / results.length,
+    avgCardsUpgraded: results.reduce((a, r) => a + r.cardsUpgraded, 0) / results.length,
+    avgShopsVisited: results.reduce((a, r) => a + r.shopsVisited, 0) / results.length,
+    avgRestsVisited: results.reduce((a, r) => a + r.restsVisited, 0) / results.length,
+    avgElitesVisited: results.reduce((a, r) => a + r.elitesVisited, 0) / results.length,
+    avgBossKills: results.reduce((a, r) => a + r.bossKills, 0) / results.length,
   };
 }

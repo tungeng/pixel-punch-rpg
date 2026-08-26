@@ -12,6 +12,7 @@ import { ALL_RELIC_IDS } from "./relics";
 const RUNS = Number(process.env["SIM_RUNS"] ?? 0);
 const OUT = process.env["SIM_OUT"] ?? "/tmp/overtung-sim.json";
 const TAG = process.env["SIM_TAG"] ?? "batch";
+const POLICY = (process.env["SIM_POLICY"] ?? "balanced") as "balanced" | "lean" | "greedy" | "risk";
 const CHUNK_SIZE = 500;
 
 describe.skipIf(RUNS <= 0)("mass sim", () => {
@@ -34,6 +35,7 @@ describe.skipIf(RUNS <= 0)("mass sim", () => {
       const hero = unlockedHeroes[i % unlockedHeroes.length]!;
       
       results.push(simulateRun(hero, `${TAG}-${i}`, {
+        policy: POLICY,
         meta: {
             unlockedHeroes,
             unlockedRelics,
@@ -61,6 +63,9 @@ describe.skipIf(RUNS <= 0)("mass sim", () => {
       `  Avg Min HP %: ${(report.avgMinHpPct * 100).toFixed(1)}%\n` +
       `  Avg Dmg Taken: ${report.avgTotalDamageTaken.toFixed(1)}\n` +
       `  Avg Credits: ${report.avgCreditsEarned.toFixed(0)}\n` +
+      `  Avg Cards Added/Removed/Upgraded: ${report.avgCardsAdded.toFixed(1)}/${report.avgCardsRemoved.toFixed(1)}/${report.avgCardsUpgraded.toFixed(1)}\n` +
+      `  Avg Treasure Breach/Salvage: ${report.avgTreasureBreaches.toFixed(1)}/${report.avgTreasureSalvages.toFixed(1)}\n` +
+      `  Avg Boss Kills: ${report.avgBossKills.toFixed(1)}\n` +
       `  Errors: ${report.errors.length}\n`
     );
   }, 3_600_000);

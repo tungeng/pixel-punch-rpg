@@ -1174,13 +1174,14 @@ export const useGame = create<GameState>((set, get) => ({
   useUltimate: (targetUid) => {
     const s = get();
     const c = s.combat;
-    if (!c || !c.active || c.ultCharge < 100) return;
+    const freeUlt = !!c && s.relics.includes("null_sector_core") && !c.freeUltUsed;
+    if (!c || !c.active || (c.ultCharge < 100 && !freeUlt)) return;
     const hero = getHero(s.heroId);
     const ult = { ...hero.ultimate, uid: `ult_${c.turn}`, upgraded: false } as CardInstance;
+    const chargeBefore = c.ultCharge;
     c.ultCharge = 0;
     const living = c.enemies.filter((e) => !e.isDead);
     const needsTarget = ((ult.damage ?? 0) > 0 || !!ult.beam) && !ult.aoe && living.length > 1;
-    const freeUlt = s.relics.includes("null_sector_core") && !c.freeUltUsed;
     if (needsTarget && !targetUid) {
       resolveCard(set, get, ult, living[0]?.uid ?? null, true);
     } else {
@@ -1190,8 +1191,8 @@ export const useGame = create<GameState>((set, get) => ({
       const after = get().combat;
       if (after) {
         after.freeUltUsed = true;
-        after.ultCharge = 100;
-        pushLog(after, "Null Sector Core refunds the Ultimate.");
+        after.ultCharge = chargeBefore;
+        pushLog(after, "Null Sector Core fires the Ultimate for free.");
         set({ combat: { ...after } });
       }
     }
