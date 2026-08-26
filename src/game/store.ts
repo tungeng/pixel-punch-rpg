@@ -804,7 +804,7 @@ export const useGame = create<GameState>((set, get) => ({
       regen: 0,
       poisonBoost: 0,
       armor: 0,
-      stance: s.heroId === "bastion" ? "recon" : null,
+      stance: s.heroId === "bastion" ? "sentry" : null,
       stanceSwaps: 0,
       ragePaid: 0,
       thorns: 0,
