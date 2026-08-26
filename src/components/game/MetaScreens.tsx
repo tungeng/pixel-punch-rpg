@@ -8,7 +8,8 @@ import { PixelButton } from "./PixelButton";
 import { Bar } from "./Bar";
 import { motion } from "motion/react";
 import { RelicTray } from "./RelicTray";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
+import type { MotionStyle } from "motion/react";
 
 export function RewardScreen() {
   const choices = useGame((s) => s.rewardChoices);
@@ -41,7 +42,7 @@ export function RewardScreen() {
               border: `3px solid ${relic.color}`,
               boxShadow: `0 0 24px -6px ${relic.color}`,
               "--tier-color": RELIC_TIER_COLOR[relic.tier ?? "common"],
-            } as CSSProperties
+            } as unknown as MotionStyle
           }
         >
           <div className="breathe-glow shrink-0">
@@ -132,7 +133,7 @@ export function TreasureScreen() {
           className={`mb-4 flex flex-col items-center gap-3 p-3 ${
             isExaltedTier(relic?.tier) ? "relic-exalted" : ""
           } ${relic?.tier === "mythic" ? "relic-mythic" : ""}`}
-          style={{ "--tier-color": RELIC_TIER_COLOR[relic?.tier ?? "common"] } as CSSProperties}
+          style={{ "--tier-color": RELIC_TIER_COLOR[relic?.tier ?? "common"] } as unknown as MotionStyle}
         >
           <div className="scale-[1.8]">
             <RelicIcon id={pending} />
@@ -221,7 +222,7 @@ export function ShopScreen() {
                 {
                   border: `2px solid ${RELICS[r]?.color ?? "#07060c"}`,
                   "--tier-color": RELIC_TIER_COLOR[RELICS[r]?.tier ?? "common"],
-                } as CSSProperties
+                } as unknown as MotionStyle
               }
             >
               <RelicIcon id={r} />
@@ -432,7 +433,7 @@ export function RelicChoiceScreen() {
                   border: `3px solid ${tierColor}`,
                   boxShadow: `0 0 16px -6px ${relic.color}`,
                   "--tier-color": tierColor,
-                } as CSSProperties
+                } as unknown as MotionStyle
               }
             >
               <RelicIcon id={id} />

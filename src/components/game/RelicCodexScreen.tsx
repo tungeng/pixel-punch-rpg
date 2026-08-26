@@ -1,4 +1,4 @@
-import type React from "react";
+import type { MotionStyle } from "motion/react";
 import { motion } from "motion/react";
 import { useGame } from "@/game/store";
 import { ALL_RELIC_IDS, RELICS, RELIC_TIER_COLOR, relicUnlockCost, isExaltedTier } from "@/game/relics";
@@ -63,7 +63,7 @@ export function RelicCodexScreen({ onClose }: { onClose: () => void }) {
                     borderColor: isUnlocked ? tierColor : "#2a2740",
                     background: isUnlocked ? "#0b0a12" : "#0a0912",
                     "--tier-color": tierColor,
-                  } as React.CSSProperties
+                  } as unknown as MotionStyle
                 }
               >
                 <div className="relative shrink-0">
