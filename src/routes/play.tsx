@@ -5,7 +5,7 @@ import { Heart, Zap, Star, Lock } from "lucide-react";
 import { useGame } from "@/game/store";
 import { HEROES, STARTER_HEROES, UNLOCKABLE_HEROES } from "@/game/heroes";
 import { PixelButton } from "@/components/game/PixelButton";
-import { MenuShell, SectionTitle } from "@/components/game/MenuShell";
+import { MenuShell, SectionTitle, Readout } from "@/components/game/MenuShell";
 
 export const Route = createFileRoute("/play")({
   head: () => ({
