@@ -9,6 +9,7 @@ import type { CardInstance } from "@/game/types";
 import { RelicTray } from "./RelicTray";
 import { HeroVfx, BEAM_HEROES } from "./HeroVfx";
 import { UltimateAnnounce } from "./UltimateAnnounce";
+import { KeywordTips } from "./KeywordTips";
 
 /**
  * Picks which of the hero's three signature attack animations to play:
@@ -193,6 +194,9 @@ export function CombatScreen() {
       <div className="absolute left-2 top-2 z-40 w-40">
         <RelicTray size={20} />
       </div>
+
+      {/* first-encounter keyword tutorials */}
+      <KeywordTips />
 
       {/* arena — enemies centered in the remaining space */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">

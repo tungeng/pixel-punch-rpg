@@ -196,7 +196,11 @@ export type EnemyTrait =
   | "rampage" // gains strength each turn
   | "leech" // heals when it lands an attack
   | "curse" // applies weak + vulnerable at battle start
-  | "regen"; // heals a flat amount each turn
+  | "regen" // heals a flat amount each turn
+  // ---- formation traits: these enemies change how the whole fight is solved ----
+  | "guardian" // shields its most wounded ally every turn
+  | "mender" // heals every other enemy each turn — kill it first
+  | "conduit"; // allies take reduced damage while it lives
 
 export interface EnemyDef {
   id: string;
