@@ -499,10 +499,12 @@ export const useGame = create<GameState>((set, get) => ({
     const hero = getHero(s.heroId);
     let enemies: EnemyInstance[] = [];
     let isBoss = false;
+    let bossIntro: string | null = null;
     if (nodeType === "boss") {
       const def = BOSSES[ACT_BOSSES[s.act] ?? ACT_BOSSES[ACT_BOSSES.length - 1]!]!;
       enemies = [spawnEnemy(def, rng, `e_${Date.now()}`)];
       isBoss = true;
+      bossIntro = def.introLine ?? null;
     } else if (nodeType === "elite") {
       const elitePool = elitePoolFor(s.act);
       const id = rng.pick(elitePool);
@@ -1667,6 +1669,7 @@ function handleCombatWin(set: any, get: () => GameState) {
         rewardChoices: choices,
         rewardGold: g,
         combat: null,
+        bossOutro: BOSSES[c.enemies[0]?.defId ?? ""]?.deathLine ?? null,
       });
       return;
     }
