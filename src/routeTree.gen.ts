@@ -10,11 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CreditsRouteImport } from './routes/credits'
+import { Route as HeroesRouteImport } from './routes/heroes'
+import { Route as PlayRouteImport } from './routes/play'
 import { Route as RunRouteImport } from './routes/run'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreditsRoute = CreditsRouteImport.update({
+  id: '/credits',
+  path: '/credits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HeroesRoute = HeroesRouteImport.update({
+  id: '/heroes',
+  path: '/heroes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayRoute = PlayRouteImport.update({
+  id: '/play',
+  path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RunRoute = RunRouteImport.update({
@@ -25,27 +43,39 @@ const RunRoute = RunRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/credits': typeof CreditsRoute
+  '/heroes': typeof HeroesRoute
+  '/play': typeof PlayRoute
   '/run': typeof RunRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/credits': typeof CreditsRoute
+  '/heroes': typeof HeroesRoute
+  '/play': typeof PlayRoute
   '/run': typeof RunRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/credits': typeof CreditsRoute
+  '/heroes': typeof HeroesRoute
+  '/play': typeof PlayRoute
   '/run': typeof RunRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/run'
+  fullPaths: '/' | '/credits' | '/heroes' | '/play' | '/run'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/run'
-  id: '__root__' | '/' | '/run'
+  to: '/' | '/credits' | '/heroes' | '/play' | '/run'
+  id: '__root__' | '/' | '/credits' | '/heroes' | '/play' | '/run'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreditsRoute: typeof CreditsRoute
+  HeroesRoute: typeof HeroesRoute
+  PlayRoute: typeof PlayRoute
   RunRoute: typeof RunRoute
 }
 
@@ -56,6 +86,27 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/credits': {
+      id: '/credits'
+      path: '/credits'
+      fullPath: '/credits'
+      preLoaderRoute: typeof CreditsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/heroes': {
+      id: '/heroes'
+      path: '/heroes'
+      fullPath: '/heroes'
+      preLoaderRoute: typeof HeroesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/play': {
+      id: '/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/run': {
@@ -70,6 +121,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreditsRoute: CreditsRoute,
+  HeroesRoute: HeroesRoute,
+  PlayRoute: PlayRoute,
   RunRoute: RunRoute,
 }
 export const routeTree = rootRouteImport
