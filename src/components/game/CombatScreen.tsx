@@ -921,12 +921,57 @@ function EnemyView({
         <div className="text-pixel absolute -top-1 text-[10px] text-destructive">✖</div>
       )}
 
-      <div className="mt-1 w-28">
+      {/* kill confirmation — the moment reads as a result, not just a vanished sprite */}
+      <AnimatePresence>
+        {slain && (
+          <motion.div
+            key="slain"
+            initial={{ opacity: 0, scale: 0.7, y: 0 }}
+            animate={{ opacity: [0, 1, 1, 0], scale: 1.1, y: -18 }}
+            transition={{ duration: isBoss ? 1.5 : 0.9, times: [0, 0.15, 0.7, 1] }}
+            onAnimationComplete={() => setSlain(false)}
+            className="text-pixel pointer-events-none absolute top-8 z-40 whitespace-nowrap px-1 text-[10px]"
+            style={{
+              color: "#07060c",
+              background: isBoss ? "#ff5cf0" : "#ffcc4d",
+              border: "2px solid #07060c",
+            }}
+          >
+            {isBoss ? "BOSS DOWN" : isElite ? "ELITE DOWN" : "ELIMINATED"}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* nameplate: who this is, and how dangerous, before you read the bar */}
+      <div className="mt-1 flex w-28 items-center justify-between gap-1">
+        <span
+          className="text-pixel truncate text-[6.5px]"
+          style={{ color: isBoss ? "#ff5cf0" : isElite ? "#ffb020" : "#cbd5e1" }}
+        >
+          {enemy.name}
+        </span>
+        {(isBoss || isElite) && (
+          <span
+            className="text-pixel shrink-0 px-0.5 text-[6px] text-black"
+            style={{ background: isBoss ? "#ff5cf0" : "#ffb020" }}
+          >
+            {isBoss ? "BOSS" : "ELITE"}
+          </span>
+        )}
+      </div>
+
+      <div className="w-28">
         <Bar
           value={enemy.hp}
           max={enemy.maxHp}
-          color="linear-gradient(90deg,#ff3b3b,#ff7a45)"
-          height={20}
+          color={
+            isBoss
+              ? "linear-gradient(90deg,#ff2b8f,#ff7a45)"
+              : isElite
+                ? "linear-gradient(90deg,#ff7a45,#ffb020)"
+                : "linear-gradient(90deg,#ff3b3b,#ff7a45)"
+          }
+          height={isBoss ? 22 : 20}
           label={`${enemy.hp}/${enemy.maxHp}`}
         />
       </div>
@@ -947,9 +992,10 @@ function EnemyView({
           .filter((f) => f.target === enemyUid)
           .slice(-4)
           .map((f) => (
-            <FloatText key={f.id} text={f.text} kind={f.kind} />
+            <FloatText key={f.id} text={f.text} kind={f.kind} of={maxHp} />
           ))}
       </AnimatePresence>
+
     </motion.button>
   );
 }
