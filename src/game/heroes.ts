@@ -70,7 +70,7 @@ export const HEROES: Record<string, HeroDef> = {
     id: "genji",
     name: "Genji",
     role: "Combo",
-    maxHp: 68,
+    maxHp: 74,
     color: "#22c55e",
     asset: genjiImg,
     passive: "The body moves before the mind asks. Draw 1 extra card each turn, and every Attack after the first in a turn strikes for +4.",
