@@ -17,9 +17,11 @@ export function Bar({
   ghost?: boolean;
 }) {
   const ratio = Math.max(0, Math.min(1, value / Math.max(1, max)));
-  const [w, setW] = useState(0);
-  const [trail, setTrail] = useState(0);
-  const prev = useRef(0);
+  // start already filled so a fresh bar never flashes its damage trail
+  const [w, setW] = useState(ratio);
+  const [trail, setTrail] = useState(ratio);
+  const prev = useRef(ratio);
+
 
   useEffect(() => {
     const t = setTimeout(() => setW(ratio), 30);
