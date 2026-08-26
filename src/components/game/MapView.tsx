@@ -17,7 +17,7 @@ type NodeMeta = {
 
 const NODE: Record<string, NodeMeta> = {
   combat: {
-    glyph: "⚔",
+    glyph: "F",
     color: "#ff7a45",
     label: "FIGHT",
     title: "HOSTILE ZONE",
@@ -26,7 +26,7 @@ const NODE: Record<string, NodeMeta> = {
     reward: "Gold, a card pick, contract progress.",
   },
   elite: {
-    glyph: "☠",
+    glyph: "E",
     color: "#c47bff",
     label: "ELITE",
     title: "ELITE PATROL",
@@ -53,7 +53,7 @@ const NODE: Record<string, NodeMeta> = {
     reward: "Buy cards and relics, pay to delete a card.",
   },
   treasure: {
-    glyph: "?",
+    glyph: "C",
     color: "#54a8ff",
     label: "CACHE",
     title: "SEALED CACHE",
@@ -62,7 +62,7 @@ const NODE: Record<string, NodeMeta> = {
     reward: "Gold, a relic, or a gamble for more.",
   },
   boss: {
-    glyph: "☠",
+    glyph: "B",
     color: "#ff3b3b",
     label: "BOSS",
     title: "ACT BOSS",
@@ -129,16 +129,20 @@ export function MapView() {
   // Everything downstream of the inspected node, so a branch reads as a route.
   const preview = useMemo(() => {
     if (selected == null) return new Set<number>();
+    // Only two floors ahead. Full-depth preview lights up the whole map and reads as noise.
     const seen = new Set<number>([selected]);
-    const queue = [selected];
-    while (queue.length) {
-      const node = byId.get(queue.shift()!);
-      node?.next.forEach((id) => {
-        if (!seen.has(id)) {
-          seen.add(id);
-          queue.push(id);
-        }
-      });
+    let frontier = [selected];
+    for (let depth = 0; depth < 2; depth++) {
+      const nextFrontier: number[] = [];
+      for (const id of frontier) {
+        byId.get(id)?.next.forEach((t) => {
+          if (!seen.has(t)) {
+            seen.add(t);
+            nextFrontier.push(t);
+          }
+        });
+      }
+      frontier = nextFrontier;
     }
     return seen;
   }, [selected, byId]);
