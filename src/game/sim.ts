@@ -281,7 +281,10 @@ export function simulateRun(hero: string, seed: string, opts: BotOpts = {}): Run
         }
 
         const playable = c.hand.filter(
-          (card) => effectiveCost(card, c) <= c.energy && card.type !== c.hackedType,
+          (card) =>
+            effectiveCost(card, c) <= c.energy &&
+            card.type !== c.hackedType &&
+            (!card.goldCost || s.gold >= card.goldCost),
         );
         if (playable.length > 0) {
           const setup = playable.find(
