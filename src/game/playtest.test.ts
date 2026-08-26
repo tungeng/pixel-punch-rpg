@@ -30,6 +30,7 @@ function simulateRun(hero: string, seed: string): RunResult {
       unlockedRelics: [...ALL_RELIC_IDS],
       credits: 0,
       bestFloor: 0,
+      playerName: "sim",
       totalRuns: 0,
       upgrades: {},
     },

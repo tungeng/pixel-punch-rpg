@@ -376,6 +376,8 @@ export const BOSSES: Record<string, EnemyDef> = {
     asset: reaperImg,
     hp: [120, 120],
     isBoss: true,
+    introLine: "Death walks among you. I am the reaping.",
+    deathLine: "You... only delayed it. Death is patient.",
     mechanic: "wraith",
     mechanicName: "WRAITH FORM",
     moves: [
@@ -391,6 +393,8 @@ export const BOSSES: Record<string, EnemyDef> = {
     asset: widowImg,
     hp: [150, 150],
     isBoss: true,
+    introLine: "One shot. One kill. Hold still.",
+    deathLine: "Cherie... you were... a fine target.",
     mechanic: "venom",
     mechanicName: "VENOM MINE",
     moves: [
@@ -406,6 +410,8 @@ export const BOSSES: Record<string, EnemyDef> = {
     asset: sigmaImg,
     hp: [185, 185],
     isBoss: true,
+    introLine: "Fascinating. Your timeline is an unstable variable. Let us correct it.",
+    deathLine: "The equation... resolves without me. Curious.",
     mechanic: "gravity",
     mechanicName: "GRAVITIC FLUX",
     moves: [
@@ -421,6 +427,8 @@ export const BOSSES: Record<string, EnemyDef> = {
     asset: sombraImg,
     hp: [230, 230],
     isBoss: true,
+    introLine: "Boop. Everything has a weakness, and I already found yours.",
+    deathLine: "Ugh. Fine. You win this one, jefe. Apagando las luces.",
     mechanic: "stealth",
     mechanicName: "STEALTH PROTOCOL",
     moves: [

@@ -7,6 +7,7 @@ import { motion } from "motion/react";
 import { Heart, Zap, Star, Lock } from "lucide-react";
 import { ArchiveScreen } from "@/components/game/ArchiveScreen";
 import { RelicCodexScreen } from "@/components/game/RelicCodexScreen";
+import { LeaderboardScreen } from "@/components/game/LeaderboardScreen";
 import { CabinetShell } from "@/components/game/CabinetShell";
 
 export const Route = createFileRoute("/")({
@@ -37,6 +38,7 @@ function Index() {
   const [seed, setSeed] = useState("");
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [codexOpen, setCodexOpen] = useState(false);
+  const [boardOpen, setBoardOpen] = useState(false);
   const unlockCost = 150;
 
   const all = [...STARTER_HEROES, ...UNLOCKABLE_HEROES];
@@ -178,9 +180,13 @@ function Index() {
           <PixelButton onClick={() => setCodexOpen(true)} color="secondary" className="w-full">
             ✦ CODEX
           </PixelButton>
+          <PixelButton onClick={() => setBoardOpen(true)} color="secondary" className="col-span-2 w-full">
+            ★ LEADERBOARD
+          </PixelButton>
         </div>
         {archiveOpen && <ArchiveScreen onClose={() => setArchiveOpen(false)} />}
         {codexOpen && <RelicCodexScreen onClose={() => setCodexOpen(false)} />}
+        {boardOpen && <LeaderboardScreen onClose={() => setBoardOpen(false)} />}
       </div>
     </div>
     </CabinetShell>
