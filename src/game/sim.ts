@@ -138,7 +138,7 @@ function cardScore(
   if (hero === "tracer" && (card.draw ?? 0) > 0) score += 3;
   if (hero === "mercy" && ((card.heal ?? 0) > 0 || (card.weak ?? 0) > 0)) score += 3;
   if (hero === "reinhardt" && ((card.block ?? 0) > 0 || (card.armor ?? 0) > 0)) score += 3;
-  if (hero === "bastion" && (card.setStance || card.stanceCycle || (card.damagePerStanceSwap ?? 0) > 0)) score += 5;
+  if (hero === "bastion" && ((card as any).setStance || (card as any).stanceCycle || ((card as any).damagePerStanceSwap ?? 0) > 0)) score += 5;
   if (hero === "moira" && ((card.poison ?? 0) > 0 || (card.poisonBoost ?? 0) > 0)) score += 4;
   return score;
 }
