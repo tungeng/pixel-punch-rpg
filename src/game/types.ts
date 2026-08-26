@@ -209,6 +209,10 @@ export interface EnemyDef {
   hp: [number, number];
   isBoss?: boolean;
   isElite?: boolean;
+  /** Boss taunt shown when the fight opens. */
+  introLine?: string;
+  /** Boss last words shown when it dies. */
+  deathLine?: string;
   trait?: EnemyTrait;
   traitName?: string;
   mechanic?: BossMechanic;
