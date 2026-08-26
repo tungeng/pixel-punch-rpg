@@ -434,6 +434,7 @@ export interface Report {
   winRate: number;
   avgFloors: number;
   avgTurnsPerCombat: number;
+  avgTurnsByNode: Record<string, number>;
   errors: string[];
   perHero: Record<string, { runs: number; wins: number; winRate: number; avgFloors: number }>;
   deathsByAct: Record<number, number>;
