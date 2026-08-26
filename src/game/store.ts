@@ -1240,6 +1240,7 @@ export const useGame = create<GameState>((set, get) => ({
     const relicId = s.shopRelics[index];
     if (!relicId) return;
     if (s.relics.includes(relicId)) return;
+    if (s.relics.length >= MAX_RELICS) return;
     const cost = relicPrice(relicId);
     if (s.gold < cost) return;
     const relics = [...s.relics, relicId];
@@ -1812,10 +1813,11 @@ function handleCombatWin(set: any, get: () => GameState) {
   const ownedIds = new Set(s.relics);
   const unlockedIds = new Set(s.meta.unlockedRelics);
   const availRelics = ALL_RELIC_IDS.filter((r) => unlockedIds.has(r) && !ownedIds.has(r) && isDropEligible(r, true));
-  const glut = Math.max(0.2, 1 - s.relics.length * 0.09);
+  const atCap = s.relics.length >= MAX_RELICS;
+  const glut = Math.max(0.25, 1 - s.relics.length * 0.1);
   const baseDrop =
-    c.nodeType === "boss" ? 1 : c.nodeType === "elite" ? 0.7 : has("relic_scanner") ? 0.14 : 0.06;
-  const dropChance = c.nodeType === "boss" ? 1 : baseDrop * glut;
+    c.nodeType === "boss" ? 1 : c.nodeType === "elite" ? 0.8 : has("relic_scanner") ? 0.12 : 0.05;
+  const dropChance = atCap ? 0 : c.nodeType === "boss" ? 1 : baseDrop * glut;
   const droppedRelic =
     availRelics.length > 0 && rng.chance(dropChance)
       ? (pickRelicId(availRelics, rng.next(), true) ?? null)
@@ -1923,7 +1925,10 @@ function openShop(set: any, get: () => GameState, rng: Rng) {
   }
   const owned = new Set(s.relics);
   const unlockedShop = new Set(s.meta.unlockedRelics);
-  let avail = ALL_RELIC_IDS.filter((r) => unlockedShop.has(r) && !owned.has(r) && isDropEligible(r));
+  let avail =
+    s.relics.length >= MAX_RELICS
+      ? []
+      : ALL_RELIC_IDS.filter((r) => unlockedShop.has(r) && !owned.has(r) && isDropEligible(r));
   const shopRelics: string[] = [];
   for (let i = 0; i < 2; i++) {
     const id = pickRelicId(avail, rng.next());
