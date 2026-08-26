@@ -12,7 +12,7 @@ import { ALL_RELIC_IDS } from "./relics";
 const RUNS = Number(process.env["SIM_RUNS"] ?? 0);
 const OUT = process.env["SIM_OUT"] ?? "/tmp/overtung-sim.json";
 const TAG = process.env["SIM_TAG"] ?? "batch";
-const POLICY = (process.env["SIM_POLICY"] ?? "balanced") as "balanced" | "lean" | "greedy" | "risk";
+const POLICY = (process.env["SIM_POLICY"] ?? "balanced") as "balanced" | "lean" | "greedy" | "risk" | "explore";
 const CHUNK_SIZE = 500;
 
 describe.skipIf(RUNS <= 0)("mass sim", () => {
@@ -54,6 +54,30 @@ describe.skipIf(RUNS <= 0)("mass sim", () => {
     
     const report = summarize(results);
     writeFileSync(OUT, JSON.stringify(report, null, 2));
+    if (process.env["SIM_RAW"]) {
+      writeFileSync(
+        process.env["SIM_RAW"]!,
+        JSON.stringify(
+          results.map((r) => ({
+            hero: r.hero,
+            won: r.won,
+            act: r.act,
+            floors: r.floors,
+            deathNode: r.deathNode,
+            deathEnemy: r.deathEnemy,
+            relics: r.relics,
+            augments: r.augments,
+            augmentsOffered: r.augmentsOffered,
+            cardsOffered: r.cardsOffered,
+            cardsPicked: r.cardsPicked,
+            finalDeck: r.finalDeck,
+            cardsPlayed: r.cardsPlayed,
+            deckSize: r.deckSize,
+            minHpPct: r.minHpPct,
+          })),
+        ),
+      );
+    }
     
     console.log(
       `\n[${TAG}] Final Report:\n` +

@@ -8,10 +8,10 @@ export function nextUid(prefix = "c"): string {
 
 export const CARDS: Record<string, CardDef> = {
   // ---------------- TRACER (fast burst) ----------------
-  tracer_blink: { id: "tracer_blink", name: "Blink", type: "attack", cost: 1, hero: "tracer", rarity: "starter", damage: 5, draw: 1, text: "Deal 5 damage. Draw 1 card.", up: { damage: 8 } },
+  tracer_blink: { id: "tracer_blink", name: "Blink", type: "attack", cost: 1, hero: "tracer", rarity: "starter", damage: 5, draw: 1, text: "Deal 7 damage. Draw 1 card.", up: { damage: 10 } },
   tracer_pistols: { id: "tracer_pistols", name: "Pulse Pistols", type: "attack", cost: 1, hero: "tracer", rarity: "starter", damage: 4, hits: 2, text: "Deal 4 damage twice.", up: { damage: 6 } },
   tracer_recall: { id: "tracer_recall", name: "Recall", type: "skill", cost: 1, hero: "tracer", rarity: "starter", block: 3, heal: 2, text: "Gain 3 Block. Heal 2.", up: { block: 5, heal: 4 } },
-  tracer_strafe: { id: "tracer_strafe", name: "Strafe", type: "attack", cost: 0, hero: "tracer", rarity: "common", damage: 2, draw: 1, text: "Deal 2 damage. Draw 1 card.", up: { damage: 4 } },
+  tracer_strafe: { id: "tracer_strafe", name: "Strafe", type: "attack", cost: 0, hero: "tracer", rarity: "common", damage: 4, draw: 1, text: "Deal 4 damage. Draw 1 card.", up: { damage: 6 } },
   tracer_charged: { id: "tracer_charged", name: "Charged Shot", type: "attack", cost: 2, hero: "tracer", rarity: "uncommon", damage: 10, vulnerable: 1, text: "Deal 10 damage. Apply 1 Vulnerable.", up: { damage: 14, vulnerable: 2 } },
   tracer_adrenaline: { id: "tracer_adrenaline", name: "Adrenaline", type: "skill", cost: 0, hero: "tracer", rarity: "uncommon", energyGain: 2, text: "Gain 2 Energy. Exhaust.", exhaust: true, up: { energyGain: 3 } },
   tracer_hnr: { id: "tracer_hnr", name: "Hit & Run", type: "attack", cost: 1, hero: "tracer", rarity: "common", damage: 5, block: 3, text: "Deal 5 damage. Gain 3 Block.", up: { damage: 7, block: 5 } },
@@ -25,7 +25,7 @@ export const CARDS: Record<string, CardDef> = {
   mercy_blaster: { id: "mercy_blaster", name: "Caduceus Blaster", type: "attack", cost: 1, hero: "mercy", rarity: "starter", damage: 5, text: "Deal 5 damage.", up: { damage: 7 } },
   mercy_heal: { id: "mercy_heal", name: "Heal Beam", type: "skill", cost: 1, hero: "mercy", rarity: "starter", heal: 5, text: "Heal 5 HP.", up: { heal: 8 } },
   mercy_boost: { id: "mercy_boost", name: "Damage Boost", type: "skill", cost: 1, hero: "mercy", rarity: "uncommon", strength: 2, text: "Gain 2 Strength.", up: { strength: 3 } },
-  mercy_guardian: { id: "mercy_guardian", name: "Guardian Angel", type: "skill", cost: 1, hero: "mercy", rarity: "common", heal: 3, block: 5, bonusHealIfLowHp: 6, text: "Gain 5 Block. Heal 3, or 9 if below half HP.", up: { block: 7, bonusHealIfLowHp: 9 } },
+  mercy_guardian: { id: "mercy_guardian", name: "Guardian Angel", type: "skill", cost: 1, hero: "mercy", rarity: "common", heal: 4, block: 8, bonusHealIfLowHp: 8, text: "Gain 8 Block. Heal 4, or 12 if below half HP.", up: { block: 10, bonusHealIfLowHp: 11 } },
   mercy_resurrect: { id: "mercy_resurrect", name: "Resurrect", type: "skill", cost: 1, hero: "mercy", rarity: "rare", heal: 6, draw: 2, text: "Heal 6. Draw 2 cards.", up: { heal: 10, draw: 3 } },
   mercy_shot: { id: "mercy_shot", name: "Caduceus Shot", type: "attack", cost: 1, hero: "mercy", rarity: "common", damage: 7, heal: 2, text: "Deal 7 damage. Heal 2.", up: { damage: 10, heal: 4 } },
   mercy_pacify: { id: "mercy_pacify", name: "Pacify", type: "skill", cost: 0, hero: "mercy", rarity: "common", weak: 2, text: "Apply 2 Weak.", up: { weak: 3 } },
@@ -39,10 +39,10 @@ export const CARDS: Record<string, CardDef> = {
   genji_shuriken: { id: "genji_shuriken", name: "Shuriken", type: "attack", cost: 0, hero: "genji", rarity: "starter", damage: 3, text: "Deal 3 damage.", up: { damage: 5 } },
   genji_swift: { id: "genji_swift", name: "Swift Strike", type: "attack", cost: 1, hero: "genji", rarity: "starter", damage: 6, bonusIfAttack: 3, text: "Deal 6 damage. +3 if you played an Attack this turn.", up: { damage: 9, bonusIfAttack: 5 } },
   genji_deflect: { id: "genji_deflect", name: "Deflect", type: "skill", cost: 1, hero: "genji", rarity: "starter", block: 8, text: "Gain 8 Block.", up: { block: 11 } },
-  genji_fang: { id: "genji_fang", name: "Dragon Fang", type: "attack", cost: 1, hero: "genji", rarity: "common", damage: 5, draw: 1, text: "Deal 5 damage. Draw 1 card.", up: { damage: 8 } },
-  genji_agility: { id: "genji_agility", name: "Cyber Agility", type: "skill", cost: 1, hero: "genji", rarity: "common", block: 5, comboCards: 2, comboEnergy: 1, text: "Gain 5 Block. If you played 2+ cards this turn, gain 1 Energy.", up: { block: 8 } },
+  genji_fang: { id: "genji_fang", name: "Dragon Fang", type: "attack", cost: 1, hero: "genji", rarity: "common", damage: 7, draw: 1, text: "Deal 5 damage. Draw 1 card.", up: { damage: 8 } },
+  genji_agility: { id: "genji_agility", name: "Cyber Agility", type: "skill", cost: 0, hero: "genji", rarity: "common", block: 4, comboCards: 2, comboEnergy: 1, text: "Gain 4 Block. If you played 2+ cards this turn, gain 1 Energy.", up: { block: 7 } },
   genji_spirit: { id: "genji_spirit", name: "Spirit Dragon", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 3, hitsPerAttack: true, text: "Deal 3 damage, once more for each Attack already played this turn.", up: { damage: 5 } },
-  genji_riposte: { id: "genji_riposte", name: "Riposte", type: "skill", cost: 1, hero: "genji", rarity: "common", block: 6, comboCards: 2, comboDraw: 1, text: "Gain 6 Block. If you played 2+ cards this turn, draw 1 card.", up: { block: 9 } },
+  genji_riposte: { id: "genji_riposte", name: "Riposte", type: "skill", cost: 1, hero: "genji", rarity: "common", block: 8, comboCards: 2, comboDraw: 2, text: "Gain 8 Block. If you played 2+ cards this turn, draw 2 cards.", up: { block: 11 } },
   genji_dash: { id: "genji_dash", name: "Dash", type: "attack", cost: 0, hero: "genji", rarity: "common", damage: 3, bonusIfAttack: 3, text: "Deal 3 damage. +3 if you played an Attack this turn.", up: { damage: 5, bonusIfAttack: 5 } },
   genji_storm: { id: "genji_storm", name: "Storm of Blades", type: "attack", cost: 2, hero: "genji", rarity: "rare", damage: 3, hits: 3, text: "Deal 3 damage 3 times.", up: { damage: 5 } },
   genji_rush: { id: "genji_rush", name: "Dragon Rush", type: "attack", cost: 1, hero: "genji", rarity: "uncommon", damage: 6, freeIfAttack: true, text: "Deal 6 damage. Costs 0 if you played an Attack this turn.", up: { damage: 9 } },
@@ -55,12 +55,12 @@ export const CARDS: Record<string, CardDef> = {
   junkrat_concussive: { id: "junkrat_concussive", name: "Concussion Mine", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 6, weak: 2, text: "Deal 6 damage. Apply 2 Weak.", up: { damage: 8, weak: 3 } },
   junkrat_mine: { id: "junkrat_mine", name: "Rip Tire", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 11, selfDamage: 2, text: "Deal 11 damage. Take 2 damage.", up: { damage: 14 } },
   junkrat_rpg: { id: "junkrat_rpg", name: "RPG", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 15, text: "Deal 15 damage.", up: { damage: 19 } },
-  junkrat_scatter: { id: "junkrat_scatter", name: "Scatter Shot", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 5, randomHits: [2, 3], text: "Deal 5 damage 2-3 times at random.", up: { damage: 7, randomHits: [2, 4] } },
+  junkrat_scatter: { id: "junkrat_scatter", name: "Scatter Shot", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 6, randomHits: [2, 3], text: "Deal 6 damage 2-3 times at random.", up: { damage: 8, randomHits: [2, 4] } },
   junkrat_armor: { id: "junkrat_armor", name: "Junk Armor", type: "skill", cost: 0, hero: "junkrat", rarity: "common", block: 8, selfDamage: 3, text: "Gain 8 Block. Take 3 damage.", up: { block: 10 } },
   junkrat_rummage: { id: "junkrat_rummage", name: "Rummage", type: "skill", cost: 0, hero: "junkrat", rarity: "common", draw: 2, selfDamage: 3, text: "Draw 2 cards. Take 3 damage.", up: { draw: 3 } },
   junkrat_frag: { id: "junkrat_frag", name: "Frag Toss", type: "attack", cost: 1, hero: "junkrat", rarity: "common", damage: 4, damagePerDebuff: 3, text: "Deal 4 damage, +3 per Vulnerable or Weak stack on the target.", up: { damage: 6, damagePerDebuff: 4 } },
   junkrat_blast: { id: "junkrat_blast", name: "Total Mayhem", type: "attack", cost: 2, hero: "junkrat", rarity: "uncommon", damage: 12, aoe: true, text: "Deal 12 damage to ALL enemies.", up: { damage: 14 } },
-  junkrat_loose: { id: "junkrat_loose", name: "Loose Cannon", type: "attack", cost: 1, hero: "junkrat", rarity: "uncommon", randomDamage: [5, 13], text: "Deal 5-13 damage at random.", up: { randomDamage: [8, 16] } },
+  junkrat_loose: { id: "junkrat_loose", name: "Loose Cannon", type: "attack", cost: 1, hero: "junkrat", rarity: "uncommon", randomDamage: [8, 18], text: "Deal 8-18 damage at random.", up: { randomDamage: [11, 22] } },
   junkrat_scrap: { id: "junkrat_scrap", name: "Scrap Heap", type: "attack", cost: 2, hero: "junkrat", rarity: "rare", damage: 3, damagePerDiscard: 1, shuffleDiscard: true, text: "Deal 3 damage, +1 per card in your discard pile. Then shuffle discard into your draw pile.", up: { damage: 6 } },
 
 
@@ -86,7 +86,7 @@ export const CARDS: Record<string, CardDef> = {
   doomfist_shield: { id: "doomfist_shield", name: "Power Block", type: "skill", cost: 1, hero: "doomfist", rarity: "starter", block: 8, text: "Gain 8 Block.", up: { block: 11 } },
   doomfist_uppercut: { id: "doomfist_uppercut", name: "Rising Uppercut", type: "attack", cost: 2, hero: "doomfist", rarity: "uncommon", damage: 14, text: "Deal 14 damage.", up: { damage: 18 } },
   doomfist_bestdefense: { id: "doomfist_bestdefense", name: "Best Defense", type: "skill", cost: 1, hero: "doomfist", rarity: "common", strength: 1, block: 3, blockPerAttackPlayed: 3, text: "Gain 1 Strength and 3 Block, +3 per Attack played this turn.", up: { strength: 2, blockPerAttackPlayed: 4 } },
-  doomfist_grapple: { id: "doomfist_grapple", name: "Iron Grip", type: "skill", cost: 0, hero: "doomfist", rarity: "common", block: 4, draw: 1, text: "Gain 4 Block. Draw 1 card.", up: { block: 6 } },
+  doomfist_grapple: { id: "doomfist_grapple", name: "Iron Grip", type: "skill", cost: 0, hero: "doomfist", rarity: "common", block: 6, draw: 1, text: "Gain 6 Block. Draw 1 card.", up: { block: 8 } },
   doomfist_charge: { id: "doomfist_charge", name: "Meteor Strike", type: "attack", cost: 1, hero: "doomfist", rarity: "common", damage: 9, vulnerable: 1, text: "Deal 9 damage. Apply 1 Vulnerable.", up: { damage: 12, vulnerable: 2 } },
   doomfist_bruise: { id: "doomfist_bruise", name: "Bruise", type: "attack", cost: 0, hero: "doomfist", rarity: "common", damage: 3, damagePerBlock: 8, text: "Deal 3 damage, +1 for every 8 Block you have.", up: { damage: 5, damagePerBlock: 6 } },
   doomfist_fortify: { id: "doomfist_fortify", name: "Fortify", type: "skill", cost: 1, hero: "doomfist", rarity: "common", block: 5, draw: 1, text: "Gain 5 Block. Draw 1 card.", up: { block: 7 } },
@@ -120,7 +120,7 @@ export const CARDS: Record<string, CardDef> = {
 export const NEUTRAL_EXPANSION: Record<string, CardDef> = {
   n_gambit: { id: "n_gambit", name: "Gambit", type: "attack", cost: 1, rarity: "uncommon", damageEqualToBlock: true, exhaust: true, text: "Deal damage equal to your current Block. Exhaust." },
   n_overclock_cell: { id: "n_overclock_cell", name: "Overclock Cell", type: "skill", cost: 0, rarity: "uncommon", selfDamage: 4, draw: 2, energyGain: 1, exhaust: true, text: "Take 4 damage. Draw 2 cards. Gain 1 Energy. Exhaust.", up: { draw: 3 } },
-  n_adrenaline: { id: "n_adrenaline", name: "Adrenaline Rush", type: "skill", cost: 2, rarity: "uncommon", freeIfCardsPlayed: 3, energyGain: 2, draw: 1, text: "Gain 2 Energy. Draw 1. Costs 0 if you have played 3+ cards this turn.", up: { draw: 2 } },
+  n_adrenaline: { id: "n_adrenaline", name: "Adrenaline Rush", type: "skill", cost: 2, rarity: "uncommon", freeIfCardsPlayed: 4, energyGain: 1, draw: 1, exhaust: true, text: "Gain 1 Energy. Draw 1. Costs 0 if you have played 4+ cards this turn. Exhaust.", up: { draw: 2 } },
   n_scavenge: { id: "n_scavenge", name: "Scavenge", type: "attack", cost: 1, rarity: "common", damage: 4, goldOnKill: 15, text: "Deal 4 damage. If this kills the enemy, gain 15 gold.", up: { damage: 7 } },
   n_mirror_ward: { id: "n_mirror_ward", name: "Mirror Ward", type: "skill", cost: 1, rarity: "uncommon", block: 5, nextAttackBonusPct: 50, text: "Gain 5 Block. Your next Attack this turn deals +50% damage.", up: { block: 8 } },
   n_last_stand: { id: "n_last_stand", name: "Last Stand", type: "skill", cost: 1, rarity: "rare", strength: 1, lowHpStrength: 3, lowHpBlock: 10, exhaust: true, text: "Below half HP: gain 3 Strength and 10 Block. Otherwise gain 1 Strength. Exhaust.", up: { strength: 2 } },
@@ -134,11 +134,11 @@ export const NEUTRAL_EXPANSION: Record<string, CardDef> = {
 
 Object.assign(CARDS, NEUTRAL_EXPANSION);
 
+// Reward pools no longer offer strictly-worse copies of starter cards.
+// Reinforce/Strike/Field Kit still exist in starting decks, but as draft
+// options they were dead picks that made reward screens feel like filler.
 export const NEUTRAL_POOL = [
-  "n_block",
-  "n_strike",
   "n_vuln",
-  "n_heal",
   "n_focus",
   "n_power",
   ...Object.keys(NEUTRAL_EXPANSION),
