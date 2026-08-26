@@ -105,6 +105,28 @@ export interface CardDef {
   /** Deal damage equal to this multiple of your Armor without spending it (Reinhardt). */
   armorBurst?: number;
 
+  // ---- Neutral pool mechanics ----
+  /** Deal damage equal to your current Block (neutral: Gambit). */
+  damageEqualToBlock?: boolean;
+  /** Gain this much gold if this card kills its target (neutral: Scavenge). */
+  goldOnKill?: number;
+  /** Costs 0 if you have already played this many cards this turn (neutral: Adrenaline Rush). */
+  freeIfCardsPlayed?: number;
+  /** Your next Attack this turn deals this much extra percent damage (neutral: Mirror Ward). */
+  nextAttackBonusPct?: number;
+  /** Below half HP, gain this Strength instead of the base amount (neutral: Last Stand). */
+  lowHpStrength?: number;
+  /** Below half HP, also gain this much Block (neutral: Last Stand). */
+  lowHpBlock?: number;
+  /** Spends this much run gold to play (neutral: Pawn Shop). */
+  goldCost?: number;
+  /** Gain this much Block per card in your exhaust pile (neutral: Salvage Rites). */
+  blockPerExhaust?: number;
+  /** Convert all Block into healing at 1 HP per N Block (neutral: Second Wind). */
+  blockToHealRatio?: number;
+  /** Damage is doubled if your hand is empty when this resolves (neutral: All In). */
+  doubleIfHandEmpty?: boolean;
+
 
   // upgrade deltas applied when upgraded
   up?: Partial<
