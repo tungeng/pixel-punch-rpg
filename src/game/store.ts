@@ -143,6 +143,7 @@ export interface GameState {
   /** Fights cleared inside the current act. Drives the difficulty curve. */
   actFloors: number;
   augments: string[];
+  augmentTiers: Record<string, number>;
   augmentChoices: string[];
   contract: ContractState;
   contractsCompleted: number;
@@ -492,6 +493,7 @@ export const useGame = create<GameState>((set, get) => ({
   floorsCleared: 0,
   actFloors: 0,
   augments: [],
+  augmentTiers: {},
   augmentChoices: [],
   contract: makeContract(0),
   contractsCompleted: 0,
@@ -547,6 +549,7 @@ export const useGame = create<GameState>((set, get) => ({
       floorsCleared: 0,
       actFloors: 0,
       augments: [],
+      augmentTiers: {},
       augmentChoices: [],
       contract: makeContract(seed % 3),
       contractsCompleted: 0,
@@ -577,11 +580,17 @@ export const useGame = create<GameState>((set, get) => ({
   chooseAugment: (augmentId) => {
     const s = get();
     if (!s.augmentChoices.includes(augmentId) || !AUGMENTS[augmentId]) return;
+    const owned = s.augments.includes(augmentId);
+    const tier = (s.augmentTiers[augmentId] ?? 0) + 1;
+    const def = AUGMENTS[augmentId]!;
     set({
-      augments: [...s.augments, augmentId],
+      augments: owned ? s.augments : [...s.augments, augmentId],
+      augmentTiers: { ...s.augmentTiers, [augmentId]: tier },
       augmentChoices: [],
       phase: s.pendingRelic ? "treasure" : "map",
-      lastEvent: `Augment installed: ${AUGMENTS[augmentId]!.name}. ${AUGMENTS[augmentId]!.text}`,
+      lastEvent: owned
+        ? `${def.name} deepened to Tier ${tier}. The path sharpens.`
+        : `Augment installed: ${def.name}. ${def.text}`,
       lastEventAt: Date.now(),
     });
   },
@@ -741,12 +750,15 @@ export const useGame = create<GameState>((set, get) => ({
     for (const id of s.augments) {
       const a = AUGMENTS[id];
       if (!a) continue;
-      combat.block += a.block;
-      combat.strength += a.strength;
-      combat.energy += a.energy;
-      combat.ultCharge += a.ult;
-      if (a.draw > 0) drawCards(combat, a.draw);
-      if (id === "rein_crusader") combat.armor += 12;
+      // Augments are paths, not a checklist. Deepening one multiplies its
+      // payload so committing to an identity beats collecting every option.
+      const t = s.augmentTiers[id] ?? 1;
+      combat.block += a.block * t;
+      combat.strength += a.strength * t;
+      combat.energy += a.energy + (t > 2 ? 1 : 0);
+      combat.ultCharge += a.ult * t;
+      if (a.draw > 0) drawCards(combat, a.draw * t);
+      if (id === "rein_crusader") combat.armor += 12 * t;
     }
     combat.ultCharge = Math.min(100, combat.ultCharge);
     // elite modifier: curse enemies hex you the moment the fight opens
@@ -1085,7 +1097,7 @@ export const useGame = create<GameState>((set, get) => ({
     c.turn += 1;
     // Doomfist: The Rising Uppercut. Pain fuels permanent Strength.
     if (s.heroId === "doomfist") {
-      const rageThreshold = s.augments.includes("doom_rising") ? 8 : 12;
+      const rageThreshold = s.augments.includes("doom_rising") ? Math.max(4, 10 - 2 * (s.augmentTiers["doom_rising"] ?? 1)) : 12;
       const owed = Math.floor(c.damageTakenThisCombat / rageThreshold) - (c.ragePaid ?? 0);
       if (owed > 0) {
         c.ragePaid = (c.ragePaid ?? 0) + owed;
@@ -1220,8 +1232,8 @@ export const useGame = create<GameState>((set, get) => ({
           c.block += 1;
           pushFloat(c, "+1", "block", "player");
         }
-        if (s.augments.includes("mercy_bluebeam")) c.nextAttackPct += 10;
-        if (s.augments.includes("mercy_valkyrie")) c.ultCharge = Math.min(100, c.ultCharge + 3);
+        if (s.augments.includes("mercy_bluebeam")) c.nextAttackPct += 10 * (s.augmentTiers["mercy_bluebeam"] ?? 1);
+        if (s.augments.includes("mercy_valkyrie")) c.ultCharge = Math.min(100, c.ultCharge + 3 * (s.augmentTiers["mercy_valkyrie"] ?? 1));
       }
     }
 
@@ -1633,7 +1645,7 @@ function resolveCard(
 
   // doomfist passive
     if (s.heroId === "doomfist" && isAttack && !isUlt) {
-      const block = s.augments.includes("doom_gauntlet") ? 5 : 3;
+      const block = s.augments.includes("doom_gauntlet") ? 3 + 2 * (s.augmentTiers["doom_gauntlet"] ?? 1) : 3;
       c.block += block;
       pushFloat(c, `+${block}`, "block", "player");
   }
@@ -2137,8 +2149,16 @@ function handleCombatWin(set: any, get: () => GameState) {
       const nextAct = s.act + 1;
       const newMap = generateMap(rngForRun(s.seed, 7000 + nextAct * 131));
       const nextMaxHp = maxHpFor(s.heroId, relics, nextAct, s.meta.upgrades);
+      // Boss rewards used to hand out every augment in order, which meant the
+      // "choice" was really just sequencing. Now you either deepen the path you
+      // committed to or branch into a new one, and you cannot have it all.
       const available = augmentPoolFor(s.heroId, s.augments);
-      const augmentChoices = rng.shuffle(available).slice(0, 3).map((a) => a.id);
+      const branch = rng.shuffle(available).slice(0, 2).map((a) => a.id);
+      const deepen = [...s.augments]
+        .filter((id) => (s.augmentTiers[id] ?? 1) < 3)
+        .sort((a, b) => (s.augmentTiers[b] ?? 1) - (s.augmentTiers[a] ?? 1))
+        .slice(0, 1);
+      const augmentChoices = [...deepen, ...branch].slice(0, 3);
       set({
         hp: Math.min(nextMaxHp, hp + Math.floor(nextMaxHp * 0.35)),
         maxHp: nextMaxHp,
@@ -2152,6 +2172,7 @@ function handleCombatWin(set: any, get: () => GameState) {
         currentNodeId: null,
         phase: "augment_choice",
         augments: s.augments,
+        augmentTiers: s.augmentTiers,
         augmentChoices,
         contract: makeContract((s.seed + nextAct) % 3),
         contractsCompleted,
