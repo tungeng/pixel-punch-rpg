@@ -17,6 +17,7 @@ import tracerImg from "../assets/tracer.png";
 import kingsrowImg from "../assets/bg_kingsrow.jpg";
 import factoryImg from "../assets/bg_factory.jpg";
 import { UPGRADES, tierOf, upgradeBonusMaxHp, upgradeCacheRelicChance, upgradeCreditMult, upgradeStartGold } from "./upgrades";
+import { MUTATORS, MUTATOR_IDS } from "./mutators";
 import { AUGMENTS, augmentPoolFor, makeContract, type ContractState } from "./progression";
 
 export type Phase =
@@ -96,12 +97,19 @@ export interface Combat {
   nextAttackPct: number;
   /** Junkrat: self-blast counter for Total Mayhem tuning. */
   junkratBlastCount: number;
+  /** Fracture Protocol warping this run's rules. */
+  mutator: string | null;
+  /** biggest single hit landed this combat, feeds the run highlight reel */
+  bestHit: number;
 }
 
 
 export interface RunRecord {
   heroId: string;
   score: number;
+  /** one-line "what you'll remember" beat, generated from run stats */
+  highlight?: string;
+  mutator?: string | null;
   floorsCleared: number;
   act: number;
   fullClear: boolean;
@@ -143,6 +151,12 @@ export interface GameState {
   /** Fights cleared inside the current act. Drives the difficulty curve. */
   actFloors: number;
   augments: string[];
+  /** Fracture Protocol bending this run's rules (paired with the starting relic) */
+  mutator: string | null;
+  /** protocol paired with each starting relic choice, same index */
+  startingMutators: string[];
+  /** highlight reel material, surfaced on the run-over screen */
+  runStats: { bestHit: number; lowestHp: number; bossKills: number; clutch: boolean };
   augmentTiers: Record<string, number>;
   augmentChoices: string[];
   contract: ContractState;
@@ -168,7 +182,8 @@ export interface GameState {
   // actions
   loadMeta: () => void;
   startRun: (heroId: string, seedLabel?: string) => void;
-  chooseStartingRelic: (relicId: string) => void;
+  rerun: () => void;
+  chooseStartingRelic: (relicId: string, index?: number) => void;
   chooseAugment: (augmentId: string) => void;
   enterNode: (nodeId: number) => void;
   startCombat: (nodeType: NodeType, rng: Rng) => void;
@@ -330,6 +345,8 @@ function applyEnemyDamage(
     enemy.trait !== "conduit" &&
     c.enemies.some((e) => !e.isDead && e.uid !== enemy.uid && e.trait === "conduit");
   if (dampened) dmg = Math.ceil(dmg * 0.65);
+  const outMult = c.mutator ? MUTATORS[c.mutator]?.outMult ?? 1 : 1;
+  if (outMult !== 1) dmg = Math.floor(dmg * outMult);
   dmg = Math.max(0, dmg);
   let remaining = dmg;
   if (enemy.block > 0 && !ignoreBlock) {
@@ -342,8 +359,10 @@ function applyEnemyDamage(
     enemy.hp = 0;
     enemy.isDead = true;
   }
+  if (remaining > c.bestHit) c.bestHit = remaining;
   // Ults no longer charge off their own damage, so normal card damage charges faster.
-  charge.v += dmg * (relicPower ? 2.2 : 1.4);
+  const ultMult = c.mutator ? MUTATORS[c.mutator]?.ultMult ?? 1 : 1;
+  charge.v += dmg * (relicPower ? 2.2 : 1.4) * ultMult;
   return dmg;
 }
 
@@ -351,6 +370,8 @@ function applyPlayerDamage(get: () => GameState, c: Combat, base: number, srcStr
   let dmg = base + srcStrength;
   if (srcWeak > 0) dmg = Math.floor(dmg * 0.75);
   if (c.vulnerable > 0) dmg = Math.floor(dmg * 1.5);
+  const inMult = c.mutator ? MUTATORS[c.mutator]?.inMult ?? 1 : 1;
+  if (inMult !== 1) dmg = Math.ceil(dmg * inMult);
   dmg = Math.max(0, dmg);
   let remaining = dmg;
   if (c.block > 0) {
@@ -493,6 +514,9 @@ export const useGame = create<GameState>((set, get) => ({
   floorsCleared: 0,
   actFloors: 0,
   augments: [],
+  mutator: null,
+  startingMutators: [],
+  runStats: { bestHit: 0, lowestHp: 999, bossKills: 0, clutch: false },
   augmentTiers: {},
   augmentChoices: [],
   contract: makeContract(0),
@@ -514,6 +538,12 @@ export const useGame = create<GameState>((set, get) => ({
 
   loadMeta: () => set({ meta: loadMetaFromStorage() }),
 
+  /** Straight back into the breach with the same hero. No hub round trip. */
+  rerun: () => {
+    const heroId = get().lastRun?.heroId ?? get().heroId;
+    get().startRun(heroId);
+  },
+
   startRun: (heroId, seedLabel) => {
     const label = seedLabel && seedLabel.trim() ? seedLabel.trim() : Math.floor(Math.random() * 999999).toString();
     const seed = hashSeed(label);
@@ -533,10 +563,17 @@ export const useGame = create<GameState>((set, get) => ({
       if (startingRelicChoices.length >= 3) break;
       if (!startingRelicChoices.includes(id)) startingRelicChoices.push(id);
     }
+    // Protocols never depend on relic unlocks, so a brand new player still gets
+    // a real opening decision (and a run identity) on their very first breach.
+    const startingMutators = rng.shuffle([...MUTATOR_IDS]).slice(0, 3);
+    while (startingRelicChoices.length < startingMutators.length) startingRelicChoices.push("");
     set({
       inRun: true,
       seed,
       seedLabel: label,
+      mutator: null,
+      startingMutators,
+      runStats: { bestHit: 0, lowestHp: 999, bossKills: 0, clutch: false },
       heroId,
       hp: maxHp,
       maxHp,
@@ -562,17 +599,21 @@ export const useGame = create<GameState>((set, get) => ({
     });
   },
 
-  chooseStartingRelic: (relicId) => {
+  chooseStartingRelic: (relicId, index) => {
     const s = get();
-    const relics = [relicId];
-    const maxHp = maxHpFor(s.heroId, relics, s.act, s.meta.upgrades);
+    const idx = index ?? s.startingRelicChoices.indexOf(relicId);
+    const relics = relicId ? [relicId] : [];
+    const mutator = s.startingMutators[idx] ?? null;
+    const maxHp = Math.max(20, maxHpFor(s.heroId, relics, s.act, s.meta.upgrades) + (mutator ? MUTATORS[mutator]?.hpMod ?? 0 : 0));
     set({
       relics,
+      mutator,
       maxHp,
       hp: maxHp,
       startingRelicChoices: [],
+      startingMutators: [],
       phase: "map",
-      lastEvent: `${RELICS[relicId]!.name} equipped. ${RELICS[relicId]!.text}`,
+      lastEvent: `${relicId ? RELICS[relicId]!.name + " equipped. " : ""}${mutator ? MUTATORS[mutator]!.name + " online." : ""}`.trim(),
       lastEventAt: Date.now(),
     });
   },
@@ -693,8 +734,18 @@ export const useGame = create<GameState>((set, get) => ({
     if (s.heroId === "junkrat") {
       for (const e of enemies) e.vulnerable = 2;
     }
-    const maxEnergy = maxEnergyFor(s.heroId, s.relics);
-    const drawN = drawCountFor(s.heroId, s.relics);
+    const mut = s.mutator ? MUTATORS[s.mutator] : null;
+    const maxEnergy = maxEnergyFor(s.heroId, s.relics) + (mut?.energy ?? 0);
+    const drawN = drawCountFor(s.heroId, s.relics) + (mut?.draw ?? 0);
+    if (mut?.enemyHpMult || mut?.enemyStrength) {
+      for (const e of enemies) {
+        if (mut.enemyHpMult) {
+          e.maxHp = Math.round(e.maxHp * mut.enemyHpMult);
+          e.hp = e.maxHp;
+        }
+        if (mut.enemyStrength) e.strength += mut.enemyStrength;
+      }
+    }
     const maxHp = s.maxHp;
     let deck = s.deck.map((c) => makeCard(c.id, c.upgraded));
     deck = rng.shuffle(deck);
@@ -707,8 +758,8 @@ export const useGame = create<GameState>((set, get) => ({
       maxEnergy,
       hp: s.hp,
       maxHp,
-      block: 0,
-      strength: 0,
+      block: mut?.startBlock ?? 0,
+      strength: mut?.startStrength ?? 0,
       vulnerable: 0,
       weak: 0,
       poison: 0,
@@ -746,6 +797,8 @@ export const useGame = create<GameState>((set, get) => ({
       freeUltUsed: false,
       fracturePending: s.relics.includes("timeline_fracture"),
       junkratBlastCount: 0,
+      mutator: s.mutator,
+      bestHit: 0,
     };
     for (const id of s.augments) {
       const a = AUGMENTS[id];
@@ -2071,6 +2124,15 @@ function resolveCard(
 function handleCombatWin(set: any, get: () => GameState) {
   const s = get();
   const c = s.combat!;
+  // highlight reel: the beats a player would actually retell afterwards
+  const hpPct = c.maxHp > 0 ? Math.round((c.hp / c.maxHp) * 100) : 100;
+  const runStats = {
+    bestHit: Math.max(s.runStats.bestHit, c.bestHit),
+    lowestHp: Math.min(s.runStats.lowestHp, hpPct),
+    bossKills: s.runStats.bossKills + (c.isBoss ? 1 : 0),
+    clutch: s.runStats.clutch || (c.hp > 0 && c.hp <= Math.max(5, Math.ceil(c.maxHp * 0.08))),
+  };
+  set({ runStats });
   // bank hp
   let hp = c.hp;
   let gold = s.gold;
@@ -2085,6 +2147,8 @@ function handleCombatWin(set: any, get: () => GameState) {
 
   if (has("lucky_coin")) g = Math.floor(g * 1.75);
   if (has("salvage_claw")) g += 20;
+  const goldMult = s.mutator ? MUTATORS[s.mutator]?.goldMult ?? 1 : 1;
+  g = Math.floor(g * goldMult);
   gold += g;
   const floorsCleared = s.floorsCleared + 1;
   const actFloors = s.actFloors + 1;
@@ -2213,7 +2277,7 @@ function handleCombatWin(set: any, get: () => GameState) {
       meta,
       banner,
       bossOutro: BOSSES[c.enemies[0]?.defId ?? ""]?.deathLine ?? null,
-      lastRun: { heroId: s.heroId, score, floorsCleared, act: s.act + 1, fullClear: true },
+      lastRun: { heroId: s.heroId, score, floorsCleared, act: s.act + 1, fullClear: true, highlight: runHighlight({ ...s, floorsCleared }), mutator: s.mutator },
       scoreSubmitted: false,
     });
     return;
@@ -2240,6 +2304,18 @@ function handleCombatWin(set: any, get: () => GameState) {
 }
 
 
+/** One line the player would repeat to a friend. Ranked by how loud the beat is. */
+function runHighlight(s: GameState): string {
+  const st = s.runStats;
+  if (st.bestHit >= 60) return `You hit something for ${st.bestHit} in a single card.`;
+  if (st.clutch) return "You closed out a fight on fumes and kept walking.";
+  if (st.bossKills >= 3) return `${st.bossKills} bosses down in one timeline.`;
+  if (st.bestHit >= 35) return `Biggest hit of the run: ${st.bestHit} damage.`;
+  if (st.bossKills >= 1) return "You put a boss in the ground before it got you.";
+  if (st.lowestHp <= 15) return `You held a fight at ${st.lowestHp}% HP.`;
+  return `Deepest push: floor ${s.floorsCleared}.`;
+}
+
 function handleDeath(set: any, get: () => GameState) {
   const s = get();
   const credits = Math.floor((s.floorsCleared * 8 + s.gold * 0.2) * upgradeCreditMult(s.meta.upgrades));
@@ -2255,7 +2331,7 @@ function handleDeath(set: any, get: () => GameState) {
     phase: "dead",
     combat: null,
     meta,
-    lastRun: { heroId: s.heroId, score, floorsCleared: s.floorsCleared, act: s.act, fullClear: false },
+    lastRun: { heroId: s.heroId, score, floorsCleared: s.floorsCleared, act: s.act, fullClear: false, highlight: runHighlight(s), mutator: s.mutator },
     scoreSubmitted: false,
   });
 }

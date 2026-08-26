@@ -1,7 +1,8 @@
 import { ACT_COUNT } from "@/game/enemies";
 import { useGame, cardPrice, relicPrice } from "@/game/store";
 import { HEROES } from "@/game/heroes";
-import { RELICS, RELIC_TIER_COLOR, isExaltedTier } from "@/game/relics";
+import { RELICS, RELIC_TIER_COLOR, isExaltedTier, relicUnlockCost, ALL_RELIC_IDS } from "@/game/relics";
+import { MUTATORS } from "@/game/mutators";
 import { CardView } from "./CardView";
 import { ScoreSubmit } from "./ScoreSubmit";
 import { PixelButton } from "./PixelButton";
@@ -113,7 +114,7 @@ export function AugmentChoiceScreen() {
           if (!augment) return null;
           return (
             <motion.button
-              key={id}
+              key={`${id}-${i}`}
               initial={{ x: i % 2 ? 40 : -40, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               whileTap={{ scale: 0.97 }}
@@ -327,11 +328,63 @@ export function ShopScreen() {
   );
 }
 
+/** The single most important screen for retention: it has to make you tap again. */
+function RunOverTail() {
+  const abandon = useGame((s) => s.abandon);
+  const rerun = useGame((s) => s.rerun);
+  const last = useGame((s) => s.lastRun);
+  const credits = useGame((s) => s.meta.credits);
+  const unlocked = useGame((s) => s.meta.unlockedRelics);
+  const hero = last ? HEROES[last.heroId] : null;
+  const mut = last?.mutator ? MUTATORS[last.mutator] : null;
+  const next = ALL_RELIC_IDS
+    .filter((id) => !unlocked.includes(id))
+    .map((id) => ({ id, cost: relicUnlockCost(id) }))
+    .sort((a, b) => a.cost - b.cost)[0];
+  return (
+    <>
+      {last?.highlight && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mb-3 w-full max-w-[320px] border-2 border-primary/50 bg-background/70 p-3 text-center"
+        >
+          <div className="text-pixel mb-1 text-[7px] text-primary">RUN HIGHLIGHT</div>
+          <div className="text-[15px] leading-[17px] text-foreground/85" style={{ fontFamily: "var(--font-pixel-body)" }}>
+            {last.highlight}
+          </div>
+          {mut && (
+            <div className="text-pixel mt-2 text-[6px]" style={{ color: mut.color }}>
+              UNDER {mut.name}
+            </div>
+          )}
+        </motion.div>
+      )}
+      {next && (
+        <div className="mb-4 w-full max-w-[320px] border-2 border-primary/25 bg-background/60 p-2 text-center">
+          <div className="text-[14px] text-foreground/70" style={{ fontFamily: "var(--font-pixel-body)" }}>
+            {credits >= next.cost
+              ? `You can unlock ${RELICS[next.id]?.name} in the Codex right now.`
+              : `${next.cost - credits} Cores from unlocking ${RELICS[next.id]?.name}.`}
+          </div>
+        </div>
+      )}
+      <ScoreSubmit />
+      <div className="flex w-full max-w-[320px] flex-col gap-2">
+        <PixelButton onClick={rerun} color="danger">
+          ▶ BREACH AGAIN{hero ? ` AS ${hero.name.toUpperCase()}` : ""}
+        </PixelButton>
+        <PixelButton onClick={abandon} color="primary">Return to hub</PixelButton>
+      </div>
+    </>
+  );
+}
+
 export function DeathScreen() {
   const floors = useGame((s) => s.floorsCleared);
-  const abandon = useGame((s) => s.abandon);
   return (
-    <Screen title="THE BREACH CONSUMED YOU" tone="#ff3b3b">
+    <Screen title="THE BREACH CONSUMED YOU" tone="#ff3b3b" scroll>
       <motion.div
         initial={{ opacity: 0, scale: 1.4 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -339,21 +392,18 @@ export function DeathScreen() {
       >
         FLOOR {floors}
       </motion.div>
-      <div className="mb-6 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/70" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        The timeline snaps back. The version of you that fell here is edited out.
-        Only the Chrono Cores you banked survive the rewrite.
+      <div className="mb-4 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/70" style={{ fontFamily: "var(--font-pixel-body)" }}>
+        The timeline snaps back. Only the Chrono Cores you banked survive the rewrite.
       </div>
-      <ScoreSubmit />
-      <PixelButton onClick={abandon} color="primary">Return to hub</PixelButton>
+      <RunOverTail />
     </Screen>
   );
 }
 
 export function VictoryScreen() {
   const floors = useGame((s) => s.floorsCleared);
-  const abandon = useGame((s) => s.abandon);
   return (
-    <Screen title="BREACH SEALED" tone="#54d98c">
+    <Screen title="BREACH SEALED" tone="#54d98c" scroll>
       <motion.div
         animate={{ scale: [1, 1.06, 1] }}
         transition={{ repeat: Infinity, duration: 1.8 }}
@@ -361,12 +411,10 @@ export function VictoryScreen() {
       >
         ✦ {floors} FLOORS ✦
       </motion.div>
-      <div className="mb-6 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
-        The fracture folds shut over King's Row. Somewhere down the line, another
-        you wakes up and never hears a single shot.
+      <div className="mb-4 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
+        The fracture folds shut over King's Row. Another you wakes up and never hears a shot.
       </div>
-      <ScoreSubmit />
-      <PixelButton onClick={abandon} color="primary">Return to hub</PixelButton>
+      <RunOverTail />
     </Screen>
   );
 }
@@ -476,20 +524,22 @@ export function Hud() {
 
 export function RelicChoiceScreen() {
   const choices = useGame((s) => s.startingRelicChoices);
+  const protocols = useGame((s) => s.startingMutators);
   const choose = useGame((s) => s.chooseStartingRelic);
   return (
-    <Screen title="CHOOSE YOUR RELIC" tone="#ffcc4d" scroll>
+    <Screen title="BREACH PROTOCOL" tone="#ffcc4d" scroll>
       <div
         className="mb-4 max-w-[300px] text-center text-[15px] leading-[17px] text-foreground/75"
         style={{ fontFamily: "var(--font-pixel-body)" }}
       >
-        One artifact makes it through the breach intact. Pick the one you'll miss least without.
+One artifact and one distortion make it through with you. They come as a pair, so pick the run you want to play.
       </div>
       <div className="flex w-full max-w-[440px] flex-col gap-3 pb-6">
         {choices.map((id, i) => {
           const relic = RELICS[id];
-          if (!relic) return null;
-          const tierColor = RELIC_TIER_COLOR[relic.tier ?? "common"] ?? "#cbd5e1";
+          const proto = protocols[i] ? MUTATORS[protocols[i]!] : null;
+          if (!relic && !proto) return null;
+          const tierColor = relic ? RELIC_TIER_COLOR[relic.tier ?? "common"] ?? "#cbd5e1" : proto!.color;
           return (
             <motion.button
               key={id}
@@ -497,34 +547,51 @@ export function RelicChoiceScreen() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => choose(id)}
+              onClick={() => choose(id, i)}
               className={`flex items-center gap-3 bg-[#0b0a12] p-3 text-left ${
-                isExaltedTier(relic.tier) ? "relic-exalted" : ""
-              } ${relic.tier === "mythic" ? "relic-mythic" : ""}`}
+                relic && isExaltedTier(relic.tier) ? "relic-exalted" : ""
+              } ${relic?.tier === "mythic" ? "relic-mythic" : ""}`}
               style={
                 {
                   border: `3px solid ${tierColor}`,
-                  boxShadow: `0 0 16px -6px ${relic.color}`,
+                  boxShadow: `0 0 16px -6px ${relic?.color ?? tierColor}`,
                   "--tier-color": tierColor,
                 } as unknown as MotionStyle
               }
             >
-              <RelicIcon id={id} />
+              {relic ? <RelicIcon id={id} /> : null}
               <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="text-pixel text-[9px]" style={{ color: relic.color }}>
-                    {relic.name}
-                  </span>
-                  <span className="text-pixel text-[6px]" style={{ color: tierColor }}>
-                    {(relic.tier ?? "common").toUpperCase()}
-                  </span>
-                </div>
-                <div
-                  className="text-[14px] leading-[15px] text-foreground/80"
-                  style={{ fontFamily: "var(--font-pixel-body)" }}
-                >
-                  {relic.text}
-                </div>
+                {relic && (
+                  <>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <span className="text-pixel text-[9px]" style={{ color: relic.color }}>
+                        {relic.name}
+                      </span>
+                      <span className="text-pixel text-[6px]" style={{ color: tierColor }}>
+                        {(relic.tier ?? "common").toUpperCase()}
+                      </span>
+                    </div>
+                    <div
+                      className="text-[14px] leading-[15px] text-foreground/80"
+                      style={{ fontFamily: "var(--font-pixel-body)" }}
+                    >
+                      {relic.text}
+                    </div>
+                  </>
+                )}
+                {protocols[i] && MUTATORS[protocols[i]!] && (
+                  <div
+                    className="mt-2 border-t-2 border-dashed pt-1"
+                    style={{ borderColor: `${MUTATORS[protocols[i]!]!.color}66` }}
+                  >
+                    <span className="text-pixel text-[7px]" style={{ color: MUTATORS[protocols[i]!]!.color }}>
+                      {MUTATORS[protocols[i]!]!.name}
+                    </span>
+                    <div className="text-[14px] leading-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
+                      {MUTATORS[protocols[i]!]!.text}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.button>
           );
