@@ -1795,17 +1795,22 @@ function handleCombatWin(set: any, get: () => GameState) {
     choices.push(makeCard(id, rng.chance(0.12)));
   }
 
-  // ---- relic drops: bosses and elites always, normal fights sometimes ----
+  // ---- relic drops: bosses always, elites often, normal fights rarely ----
+  // Relics are meant to define a run, not fill a checklist, so the odds fall
+  // off hard as your collection grows.
   const ownedIds = new Set(s.relics);
   const unlockedIds = new Set(s.meta.unlockedRelics);
   const availRelics = ALL_RELIC_IDS.filter((r) => unlockedIds.has(r) && !ownedIds.has(r) && isDropEligible(r, true));
-  const dropChance =
-    c.nodeType === "boss" || c.nodeType === "elite" ? 1 : has("relic_scanner") ? 0.35 : 0.18;
+  const glut = Math.max(0.2, 1 - s.relics.length * 0.09);
+  const baseDrop =
+    c.nodeType === "boss" ? 1 : c.nodeType === "elite" ? 0.7 : has("relic_scanner") ? 0.14 : 0.06;
+  const dropChance = c.nodeType === "boss" ? 1 : baseDrop * glut;
   const droppedRelic =
     availRelics.length > 0 && rng.chance(dropChance)
       ? (pickRelicId(availRelics, rng.next(), true) ?? null)
       : null;
   const relics = droppedRelic ? [...s.relics, droppedRelic] : s.relics;
+
 
   // boss -> next act or victory
   if (c.nodeType === "boss") {
