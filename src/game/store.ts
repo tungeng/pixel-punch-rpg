@@ -65,6 +65,7 @@ export interface Combat {
   nodeType: NodeType;
   ultUsedThisCombat: boolean;
   damageTakenThisCombat: number;
+  ragePaid: number;
   overclock: { blockPerEnergy: number; damagePerEnergy: number } | null;
   /** Heal-over-time stacks on the player (Moira). */
   regen: number;
@@ -630,6 +631,7 @@ export const useGame = create<GameState>((set, get) => ({
       regen: 0,
       poisonBoost: 0,
       armor: 0,
+      ragePaid: 0,
       thorns: 0,
       hackedType: null,
       hackEnergy: false,
@@ -960,6 +962,16 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // start player turn
     c.turn += 1;
+    // Doomfist: The Rising Uppercut. Pain fuels permanent Strength.
+    if (s.heroId === "doomfist") {
+      const owed = Math.floor(c.damageTakenThisCombat / 6) - (c.ragePaid ?? 0);
+      if (owed > 0) {
+        c.ragePaid = (c.ragePaid ?? 0) + owed;
+        const gained = gainStrength(c, owed, relics);
+        pushFloat(c, `+${gained} STR`, "buff", "player");
+        pushLog(c, `Doomfist answers the pain. +${gained} Strength.`);
+      }
+    }
     // Reinhardt: Crusader Plating forges leftover Block into permanent Armor
     if (s.heroId === "reinhardt" && c.block >= 2) {
       const forged = Math.floor(c.block / 2);

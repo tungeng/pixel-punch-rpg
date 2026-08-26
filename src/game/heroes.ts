@@ -193,7 +193,7 @@ export const HEROES: Record<string, HeroDef> = {
     maxHp: 98,
     color: "#7c3aed",
     asset: doomfistImg,
-    passive: "The best defense is a fist already moving. Every Attack you play grants 4 Block.",
+    passive: "The best defense is a fist already moving. Every Attack grants 4 Block, and every 6 damage he takes in a fight answers back with 1 permanent Strength.",
     startingDeck: [
       "doomfist_punch", "doomfist_punch", "doomfist_slam", "doomfist_slam",
       "doomfist_shield", "doomfist_uppercut", "doomfist_grapple",
