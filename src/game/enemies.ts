@@ -345,10 +345,10 @@ export const ENEMIES: Record<string, EnemyDef> = {
 
 /** Normal fight pools per act (index 0 = Act 1) — later acts skew tougher. */
 export const ACT_ENEMY_POOLS: string[][] = [
-  ["talon_trooper", "omnic_grunt", "sweeper_bot", "talon_rusher", "shield_drone", "hex_drone"],
-  ["talon_trooper", "sweeper_bot", "sniper", "talon_rusher", "shield_drone", "hex_drone", "assembler_pod"],
-  ["talon_breacher", "venom_stalker", "arc_caster", "assembler_pod", "bastion", "sniper", "talon_rusher"],
-  ["null_titan", "wraith_echo", "venom_stalker", "arc_caster", "talon_breacher", "talon_heavy"],
+  ["talon_trooper", "omnic_grunt", "sweeper_bot", "talon_rusher", "shield_drone", "hex_drone", "bulwark_sentinel"],
+  ["talon_trooper", "sweeper_bot", "sniper", "talon_rusher", "shield_drone", "hex_drone", "assembler_pod", "bulwark_sentinel", "mender_pod"],
+  ["talon_breacher", "venom_stalker", "arc_caster", "assembler_pod", "bastion", "sniper", "talon_rusher", "mender_pod", "null_conduit"],
+  ["null_titan", "wraith_echo", "venom_stalker", "arc_caster", "talon_breacher", "talon_heavy", "null_conduit", "mender_pod"],
 ];
 
 /** Elite pools per act — every entry carries a unique modifier trait. */
