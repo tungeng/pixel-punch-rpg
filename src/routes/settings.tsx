@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useSyncExternalStore } from "react";
+import { signOutAccount, useAccount } from "@/game/account";
+import { cloudStatus, subscribeCloudStatus } from "@/game/cloud";
 import { useGame } from "@/game/store";
 import { MenuShell, SectionTitle } from "@/components/game/MenuShell";
 import { PixelButton } from "@/components/game/PixelButton";
@@ -54,6 +56,8 @@ function Settings() {
       accent="var(--muted-foreground)"
       crumb="Identity, updates and save data"
     >
+      <AccountPanel />
+
       <SectionTitle>Display name</SectionTitle>
       <p
         className="mb-2 text-[13px] text-muted-foreground"
@@ -102,5 +106,61 @@ function Settings() {
         </PixelButton>
       </div>
     </MenuShell>
+  );
+}
+
+/** Who you are, and whether your save is safe in the cloud. */
+function AccountPanel() {
+  const account = useAccount();
+  const navigate = useNavigate();
+  const status = useSyncExternalStore(subscribeCloudStatus, cloudStatus, () => "guest" as const);
+  const body = { fontFamily: "var(--font-pixel-body)" } as const;
+
+  const line: Record<string, string> = {
+    guest: "Progress lives on this device only.",
+    syncing: "Saving your progress to the cloud.",
+    synced: "Everything is backed up to your account.",
+    offline: "Offline. Your run keeps going and syncs when you reconnect.",
+    error: "Could not reach the cloud. It will retry automatically.",
+  };
+
+  return (
+    <>
+      <SectionTitle>Account</SectionTitle>
+      <div className="panel-ticks border-2 border-border bg-card/70 p-3">
+        {account.userId ? (
+          <>
+            <div className="text-pixel text-[10px] text-foreground">
+              {(account.username ?? "AGENT").toUpperCase()}
+            </div>
+            <p className="mt-1.5 text-[13px] leading-[15px] text-muted-foreground" style={body}>
+              {line[status]}
+            </p>
+            <PixelButton
+              onClick={() => {
+                void signOutAccount().then(() => navigate({ to: "/", replace: true }));
+              }}
+              color="secondary"
+              className="press mt-3 w-full"
+            >
+              SIGN OUT
+            </PixelButton>
+          </>
+        ) : (
+          <>
+            <p className="text-[13px] leading-[15px] text-foreground/85" style={body}>
+              Create an account with just a username and password to carry heroes, Chrono Cores,
+              upgrades and your current run across devices.
+            </p>
+            <Link
+              to="/auth"
+              className="press text-pixel mt-3 block w-full border-2 border-primary bg-primary/15 px-3 py-2.5 text-center text-[9px] text-foreground"
+            >
+              CREATE ACCOUNT / SIGN IN
+            </Link>
+          </>
+        )}
+      </div>
+    </>
   );
 }

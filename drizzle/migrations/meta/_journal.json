@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788034949572,
+      "tag": "0000_create_profiles_and_player_saves",
+      "breakpoints": true
+    }
+  ]
+}

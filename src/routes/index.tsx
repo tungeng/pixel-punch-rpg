@@ -5,6 +5,7 @@ import { useGame } from "@/game/store";
 import { HEROES, STARTER_HEROES, UNLOCKABLE_HEROES } from "@/game/heroes";
 import { CabinetShell } from "@/components/game/CabinetShell";
 import { MeterBar } from "@/components/game/MenuShell";
+import { AccountBadge } from "@/components/game/AccountBadge";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -129,6 +130,7 @@ function MainMenu() {
               OVERTUNG
             </h1>
             <div className="flex items-center gap-1.5">
+              <AccountBadge />
               <span className="text-pixel border-2 border-border bg-card px-2 py-1.5 text-[8px] text-foreground/85">
                 <span className="text-gold">⬢</span> {meta.credits}
               </span>

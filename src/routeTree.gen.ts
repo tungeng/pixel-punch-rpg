@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ArchiveRouteImport } from './routes/archive'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as HeroesRouteImport } from './routes/heroes'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as ProgressionRouteImport } from './routes/progression'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const ArchiveRoute = ArchiveRouteImport.update({
   id: '/archive',
   path: '/archive',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HeroesRoute = HeroesRouteImport.update({
@@ -62,6 +68,7 @@ const StatsRoute = StatsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/auth': typeof AuthRoute
   '/heroes': typeof HeroesRoute
   '/play': typeof PlayRoute
   '/progression': typeof ProgressionRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/auth': typeof AuthRoute
   '/heroes': typeof HeroesRoute
   '/play': typeof PlayRoute
   '/progression': typeof ProgressionRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/auth': typeof AuthRoute
   '/heroes': typeof HeroesRoute
   '/play': typeof PlayRoute
   '/progression': typeof ProgressionRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/archive'
+    | '/auth'
     | '/heroes'
     | '/play'
     | '/progression'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/archive'
+    | '/auth'
     | '/heroes'
     | '/play'
     | '/progression'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/archive'
+    | '/auth'
     | '/heroes'
     | '/play'
     | '/progression'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
+  AuthRoute: typeof AuthRoute
   HeroesRoute: typeof HeroesRoute
   PlayRoute: typeof PlayRoute
   ProgressionRoute: typeof ProgressionRoute
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/archive'
       fullPath: '/archive'
       preLoaderRoute: typeof ArchiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/heroes': {
@@ -198,6 +218,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
+  AuthRoute: AuthRoute,
   HeroesRoute: HeroesRoute,
   PlayRoute: PlayRoute,
   ProgressionRoute: ProgressionRoute,
