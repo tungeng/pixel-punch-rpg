@@ -8,6 +8,7 @@
  * cloud save so nothing earned offline is thrown away.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { arcadeLoad, arcadeSave, arcadeWhoAmI, type ArcadeUser } from "./arcade";
 import { useGame, type GameState } from "./store";
 
 const META_KEY = "overtung_meta_v1";
