@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useSyncExternalStore } from "react";
+import { signOutAccount, useAccount } from "@/game/account";
+import { cloudStatus, subscribeCloudStatus } from "@/game/cloud";
 import { useGame } from "@/game/store";
 import { MenuShell, SectionTitle } from "@/components/game/MenuShell";
 import { PixelButton } from "@/components/game/PixelButton";
@@ -54,6 +56,8 @@ function Settings() {
       accent="var(--muted-foreground)"
       crumb="Identity, updates and save data"
     >
+      <AccountPanel />
+
       <SectionTitle>Display name</SectionTitle>
       <p
         className="mb-2 text-[13px] text-muted-foreground"
