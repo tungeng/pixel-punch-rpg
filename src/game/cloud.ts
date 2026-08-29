@@ -321,6 +321,10 @@ export function startCloudSync() {
   const saved = readLocalRun();
   if (saved && !useGame.getState().inRun) applyRun(saved);
 
+  // if the arcade hub owns the player's identity, it owns the save too
+  void startArcadeSync();
+
+
   let lastMeta = useGame.getState().meta;
   let lastRunKey = JSON.stringify(runSnapshot(useGame.getState()));
 
@@ -341,13 +345,13 @@ export function startCloudSync() {
   });
 
   window.addEventListener("online", () => {
-    if (userId && dirty) void push();
-    else if (userId) setStatus("synced");
+    if ((userId || arcadeUser) && dirty) void push();
+    else if (userId || arcadeUser) setStatus("synced");
   });
   window.addEventListener("offline", () => {
-    if (userId) setStatus("offline");
+    if (userId || arcadeUser) setStatus("offline");
   });
   window.addEventListener("beforeunload", () => {
-    if (userId && dirty) void push();
+    if ((userId || arcadeUser) && dirty) void push();
   });
 }
