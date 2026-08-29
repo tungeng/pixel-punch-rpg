@@ -127,7 +127,9 @@ export function mergeMeta(local: Meta, remote: Meta): Meta {
     totalRuns: maxNum(local.totalRuns, remote.totalRuns),
     upgrades,
     playerName: remote.playerName || local.playerName || "",
-    selectedHeroId: remote.selectedHeroId ?? local.selectedHeroId,
+    ...(remote.selectedHeroId ?? local.selectedHeroId
+      ? { selectedHeroId: (remote.selectedHeroId ?? local.selectedHeroId)! }
+      : {}),
     stats: {
       wins: maxNum(ls?.wins, rs?.wins),
       losses: maxNum(ls?.losses, rs?.losses),
