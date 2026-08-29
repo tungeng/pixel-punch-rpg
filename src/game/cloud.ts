@@ -8,6 +8,7 @@
  * cloud save so nothing earned offline is thrown away.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { arcadeLoad, arcadeSave, arcadeWhoAmI, type ArcadeUser } from "./arcade";
 import { useGame, type GameState } from "./store";
 
 const META_KEY = "overtung_meta_v1";
@@ -161,6 +162,13 @@ let started = false;
 let statusValue: Status = "guest";
 const listeners = new Set<() => void>();
 
+/** Set when the game is running inside the Boredom Arcade hub and signed in. */
+let arcadeUser: ArcadeUser | null = null;
+
+export function arcadeAccount() {
+  return arcadeUser;
+}
+
 export function cloudStatus() {
   return statusValue;
 }
@@ -168,14 +176,17 @@ export function subscribeCloudStatus(fn: () => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }
+function notify() {
+  listeners.forEach((l) => l());
+}
 function setStatus(s: Status) {
   if (s === statusValue) return;
   statusValue = s;
-  listeners.forEach((l) => l());
+  notify();
 }
 
 async function push() {
-  if (!userId) return;
+  if (!userId && !arcadeUser) return;
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     setStatus("offline");
     return;
@@ -183,9 +194,22 @@ async function push() {
   const state = useGame.getState();
   const meta = state.meta;
   setStatus("syncing");
+
+  if (arcadeUser) {
+    const ok = await arcadeSave({
+      meta: meta as unknown as Record<string, unknown>,
+      run_state: runSnapshot(state) ?? null,
+      settings: { playerName: meta.playerName, selectedHeroId: meta.selectedHeroId },
+      updated_at: new Date().toISOString(),
+    });
+    dirty = !ok;
+    setStatus(ok ? "synced" : "error");
+    return;
+  }
+
   const { error } = await supabase.from("player_saves").upsert(
     {
-      user_id: userId,
+      user_id: userId!,
       meta: meta as never,
       run_state: (runSnapshot(state) ?? null) as never,
       settings: { playerName: meta.playerName, selectedHeroId: meta.selectedHeroId } as never,
@@ -204,9 +228,50 @@ async function push() {
 
 function queuePush() {
   dirty = true;
-  if (!userId) return;
+  if (!userId && !arcadeUser) return;
   window.clearTimeout(timer);
   timer = window.setTimeout(() => void push(), 1200);
+}
+
+/**
+ * Handshake with the arcade hub. If it answers with a signed in player we take
+ * its save as the cloud save and merge the local one into it, exactly like a
+ * normal login. Silence or "not-signed-in" leaves the game in local mode.
+ */
+async function startArcadeSync() {
+  const user = await arcadeWhoAmI();
+  if (!user) return false;
+  arcadeUser = user;
+  notify();
+  setStatus("syncing");
+
+  const saved = await arcadeLoad();
+  const local = useGame.getState().meta;
+  const localRun = runSnapshot(useGame.getState()) ?? readLocalRun();
+  const remoteMeta = (saved?.["meta"] ?? null) as Meta | null;
+  const merged = remoteMeta ? mergeMeta(local, remoteMeta) : local;
+  const run = betterRun(localRun, (saved?.["run_state"] ?? null) as RunSnapshot | null);
+
+  writeLocal(META_KEY, merged);
+  useGame.setState({ meta: merged });
+  if (run) {
+    writeLocal(RUN_KEY, run);
+    applyRun(run);
+  }
+  await push();
+
+  // hub saves are cheap, so keep a steady heartbeat plus a flush on the way out
+  window.setInterval(() => {
+    if (dirty) void push();
+  }, 10_000);
+  const flush = () => {
+    if (dirty) void push();
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flush();
+  });
+  window.addEventListener("pagehide", flush);
+  return true;
 }
 
 /** Pull the cloud save, merge the local guest save into it, then write both back. */
@@ -256,6 +321,10 @@ export function startCloudSync() {
   const saved = readLocalRun();
   if (saved && !useGame.getState().inRun) applyRun(saved);
 
+  // if the arcade hub owns the player's identity, it owns the save too
+  void startArcadeSync();
+
+
   let lastMeta = useGame.getState().meta;
   let lastRunKey = JSON.stringify(runSnapshot(useGame.getState()));
 
@@ -276,13 +345,13 @@ export function startCloudSync() {
   });
 
   window.addEventListener("online", () => {
-    if (userId && dirty) void push();
-    else if (userId) setStatus("synced");
+    if ((userId || arcadeUser) && dirty) void push();
+    else if (userId || arcadeUser) setStatus("synced");
   });
   window.addEventListener("offline", () => {
-    if (userId) setStatus("offline");
+    if (userId || arcadeUser) setStatus("offline");
   });
   window.addEventListener("beforeunload", () => {
-    if (userId && dirty) void push();
+    if ((userId || arcadeUser) && dirty) void push();
   });
 }
