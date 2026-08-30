@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { RunRecord } from "./store";
+import { GAME_VERSION } from "./arcade";
 
 export interface ScoreRow {
   id: string;
@@ -24,6 +25,7 @@ export async function submitRunScore(name: string, run: RunRecord): Promise<bool
     floors_cleared: run.floorsCleared,
     act_reached: run.act,
     full_clear: run.fullClear,
+    game_version: GAME_VERSION,
   });
   return !error;
 }
@@ -42,4 +44,36 @@ export async function fetchTopScores(scope: "today" | "all"): Promise<ScoreRow[]
   const { data, error } = await q;
   if (error || !data) return [];
   return data as ScoreRow[];
+}
+
+export interface BestScoreRow {
+  player_name: string;
+  score: number;
+  game_version: string;
+}
+
+/**
+ * Best logged run per player name, used to backfill the arcade hub board with
+ * scores that were set before the hub started collecting them.
+ */
+export async function fetchBestScoresByPlayer(): Promise<BestScoreRow[]> {
+  const { data, error } = await supabase
+    .from("run_scores")
+    .select("player_name, score, game_version")
+    .order("score", { ascending: false })
+    .limit(500);
+  if (error || !data) return [];
+  const best = new Map<string, BestScoreRow>();
+  for (const row of data as BestScoreRow[]) {
+    const key = row.player_name.trim().toLowerCase();
+    if (!key) continue;
+    if (!best.has(key)) {
+      best.set(key, {
+        player_name: row.player_name.trim(),
+        score: row.score,
+        game_version: row.game_version || "1.0.0",
+      });
+    }
+  }
+  return [...best.values()];
 }

@@ -68,6 +68,7 @@ export type Database = {
           created_at: string
           floors_cleared: number
           full_clear: boolean
+          game_version: string
           hero_id: string
           id: string
           player_name: string
@@ -78,6 +79,7 @@ export type Database = {
           created_at?: string
           floors_cleared?: number
           full_clear?: boolean
+          game_version?: string
           hero_id: string
           id?: string
           player_name: string
@@ -88,6 +90,7 @@ export type Database = {
           created_at?: string
           floors_cleared?: number
           full_clear?: boolean
+          game_version?: string
           hero_id?: string
           id?: string
           player_name?: string
