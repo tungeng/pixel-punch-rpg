@@ -8,7 +8,14 @@
  * cloud save so nothing earned offline is thrown away.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { arcadeLoad, arcadeSave, arcadeWhoAmI, type ArcadeUser } from "./arcade";
+import {
+  arcadeFlushScore,
+  arcadeLoad,
+  arcadeReportScore,
+  arcadeSave,
+  arcadeWhoAmI,
+  type ArcadeUser,
+} from "./arcade";
 import { useGame, type GameState } from "./store";
 
 const META_KEY = "overtung_meta_v1";
@@ -327,12 +334,20 @@ export function startCloudSync() {
 
   let lastMeta = useGame.getState().meta;
   let lastRunKey = JSON.stringify(runSnapshot(useGame.getState()));
+  let lastBestScore = Number(useGame.getState().meta?.stats?.bestScore ?? 0) || 0;
+  // seed the throttle baseline so a stored best is reported on boot too
+  if (lastBestScore > 0) arcadeReportScore(lastBestScore);
 
   useGame.subscribe((state) => {
     let changed = false;
     if (state.meta !== lastMeta) {
       lastMeta = state.meta;
       changed = true;
+      const best = Number(state.meta?.stats?.bestScore ?? 0) || 0;
+      if (best > lastBestScore) {
+        lastBestScore = best;
+        arcadeReportScore(best);
+      }
     }
     const snap = runSnapshot(state);
     const key = JSON.stringify(snap);
@@ -343,6 +358,12 @@ export function startCloudSync() {
     }
     if (changed) queuePush();
   });
+
+  // the hub wants the best score delivered even if the player leaves mid-throttle
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") arcadeFlushScore();
+  });
+  window.addEventListener("pagehide", arcadeFlushScore);
 
   window.addEventListener("online", () => {
     if ((userId || arcadeUser) && dirty) void push();
