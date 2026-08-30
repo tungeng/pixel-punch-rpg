@@ -459,7 +459,7 @@ function applyEnemyDamage(
   if (remaining > c.bestHit) c.bestHit = remaining;
   // Ults no longer charge off their own damage, so normal card damage charges faster.
   const ultMult = c.mutator ? MUTATORS[c.mutator]?.ultMult ?? 1 : 1;
-  charge.v += dmg * (relicPower ? 2.2 : 1.4) * ultMult;
+  charge.v += dmg * (relicPower ? 1.76 : 1.12) * ultMult;
   return dmg;
 }
 
@@ -1171,7 +1171,7 @@ export const useGame = create<GameState>((set, get) => ({
         for (let h = 0; h < hits; h++) {
           if (c.hp <= 0) break;
           const taken = applyPlayerDamage(get, c, intent.damage ?? 0, e.strength, e.weak);
-          charge.v += taken * 1.5;
+          charge.v += taken * 1.2;
           if (e.trait === "leech" && taken > 0) {
             const drained = Math.min(e.maxHp - e.hp, Math.ceil(taken * 0.35));
             if (drained > 0) {
