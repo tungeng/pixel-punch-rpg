@@ -278,6 +278,7 @@ async function startArcadeSync() {
   const user = await arcadeWhoAmI();
   if (!user) return false;
   arcadeUser = user;
+  refreshIdentity();
   notify();
   setStatus("syncing");
 
@@ -336,6 +337,7 @@ async function backfillArcadeScores() {
 /** Pull the cloud save, merge the local guest save into it, then write both back. */
 export async function syncOnLogin(uid: string) {
   userId = uid;
+  refreshIdentity();
   setStatus("syncing");
   const local = useGame.getState().meta;
   const localRun = runSnapshot(useGame.getState()) ?? readLocalRun();
@@ -383,6 +385,10 @@ export function startCloudSync() {
   // if the arcade hub owns the player's identity, it owns the save too
   void startArcadeSync();
 
+  refreshIdentity();
+  let lastPlayerName = useGame.getState().meta?.playerName ?? "";
+
+
 
   let lastMeta = useGame.getState().meta;
   let lastRunKey = JSON.stringify(runSnapshot(useGame.getState()));
@@ -402,6 +408,11 @@ export function startCloudSync() {
     if (state.meta !== lastMeta) {
       lastMeta = state.meta;
       changed = true;
+      const name = state.meta?.playerName ?? "";
+      if (name !== lastPlayerName) {
+        lastPlayerName = name;
+        refreshIdentity();
+      }
       const best = Number(state.meta?.stats?.bestScore ?? 0) || 0;
       if (best > lastBestScore) {
         lastBestScore = best;
