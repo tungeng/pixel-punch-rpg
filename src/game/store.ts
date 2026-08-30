@@ -412,11 +412,11 @@ const HERO_AGGRO: Record<string, number> = {
 
 function maxHpFor(heroId: string, relics: string[], act = 0, upgrades?: Record<string, number>): number {
   let h = getHero(heroId).maxHp;
-  if (relics.includes("gold_heart")) h += 30;
-  if (relics.includes("titan_plating")) h += 55;
-  if (relics.includes("combat_visor")) h -= 15;
+  if (relics.includes("gold_heart")) h += 15;
+  if (relics.includes("titan_plating")) h += 28;
+  if (relics.includes("combat_visor")) h -= 8;
   h += upgradeBonusMaxHp(upgrades);
-  return Math.max(20, h + act * 12);
+  return Math.max(10, h + act * 6);
 }
 
 
