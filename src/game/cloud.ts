@@ -10,6 +10,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import {
   arcadeFlushScore,
+  arcadePostScoreFor,
   arcadeLoad,
   arcadeReportScore,
   arcadeSave,
@@ -17,6 +18,7 @@ import {
   type ArcadeUser,
 } from "./arcade";
 import { useGame, type GameState } from "./store";
+import { fetchBestScoresByPlayer } from "./leaderboard";
 
 const META_KEY = "overtung_meta_v1";
 const RUN_KEY = "overtung_run_v1";
@@ -266,6 +268,7 @@ async function startArcadeSync() {
     applyRun(run);
   }
   await push();
+  void backfillArcadeScores();
 
   // hub saves are cheap, so keep a steady heartbeat plus a flush on the way out
   window.setInterval(() => {
@@ -279,6 +282,26 @@ async function startArcadeSync() {
   });
   window.addEventListener("pagehide", flush);
   return true;
+}
+
+const BACKFILL_KEY = "overtung_arcade_score_backfill_v1";
+
+/**
+ * One time push of every score already logged in our own leaderboard, matched
+ * to arcade players by the name they play under, tagged with the version the
+ * run was set on. Runs once per device.
+ */
+async function backfillArcadeScores() {
+  try {
+    if (window.localStorage.getItem(BACKFILL_KEY)) return;
+  } catch {
+    return;
+  }
+  const rows = await fetchBestScoresByPlayer();
+  for (const row of rows) {
+    arcadePostScoreFor(row.player_name, row.score, row.game_version);
+  }
+  writeLocal(BACKFILL_KEY, Date.now());
 }
 
 /** Pull the cloud save, merge the local guest save into it, then write both back. */
