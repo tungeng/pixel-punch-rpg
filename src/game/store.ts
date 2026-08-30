@@ -832,7 +832,7 @@ export const useGame = create<GameState>((set, get) => ({
     } else {
       const pool = enemyPoolFor(s.act);
       const r = rng.next();
-      const count = s.act >= 2 ? (r < 0.4 ? 1 : r < 0.9 ? 2 : 3) : r < 0.25 ? 1 : r < 0.85 ? 2 : 3;
+      const count = s.act >= 2 ? (r < 0.25 ? 1 : r < 0.8 ? 2 : 3) : r < 0.15 ? 1 : r < 0.75 ? 2 : 3;
       for (let i = 0; i < count; i++) {
         const id = rng.pick(pool);
         enemies.push(spawnEnemy(ENEMIES[id]!, rng, `e_${Date.now()}_${i}`));
@@ -844,7 +844,7 @@ export const useGame = create<GameState>((set, get) => ({
     const relicCount = s.relics.length;
     const augmentCount = s.augments.length;
     const upgradedCount = s.deck.filter((card) => card.upgraded).length;
-    const leanDeckBonus = s.deck.length < 24 ? (24 - s.deck.length) * 0.012 : 0;
+    const leanDeckBonus = s.deck.length < 24 ? (24 - s.deck.length) * 0.015 : 0;
     // Longer fights reward sustain and punish burst, so each hero meets a
     // difficulty curve tuned to how their kit ages across a combat.
     const heroPressure = HERO_PRESSURE[s.heroId] ?? 1;
@@ -853,26 +853,27 @@ export const useGame = create<GameState>((set, get) => ({
     // was filler punctuated by a wall. Each encounter class now has its own
     // depth: skirmishes are real attrition, elites are puzzles, bosses stay
     // long but hit less brutally per turn.
-    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.80 : 0.88) : nodeType === "elite" ? 3.26 : 3.38;
+    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.92 : 1.02) : nodeType === "elite" ? 3.75 : 3.8;
     const hpScale =
       DEPTH *
-      (1 + s.act * 0.63 + floor * 0.115 + relicCount * 0.048 + augmentCount * 0.085 + upgradedCount * 0.012 + leanDeckBonus) *
+      (1 + s.act * 0.7 + floor * 0.13 + relicCount * 0.055 + augmentCount * 0.095 + upgradedCount * 0.014 + leanDeckBonus) *
       heroPressure;
     // ...and hit softer per turn, so length creates tension instead of coin-flips.
-    const pace = nodeType === "boss" ? 0.7 : nodeType === "elite" ? 0.8 : 0.55;
+    const pace = nodeType === "boss" ? 0.82 : nodeType === "elite" ? 0.95 : 0.68;
     const strBonus = Math.max(
       0,
       Math.round(
-        (Math.floor(floor / 4) +
-          Math.round(s.act * 1.1) +
-          Math.floor(relicCount / 4) +
+        (Math.floor(floor / 3) +
+          Math.round(1 + s.act * 1.25) +
+          Math.floor(relicCount / 3) +
           Math.floor(augmentCount / 3) +
           (nodeType === "elite" ? 2 + s.act : 0) +
-          (nodeType === "boss" ? Math.round(s.act * 0.5) : 0) +
+          (nodeType === "boss" ? 1 + Math.round(s.act * 0.6) : 0) +
           (HERO_AGGRO[s.heroId] ?? 0)) *
           pace,
       ),
     );
+
 
 
 
