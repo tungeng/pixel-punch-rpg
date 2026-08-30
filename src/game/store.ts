@@ -2300,7 +2300,7 @@ function resolveCard(
     if (card.exhaust) {
       c.exhaustPile.push(card);
       if (relics.includes("phoenix_core")) {
-        const healed = Math.min(c.maxHp - c.hp, 3);
+        const healed = Math.min(c.maxHp - c.hp, 2);
         if (healed > 0) {
           c.hp += healed;
           pushFloat(c, `+${healed}`, "heal", "player");
@@ -2372,7 +2372,7 @@ function handleCombatWin(set: any, get: () => GameState) {
   let deck = s.deck;
   const has = (id: string) => s.relics.includes(id);
   // post-combat healing relics
-  if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 6);
+  if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 4);
   if (has("blood_pact")) hp = Math.min(s.maxHp, hp + Math.ceil(s.maxHp * 0.08));
   // gold reward
   const baseGold = c.nodeType === "boss" ? 45 : c.nodeType === "elite" ? 26 : 12;
