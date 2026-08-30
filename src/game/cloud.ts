@@ -14,6 +14,7 @@ import {
   arcadeLoad,
   arcadeReportScore,
   arcadeSave,
+  arcadeSetIdentity,
   arcadeWhoAmI,
   type ArcadeUser,
 } from "./arcade";
@@ -299,7 +300,9 @@ async function backfillArcadeScores() {
   }
   const rows = await fetchBestScoresByPlayer();
   for (const row of rows) {
-    arcadePostScoreFor(row.player_name, row.score, row.game_version);
+    // Player name doubles as the stable id for historical rows; the hub
+    // keeps one best score per player, so re-running this is safe.
+    arcadePostScoreFor(row.player_name, row.player_name, row.score, row.game_version);
   }
   writeLocal(BACKFILL_KEY, Date.now());
 }
