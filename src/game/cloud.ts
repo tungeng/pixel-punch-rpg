@@ -361,8 +361,15 @@ export function startCloudSync() {
   // seed the throttle baseline so a stored best is reported on boot too
   if (lastBestScore > 0) arcadeReportScore(lastBestScore);
 
+  let lastRunRecord = useGame.getState().lastRun;
+
   useGame.subscribe((state) => {
     let changed = false;
+    // a finished run always gets offered to the hub, best or not
+    if (state.lastRun !== lastRunRecord) {
+      lastRunRecord = state.lastRun;
+      if (lastRunRecord) arcadeReportScore(Number(lastRunRecord.score) || 0);
+    }
     if (state.meta !== lastMeta) {
       lastMeta = state.meta;
       changed = true;
