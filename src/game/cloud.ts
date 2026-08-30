@@ -23,6 +23,32 @@ import { fetchBestScoresByPlayer } from "./leaderboard";
 
 const META_KEY = "overtung_meta_v1";
 const RUN_KEY = "overtung_run_v1";
+const PLAYER_ID_KEY = "overtung_player_id_v1";
+
+/** Stable id for this player, even before they ever sign in anywhere. */
+function localPlayerId(): string {
+  try {
+    const existing = window.localStorage.getItem(PLAYER_ID_KEY);
+    if (existing) return existing;
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `p-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    window.localStorage.setItem(PLAYER_ID_KEY, id);
+    return id;
+  } catch {
+    return "guest";
+  }
+}
+
+/** Keep the arcade bridge informed about who scores belong to. */
+function refreshIdentity() {
+  if (typeof window === "undefined") return;
+  const meta = useGame.getState().meta;
+  const name = arcadeUser?.username ?? meta?.playerName ?? "";
+  const id = arcadeUser?.userId ?? userId ?? localPlayerId();
+  arcadeSetIdentity(id, name || "PLAYER");
+}
 
 export type Meta = GameState["meta"];
 
