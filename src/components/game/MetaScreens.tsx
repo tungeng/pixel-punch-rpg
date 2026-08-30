@@ -10,7 +10,9 @@ import { PixelButton } from "./PixelButton";
 import { Bar } from "./Bar";
 import { motion } from "motion/react";
 import { RelicTray } from "./RelicTray";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { makeCard } from "@/game/cards";
+
 import type { MotionStyle } from "motion/react";
 import { AUGMENTS } from "@/game/progression";
 
@@ -154,6 +156,43 @@ export function RestScreen() {
   const upgrade = useGame((s) => s.restUpgrade);
   const recycle = useGame((s) => s.restRecycle);
   const upgradeable = deck.filter((c) => !c.upgraded);
+  const [previewUid, setPreviewUid] = useState<string | null>(null);
+  const previewCard = previewUid ? (deck.find((c) => c.uid === previewUid) ?? null) : null;
+
+  if (previewCard) {
+    const after = makeCard(previewCard.id, true);
+    return (
+      <Screen title="UPGRADE PREVIEW" tone="#54d98c">
+        <div className="mb-3 text-center text-[15px] text-foreground/75" style={{ fontFamily: "var(--font-pixel-body)" }}>
+          Here is what the edge buys you. Nothing is spent until you confirm.
+        </div>
+        <div className="flex items-end justify-center gap-3">
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-pixel text-[7px] text-muted-foreground">NOW</span>
+            <CardView card={previewCard} size="reward" dimmed />
+          </div>
+          <motion.span
+            animate={{ x: [0, 5, 0] }}
+            transition={{ repeat: Infinity, duration: 1.2 }}
+            className="text-pixel pb-16 text-[14px] text-accent"
+          >
+            ▶
+          </motion.span>
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-pixel text-[7px]" style={{ color: "#54d98c" }}>UPGRADED</span>
+            <CardView card={after} size="reward" />
+          </div>
+        </div>
+        <div className="mt-6 grid w-full max-w-[300px] gap-3">
+          <PixelButton onClick={() => upgrade(previewCard.uid)} color="primary">
+            CONFIRM UPGRADE
+          </PixelButton>
+          <PixelButton onClick={() => setPreviewUid(null)}>◀ BACK</PixelButton>
+        </div>
+      </Screen>
+    );
+  }
+
   return (
     <Screen title="SAFEHOUSE" tone="#54d98c">
       <div className="mb-3 w-full max-w-[280px]">
@@ -163,10 +202,10 @@ export function RestScreen() {
         Nobody shooting at you for once. Stitch yourself up, or put an edge on one card.
       </div>
       <PixelButton onClick={heal} color="primary">Rest, heal 30%</PixelButton>
-      <div className="text-pixel mb-2 mt-5 text-center text-[8px] text-muted-foreground">OR UPGRADE:</div>
+      <div className="text-pixel mb-2 mt-5 text-center text-[8px] text-muted-foreground">OR UPGRADE (PREVIEW FIRST):</div>
       <div className="flex max-h-56 flex-wrap justify-center gap-2 overflow-y-auto px-2 pb-2">
         {upgradeable.map((c) => (
-          <CardView key={c.uid} card={c} size="hand" onClick={() => upgrade(c.uid)} />
+          <CardView key={c.uid} card={c} size="hand" onClick={() => setPreviewUid(c.uid)} />
         ))}
         {upgradeable.length === 0 && (
           <div className="text-[14px] text-muted-foreground" style={{ fontFamily: "var(--font-pixel-body)" }}>
@@ -185,6 +224,7 @@ export function RestScreen() {
     </Screen>
   );
 }
+
 
 export function TreasureScreen() {
   const take = useGame((s) => s.takeTreasure);
