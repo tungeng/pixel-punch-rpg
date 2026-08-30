@@ -853,18 +853,18 @@ export const useGame = create<GameState>((set, get) => ({
     // was filler punctuated by a wall. Each encounter class now has its own
     // depth: skirmishes are real attrition, elites are puzzles, bosses stay
     // long but hit less brutally per turn.
-    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.92 : 1.02) : nodeType === "elite" ? 3.75 : 3.8;
+    const DEPTH = nodeType === "boss" ? (s.act === 0 ? 0.86 : 0.95) : nodeType === "elite" ? 3.48 : 3.56;
     const hpScale =
       DEPTH *
-      (1 + s.act * 0.7 + floor * 0.13 + relicCount * 0.055 + augmentCount * 0.095 + upgradedCount * 0.014 + leanDeckBonus) *
+      (1 + s.act * 0.66 + floor * 0.122 + relicCount * 0.05 + augmentCount * 0.09 + upgradedCount * 0.013 + leanDeckBonus) *
       heroPressure;
     // ...and hit softer per turn, so length creates tension instead of coin-flips.
-    const pace = nodeType === "boss" ? 0.82 : nodeType === "elite" ? 0.95 : 0.68;
+    const pace = nodeType === "boss" ? 0.76 : nodeType === "elite" ? 0.87 : 0.61;
     const strBonus = Math.max(
       0,
       Math.round(
         (Math.floor(floor / 3) +
-          Math.round(1 + s.act * 1.25) +
+          Math.round(0.5 + s.act * 1.15) +
           Math.floor(relicCount / 3) +
           Math.floor(augmentCount / 3) +
           (nodeType === "elite" ? 2 + s.act : 0) +
