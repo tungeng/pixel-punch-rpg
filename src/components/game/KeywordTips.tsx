@@ -129,49 +129,51 @@ export function KeywordTips() {
 
   const currentId = queue[0];
   const tip = TIPS.find((t) => t.id === currentId);
+
+  // A tip is marked seen the moment it renders, and auto-dismisses — so it can
+  // only ever appear once, even if the player never interacts with it.
+  useEffect(() => {
+    if (!tip || !combat?.active) return;
+    markSeen(tip.id);
+    const timer = window.setTimeout(() => {
+      setQueue((q) => (q[0] === tip.id ? q.slice(1) : q));
+    }, 4200);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentId, combat?.active]);
+
   if (!tip || !combat?.active) return null;
 
   const dismiss = () => {
-    const next = [...seen, tip.id];
-    setSeen(next);
-    setQueue((q) => q.slice(1));
-    try {
-      window.localStorage.setItem(STORE_KEY, JSON.stringify(next));
-    } catch {
-      /* storage unavailable — tips just repeat next session */
-    }
+    setQueue((q) => (q[0] === tip.id ? q.slice(1) : q));
   };
 
   return (
     <AnimatePresence>
-      <motion.div
+      <motion.button
         key={tip.id}
-        initial={{ opacity: 0, y: 14 }}
+        type="button"
+        onClick={dismiss}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
+        exit={{ opacity: 0, y: 6 }}
         transition={{ duration: 0.18 }}
-        className="pointer-events-auto absolute inset-x-2 top-2 z-[260]"
+        className="pointer-events-auto absolute bottom-16 left-2 z-[260] max-w-[70%] text-left"
+        aria-label={`${tip.title}: ${tip.text}`}
       >
         <div
-          className="pix-border bg-card/95 px-3 py-2"
-          style={{ boxShadow: `0 0 0 2px ${tip.color}55, 4px 4px 0 0 #000` }}
+          className="pix-border bg-card/90 px-2.5 py-1.5"
+          style={{ boxShadow: `0 0 0 1px ${tip.color}44, 3px 3px 0 0 #000` }}
         >
           <div
-            className="text-[8px] tracking-widest"
+            className="text-[7px] tracking-widest"
             style={{ fontFamily: "var(--font-pixel)", color: tip.color }}
           >
             {tip.title}
           </div>
-          <p className="mt-1 text-[12px] leading-snug text-foreground/85">{tip.text}</p>
-          <button
-            onClick={dismiss}
-            className="mt-2 w-full border-2 border-black bg-foreground/10 px-2 py-1 text-[8px] tracking-widest text-foreground hover:bg-foreground/20"
-            style={{ fontFamily: "var(--font-pixel)" }}
-          >
-            GOT IT
-          </button>
+          <p className="mt-0.5 text-[10px] leading-snug text-foreground/75">{tip.text}</p>
         </div>
-      </motion.div>
+      </motion.button>
     </AnimatePresence>
   );
 }
