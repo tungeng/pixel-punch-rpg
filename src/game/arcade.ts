@@ -82,3 +82,55 @@ export async function arcadeSave(data: Record<string, unknown>): Promise<boolean
   const reply = await request("arcade:save", { data });
   return Boolean(reply?.ok);
 }
+
+// ---------------------------------------------------------- best metric
+//
+// The hub tracks each game's headline number (for Overtung: highest run
+// score). We post it whenever it improves, throttled to one message per
+// 10 seconds, with a final flush when the tab hides. Silence or
+// "not-signed-in" replies are ignored by design.
+
+const SCORE_THROTTLE = 10_000;
+let lastSentScore = -1;
+let lastSentAt = 0;
+let pendingScore: number | null = null;
+let scoreTimer: number | undefined;
+
+function sendScore(score: number) {
+  lastSentScore = score;
+  lastSentAt = Date.now();
+  pendingScore = null;
+  // Fire and forget: the reply carries nothing we need.
+  void request("arcade:score", { data: { score } });
+}
+
+/**
+ * Report a candidate best score to the hub. Cheap to call on every state
+ * change: repeats, non-improvements and sub-throttle updates are dropped or
+ * coalesced automatically.
+ */
+export function arcadeReportScore(score: number) {
+  if (typeof window === "undefined" || window.parent === window) return;
+  if (!Number.isFinite(score) || score <= lastSentScore) return;
+  pendingScore = score;
+  const wait = SCORE_THROTTLE - (Date.now() - lastSentAt);
+  if (wait <= 0) {
+    sendScore(score);
+    return;
+  }
+  if (scoreTimer === undefined) {
+    scoreTimer = window.setTimeout(() => {
+      scoreTimer = undefined;
+      if (pendingScore !== null && pendingScore > lastSentScore) sendScore(pendingScore);
+    }, wait);
+  }
+}
+
+/** Flush any throttled score immediately. Call on tab hide/close. */
+export function arcadeFlushScore() {
+  if (scoreTimer !== undefined) {
+    window.clearTimeout(scoreTimer);
+    scoreTimer = undefined;
+  }
+  if (pendingScore !== null && pendingScore > lastSentScore) sendScore(pendingScore);
+}
