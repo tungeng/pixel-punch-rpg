@@ -48,17 +48,17 @@ export const MUTATORS: Record<string, Mutator> = {
   bloodpact: {
     id: "bloodpact",
     name: "BLOOD PACT",
-    text: "Start every combat with 2 Strength. Lose 32 max HP.",
+    text: "Start every combat with 2 Strength. Lose 14 max HP.",
     color: "#ff3b6b",
     startStrength: 2,
-    hpMod: -32,
+    hpMod: -14,
   },
   bulwark: {
     id: "bulwark",
     name: "BULWARK CODE",
-    text: "Start every combat with 14 Block. Your Ultimate charges 40% slower.",
+    text: "Start every combat with 10 Block. Your Ultimate charges 40% slower.",
     color: "#8ab4ff",
-    startBlock: 14,
+    startBlock: 10,
     ultMult: 0.6,
   },
   hemorrhage: {
@@ -80,10 +80,10 @@ export const MUTATORS: Record<string, Mutator> = {
   cascade: {
     id: "cascade",
     name: "CASCADE PROTOCOL",
-    text: "Draw 1 extra card every turn. Lose 12 max HP.",
+    text: "Draw 1 extra card every turn. Lose 6 max HP.",
     color: "#c084fc",
     draw: 1,
-    hpMod: -12,
+    hpMod: -6,
   },
   martyr: {
     id: "martyr",

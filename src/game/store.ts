@@ -981,9 +981,9 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // ---- relic openers ----
     const R = (id: string) => s.relics.includes(id);
-    if (R("barrier_start")) combat.block += 12;
+    if (R("barrier_start")) combat.block += 9;
     if (R("chrono_engine")) {
-      combat.block += 20;
+      combat.block += 14;
       drawCards(combat, 1);
     }
     if (R("berserker")) gainStrength(combat, 2, s.relics);
@@ -2300,7 +2300,7 @@ function resolveCard(
     if (card.exhaust) {
       c.exhaustPile.push(card);
       if (relics.includes("phoenix_core")) {
-        const healed = Math.min(c.maxHp - c.hp, 3);
+        const healed = Math.min(c.maxHp - c.hp, 2);
         if (healed > 0) {
           c.hp += healed;
           pushFloat(c, `+${healed}`, "heal", "player");
@@ -2372,7 +2372,7 @@ function handleCombatWin(set: any, get: () => GameState) {
   let deck = s.deck;
   const has = (id: string) => s.relics.includes(id);
   // post-combat healing relics
-  if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 6);
+  if (has("vampire_fang")) hp = Math.min(s.maxHp, hp + 4);
   if (has("blood_pact")) hp = Math.min(s.maxHp, hp + Math.ceil(s.maxHp * 0.08));
   // gold reward
   const baseGold = c.nodeType === "boss" ? 45 : c.nodeType === "elite" ? 26 : 12;

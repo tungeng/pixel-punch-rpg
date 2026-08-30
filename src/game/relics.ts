@@ -8,10 +8,10 @@ export const RELICS: Record<string, RelicDef> = {
   // ---------- common ----------
   energy_core: { id: "energy_core", name: "Fusion Core", text: "+1 max Energy.", icon: "⚡", color: "#f59e0b", tier: "common" },
   draw_charm: { id: "draw_charm", name: "Hana's Lucky Cat", text: "Draw +1 card each turn.", icon: "🐱", color: "#38bdf8", tier: "common" },
-  vampire_fang: { id: "vampire_fang", name: "Biotic Field", text: "Heal 6 HP after each combat.", icon: "💉", color: "#facc15", tier: "common" },
-  barrier_start: { id: "barrier_start", name: "Projected Barrier", text: "Start each combat with 12 Block.", icon: "🛡️", color: "#22c55e", tier: "common" },
+  vampire_fang: { id: "vampire_fang", name: "Biotic Field", text: "Heal 4 HP after each combat.", icon: "💉", color: "#facc15", tier: "common" },
+  barrier_start: { id: "barrier_start", name: "Projected Barrier", text: "Start each combat with 9 Block.", icon: "🛡️", color: "#22c55e", tier: "common" },
   thorn_mail: { id: "thorn_mail", name: "Sentry Turret", text: "Deal 4 damage to attackers when you're hit.", icon: "🔩", color: "#84cc16", tier: "common" },
-  gold_heart: { id: "gold_heart", name: "Roadhog's Scrap Gut", text: "+30 Max HP.", icon: "🐷", color: "#eab308", tier: "common" },
+  gold_heart: { id: "gold_heart", name: "Roadhog's Scrap Gut", text: "+15 Max HP.", icon: "🐷", color: "#eab308", tier: "common" },
   lucky_coin: { id: "lucky_coin", name: "Junker Payday", text: "+75% gold from fights.", icon: "🪙", color: "#fbbf24", tier: "common" },
   berserker: { id: "berserker", name: "Whole Hog Fury", text: "Start each combat with 2 Strength.", icon: "🔥", color: "#dc2626", tier: "common" },
   regen_drone: { id: "regen_drone", name: "Repair Pack", text: "Heal 2 HP at the start of each turn.", icon: "🧰", color: "#06b6d4", tier: "common" },
@@ -27,7 +27,7 @@ export const RELICS: Record<string, RelicDef> = {
   volt_capacitor: { id: "volt_capacitor", name: "Tesla Cannon", text: "Deal 5 damage to a random enemy each turn.", icon: "🌩️", color: "#facc15", tier: "uncommon", startsLocked: true },
   aegis_loop: { id: "aegis_loop", name: "Photon Projector", text: "Keep half your Block between turns.", icon: "♾️", color: "#34d399", tier: "uncommon", startsLocked: true },
   haste_module: { id: "haste_module", name: "Pulse Booster", text: "The first card you play each turn costs 1 less.", icon: "💨", color: "#22d3ee", tier: "uncommon", startsLocked: true },
-  phoenix_core: { id: "phoenix_core", name: "Immortality Field", text: "Heal 3 HP whenever a card is exhausted.", icon: "🔆", color: "#fdba74", tier: "uncommon" },
+  phoenix_core: { id: "phoenix_core", name: "Immortality Field", text: "Heal 2 HP whenever a card is exhausted.", icon: "🔆", color: "#fdba74", tier: "uncommon" },
   blood_pact: { id: "blood_pact", name: "Vampiric Gauntlet", text: "Heal 8% of Max HP after each combat.", icon: "🩸", color: "#b91c1c", tier: "uncommon" },
   codex_shard: { id: "codex_shard", name: "Athena Uplink", text: "Card rewards offer 4 choices instead of 3.", icon: "📘", color: "#60a5fa", tier: "uncommon" },
   relic_scanner: { id: "relic_scanner", name: "Translocator Beacon", text: "Elites and bosses always drop a relic.", icon: "📡", color: "#2dd4bf", tier: "uncommon", startsLocked: true },
@@ -35,10 +35,10 @@ export const RELICS: Record<string, RelicDef> = {
   // ---------- rare ----------
   soul_stone: { id: "soul_stone", name: "Resurrect Protocol", text: "Revive once at 50% HP when you die.", icon: "🕊️", color: "#6366f1", tier: "rare", startsLocked: true },
   reactor_surge: { id: "reactor_surge", name: "Zero-Point Reactor", text: "+2 Energy on every other turn.", icon: "☢️", color: "#fde047", tier: "rare", startsLocked: true },
-  titan_plating: { id: "titan_plating", name: "Crusader Plating", text: "+55 Max HP, but -1 max Energy.", icon: "🏗️", color: "#94a3b8", tier: "rare" },
-  combat_visor: { id: "combat_visor", name: "Tactical Visor", text: "Draw +2 cards each turn, but -15 Max HP.", icon: "🥽", color: "#38f8c0", tier: "rare", startsLocked: true },
+  titan_plating: { id: "titan_plating", name: "Crusader Plating", text: "+28 Max HP, but -1 max Energy.", icon: "🏗️", color: "#94a3b8", tier: "rare" },
+  combat_visor: { id: "combat_visor", name: "Tactical Visor", text: "Draw +2 cards each turn, but -8 Max HP.", icon: "🥽", color: "#38f8c0", tier: "rare", startsLocked: true },
   execution_chip: { id: "execution_chip", name: "Death Blossom Chip", text: "Start each combat with 3 Strength.", icon: "💀", color: "#ff6b3d", tier: "rare" },
-  chrono_engine: { id: "chrono_engine", name: "Chronal Accelerator", text: "Start each combat with 20 Block and 1 extra card.", icon: "⏱️", color: "#8b5cf6", tier: "rare", startsLocked: true },
+  chrono_engine: { id: "chrono_engine", name: "Chronal Accelerator", text: "Start each combat with 14 Block and 1 extra card.", icon: "⏱️", color: "#8b5cf6", tier: "rare", startsLocked: true },
 
   // ---------- legendary ----------
   singularity_anchor: { id: "singularity_anchor", name: "Singularity Anchor", text: "Whenever you gain Strength, gain it twice.", icon: "🌑", color: "#ff7a18", tier: "legendary", startsLocked: true },
