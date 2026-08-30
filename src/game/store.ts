@@ -981,9 +981,9 @@ export const useGame = create<GameState>((set, get) => ({
     }
     // ---- relic openers ----
     const R = (id: string) => s.relics.includes(id);
-    if (R("barrier_start")) combat.block += 12;
+    if (R("barrier_start")) combat.block += 9;
     if (R("chrono_engine")) {
-      combat.block += 20;
+      combat.block += 14;
       drawCards(combat, 1);
     }
     if (R("berserker")) gainStrength(combat, 2, s.relics);
