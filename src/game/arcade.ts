@@ -134,3 +134,47 @@ export function arcadeFlushScore() {
   }
   if (pendingScore !== null && pendingScore > lastSentScore) sendScore(pendingScore);
 }
+
+// ------------------------------------------------------- hub leaderboard
+
+export interface ArcadeScoreRow {
+  userId: string;
+  username: string;
+  score: number;
+  rank?: number;
+}
+
+/**
+ * Ask the hub for its leaderboard for this game. Null means no hub, no answer
+ * or the hub does not serve one, in which case the caller shows the local
+ * Supabase board instead.
+ */
+export async function arcadeLeaderboard(limit = 10): Promise<ArcadeScoreRow[] | null> {
+  const reply = await request("arcade:leaderboard", { data: { limit } });
+  if (!reply || !reply.ok) return null;
+  const raw = reply.result as unknown;
+  const list = Array.isArray(raw)
+    ? raw
+    : Array.isArray((raw as { scores?: unknown })?.scores)
+      ? ((raw as { scores: unknown[] }).scores)
+      : Array.isArray((raw as { leaderboard?: unknown })?.leaderboard)
+        ? ((raw as { leaderboard: unknown[] }).leaderboard)
+        : null;
+  if (!list) return null;
+  return list
+    .map((e, i) => {
+      const r = e as Record<string, unknown>;
+      return {
+        userId: String(r["userId"] ?? r["user_id"] ?? i),
+        username: String(r["username"] ?? r["name"] ?? r["player_name"] ?? "PLAYER"),
+        score: Number(r["score"] ?? r["value"] ?? r["best"] ?? 0) || 0,
+        rank: typeof r["rank"] === "number" ? (r["rank"] as number) : undefined,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+}
+
+/** True when the game is embedded in a frame that could be the arcade hub. */
+export function inArcadeFrame() {
+  return typeof window !== "undefined" && window.parent !== window;
+}
