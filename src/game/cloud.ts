@@ -14,6 +14,7 @@ import {
   arcadeLoad,
   arcadeReportScore,
   arcadeSave,
+  arcadeSetIdentity,
   arcadeWhoAmI,
   type ArcadeUser,
 } from "./arcade";
@@ -22,6 +23,32 @@ import { fetchBestScoresByPlayer } from "./leaderboard";
 
 const META_KEY = "overtung_meta_v1";
 const RUN_KEY = "overtung_run_v1";
+const PLAYER_ID_KEY = "overtung_player_id_v1";
+
+/** Stable id for this player, even before they ever sign in anywhere. */
+function localPlayerId(): string {
+  try {
+    const existing = window.localStorage.getItem(PLAYER_ID_KEY);
+    if (existing) return existing;
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `p-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    window.localStorage.setItem(PLAYER_ID_KEY, id);
+    return id;
+  } catch {
+    return "guest";
+  }
+}
+
+/** Keep the arcade bridge informed about who scores belong to. */
+function refreshIdentity() {
+  if (typeof window === "undefined") return;
+  const meta = useGame.getState().meta;
+  const name = arcadeUser?.username ?? meta?.playerName ?? "";
+  const id = arcadeUser?.userId ?? userId ?? localPlayerId();
+  arcadeSetIdentity(id, name || "PLAYER");
+}
 
 export type Meta = GameState["meta"];
 
@@ -251,6 +278,7 @@ async function startArcadeSync() {
   const user = await arcadeWhoAmI();
   if (!user) return false;
   arcadeUser = user;
+  refreshIdentity();
   notify();
   setStatus("syncing");
 
@@ -284,7 +312,8 @@ async function startArcadeSync() {
   return true;
 }
 
-const BACKFILL_KEY = "overtung_arcade_score_backfill_v1";
+// v2: re-runs once per device so historical rows are re-posted with playerId.
+const BACKFILL_KEY = "overtung_arcade_score_backfill_v2";
 
 /**
  * One time push of every score already logged in our own leaderboard, matched
@@ -299,7 +328,9 @@ async function backfillArcadeScores() {
   }
   const rows = await fetchBestScoresByPlayer();
   for (const row of rows) {
-    arcadePostScoreFor(row.player_name, row.score, row.game_version);
+    // Player name doubles as the stable id for historical rows; the hub
+    // keeps one best score per player, so re-running this is safe.
+    arcadePostScoreFor(row.player_name, row.player_name, row.score, row.game_version);
   }
   writeLocal(BACKFILL_KEY, Date.now());
 }
@@ -307,6 +338,7 @@ async function backfillArcadeScores() {
 /** Pull the cloud save, merge the local guest save into it, then write both back. */
 export async function syncOnLogin(uid: string) {
   userId = uid;
+  refreshIdentity();
   setStatus("syncing");
   const local = useGame.getState().meta;
   const localRun = runSnapshot(useGame.getState()) ?? readLocalRun();
@@ -354,6 +386,10 @@ export function startCloudSync() {
   // if the arcade hub owns the player's identity, it owns the save too
   void startArcadeSync();
 
+  refreshIdentity();
+  let lastPlayerName = useGame.getState().meta?.playerName ?? "";
+
+
 
   let lastMeta = useGame.getState().meta;
   let lastRunKey = JSON.stringify(runSnapshot(useGame.getState()));
@@ -373,6 +409,11 @@ export function startCloudSync() {
     if (state.meta !== lastMeta) {
       lastMeta = state.meta;
       changed = true;
+      const name = state.meta?.playerName ?? "";
+      if (name !== lastPlayerName) {
+        lastPlayerName = name;
+        refreshIdentity();
+      }
       const best = Number(state.meta?.stats?.bestScore ?? 0) || 0;
       if (best > lastBestScore) {
         lastBestScore = best;
