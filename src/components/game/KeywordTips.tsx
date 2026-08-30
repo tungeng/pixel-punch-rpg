@@ -96,6 +96,19 @@ export function KeywordTips() {
     setSeen(loadSeen());
   }, []);
 
+  const markSeen = (id: string) => {
+    setSeen((prev) => {
+      if (prev.includes(id)) return prev;
+      const next = [...prev, id];
+      try {
+        window.localStorage.setItem(STORE_KEY, JSON.stringify(next));
+      } catch {
+        /* storage unavailable — in-memory seen still prevents repeats this session */
+      }
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (!combat?.active) return;
     const live = combat.enemies.filter((e) => !e.isDead);
