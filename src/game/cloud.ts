@@ -312,7 +312,8 @@ async function startArcadeSync() {
   return true;
 }
 
-const BACKFILL_KEY = "overtung_arcade_score_backfill_v1";
+// v2: re-runs once per device so historical rows are re-posted with playerId.
+const BACKFILL_KEY = "overtung_arcade_score_backfill_v2";
 
 /**
  * One time push of every score already logged in our own leaderboard, matched
