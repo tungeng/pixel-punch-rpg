@@ -10,7 +10,9 @@ import { PixelButton } from "./PixelButton";
 import { Bar } from "./Bar";
 import { motion } from "motion/react";
 import { RelicTray } from "./RelicTray";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { makeCard } from "@/game/cards";
+
 import type { MotionStyle } from "motion/react";
 import { AUGMENTS } from "@/game/progression";
 
