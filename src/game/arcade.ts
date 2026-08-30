@@ -123,12 +123,26 @@ let lastSentAt = 0;
 let pendingScore: number | null = null;
 let scoreTimer: number | undefined;
 
+// The hub keys its board by the game's own player identity, not by whoever
+// happens to be signed into the arcade, so every score carries both.
+let identity: { playerId: string; playerName: string } | null = null;
+
+/** Tell the bridge who is playing. Called whenever account or name changes. */
+export function arcadeSetIdentity(playerId: string, playerName: string) {
+  if (!playerId) return;
+  identity = { playerId, playerName: playerName || "PLAYER" };
+}
+
+function scoreData(score: number, version: string) {
+  return { score, version, ...(identity ?? {}) };
+}
+
 function sendScore(score: number) {
   lastSentScore = score;
   lastSentAt = Date.now();
   pendingScore = null;
   // Fire and forget: the reply carries nothing we need.
-  void request("arcade:score", { data: { score, version: GAME_VERSION } });
+  void request("arcade:score", { data: scoreData(score, GAME_VERSION) });
 }
 
 /**
@@ -157,13 +171,13 @@ export function arcadeReportScore(score: number) {
  * Post one score for a named player, bypassing the improvement throttle.
  * Used for the one time backfill of scores logged before the hub existed.
  */
-export function arcadePostScoreFor(username: string, score: number, version: string) {
+export function arcadePostScoreFor(playerId: string, playerName: string, score: number, version: string) {
   if (typeof window === "undefined" || window.parent === window) return;
   postToParents({
     source: "arcade-game",
     type: "arcade:score",
     requestId: newRequestId(),
-    data: { score, version, username },
+    data: { score, version, playerId, playerName },
   });
 }
 
